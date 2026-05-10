@@ -1,4 +1,4 @@
-import { signal, computed, inject } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { LocalStorageService } from '../../../infrastructure/persistence/local-storage.service';
 
 export type Theme = 'light' | 'dark';
@@ -22,6 +22,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   priceAlertThreshold: 5,
 };
 
+@Injectable({ providedIn: 'root' })
 export class SettingsStore {
   private localStorage = inject(LocalStorageService);
   

@@ -1,6 +1,6 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { OfflineSimulatorInterceptor } from '../interceptors/offline-simulator.interceptor';
+import { OfflineSimulatorControls } from '../interceptors/offline-simulator.interceptor';
 import { ResilientApiService } from '../../../infrastructure/api/resilience/resilient-api.service';
 import { NotificationService } from '../services/notification.service';
 import { ButtonComponent } from '../../shared/design-system/button/button.component';
@@ -553,14 +553,13 @@ import { CardComponent } from '../../shared/design-system/card/card.component';
   `]
 })
 export class FailureToggleComponent {
-  private offlineSimulator = inject(OfflineSimulatorInterceptor);
   private resilientApi = inject(ResilientApiService);
   private notificationService = inject(NotificationService);
 
   // Signals
-  private expanded = signal(false);
-  simulatorState = computed(() => this.offlineSimulator.getState());
-  cacheStats = computed(() => this.resilientApi.getCacheSize());
+  public expanded = signal(false);
+  simulatorState = computed(() => OfflineSimulatorControls.getState());
+  cacheStats = computed(() => ({ size: this.resilientApi.getCacheSize() }));
   circuitBreakerStats = computed(() => this.resilientApi.getCircuitBreakerStats());
 
   toggleExpanded(): void {
@@ -569,7 +568,7 @@ export class FailureToggleComponent {
 
   // Connection controls
   toggleOffline(): void {
-    this.offlineSimulator.setOffline(!this.simulatorState().offline);
+    OfflineSimulatorControls.setOffline(!this.simulatorState().offline);
     this.notificationService.info(
       'Connection Status',
       this.simulatorState().offline ? 'Offline mode enabled' : 'Online mode restored'
@@ -577,42 +576,42 @@ export class FailureToggleComponent {
   }
 
   resetConnection(): void {
-    this.offlineSimulator.reset();
+    OfflineSimulatorControls.reset();
     this.notificationService.success('Connection Reset', 'All simulations disabled');
   }
 
   updateLatency(value: number): void {
-    this.offlineSimulator.setLatency(value);
+    OfflineSimulatorControls.setLatency(value);
   }
 
   setLatency(ms: number): void {
-    this.offlineSimulator.setLatency(ms);
+    OfflineSimulatorControls.setLatency(ms);
   }
 
   updateFailureRate(value: number): void {
-    this.offlineSimulator.setFailureRate(value / 100);
+    OfflineSimulatorControls.setFailureRate(value / 100);
   }
 
   setFailureRate(rate: number): void {
-    this.offlineSimulator.setFailureRate(rate);
+    OfflineSimulatorControls.setFailureRate(rate);
   }
 
   // Presets
   applyPreset(preset: 'perfect' | 'slow' | 'unreliable' | 'terrible'): void {
     switch (preset) {
       case 'perfect':
-        this.offlineSimulator.setLatency(0);
-        this.offlineSimulator.setFailureRate(0);
-        this.offlineSimulator.setOffline(false);
+        OfflineSimulatorControls.setLatency(0);
+        OfflineSimulatorControls.setFailureRate(0);
+        OfflineSimulatorControls.setOffline(false);
         break;
       case 'slow':
-        this.offlineSimulator.enableSlowConnection();
+        OfflineSimulatorControls.enableSlowConnection();
         break;
       case 'unreliable':
-        this.offlineSimulator.enableUnreliableConnection();
+        OfflineSimulatorControls.enableUnreliableConnection();
         break;
       case 'terrible':
-        this.offlineSimulator.enableTerribleConnection();
+        OfflineSimulatorControls.enableTerribleConnection();
         break;
     }
 

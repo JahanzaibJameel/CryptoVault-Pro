@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Failure Demo - CryptoVault Pro</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+            line-height: 1.6;
+            background: #f8f9fa;
+        }
+        .demo-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        .instructions {
+            background: #fff;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .steps {
+            background: #e3f2fd;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+        .iframe-container {
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: none;
+        }
+        .highlight {
+            background: #fff3cd;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #ffc107;
+            margin: 1rem 0;
+        }
+        .step-number {
+            display: inline-block;
+            background: #2196f3;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            margin-right: 0.5rem;
+            font-weight: bold;
+        }
+        .controls {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+        button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0.25rem;
+        }
+        button:hover {
+            background: #1976d2;
+        }
+        button.danger {
+            background: #f44336;
+        }
+        button.danger:hover {
+            background: #d32f2f;
+        }
+        .recording-indicator {
+            background: #f44336;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <h1>🎬 Failure Demo Recording - CryptoVault Pro</h1>
+    
+    <div class="highlight">
+        <strong>📹 Recording Instructions:</strong> Use a screen recording tool to capture a 30-second demo showing the application's resilience when the API goes offline.
+    </div>
+
+    <div class="demo-container">
+        <div class="instructions">
+            <h2>🎯 Demo Script</h2>
+            
+            <div class="steps">
+                <h3>📋 Step-by-Step Recording</h3>
+                <ol>
+                    <li><span class="step-number">1</span>Start recording your screen</li>
+                    <li><span class="step-number">2</span>Navigate to the app in the iframe below</li>
+                    <li><span class="step-number">3</span>Click the 🔧 Debug button (bottom-right)</li>
+                    <li><span class="step-number">4</span>Toggle "Go Offline" to simulate API failure</li>
+                    <li><span class="step-number">5</span>Observe cached data still displaying</li>
+                    <li><span class="step-number">6</span>Try refreshing - see offline indicators</li>
+                    <li><span class="step-number">7</span>Toggle back "Go Online"</li>
+                    <li><span class="step-number">8</span>Watch data refresh and recovery</li>
+                    <li><span class="step-number">9</span>Stop recording</li>
+                </ol>
+            </div>
+
+            <div class="controls">
+                <h3>🎮 Quick Controls</h3>
+                <p>Use these buttons to control the demo iframe:</p>
+                <button onclick="reloadApp()">🔄 Reload App</button>
+                <button onclick="openInNewTab()">🔗 Open in New Tab</button>
+                <button class="danger" onclick="toggleFullscreen()">📺 Fullscreen</button>
+            </div>
+
+            <div class="highlight">
+                <strong>💡 Pro Tips:</strong>
+                <ul>
+                    <li>Highlight the debug panel when toggling</li>
+                    <li>Show the offline indicators in the UI</li>
+                    <li>Demonstrate smooth recovery when coming back online</li>
+                    <li>Keep recording under 30 seconds for GitHub</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="iframe-container">
+            <iframe src="http://localhost:8080" title="CryptoVault Pro Application" id="app-frame"></iframe>
+        </div>
+    </div>
+
+    <div class="instructions">
+        <h2>📤 After Recording</h2>
+        <ol>
+            <li>Save the recording as <code>docs/failure-demo.gif</code></li>
+            <li>Ensure file size is reasonable (< 10MB)</li>
+            <li>Test that the GIF plays correctly</li>
+            <li>Replace the existing failure-demo.gif file</li>
+        </ol>
+    </div>
+
+    <script>
+        function reloadApp() {
+            const iframe = document.getElementById('app-frame');
+            iframe.src = iframe.src;
+        }
+
+        function openInNewTab() {
+            window.open('http://localhost:8080', '_blank');
+        }
+
+        function toggleFullscreen() {
+            const iframe = document.getElementById('app-frame');
+            if (iframe.requestFullscreen) {
+                iframe.requestFullscreen();
+            } else if (iframe.webkitRequestFullscreen) {
+                iframe.webkitRequestFullscreen();
+            } else if (iframe.msRequestFullscreen) {
+                iframe.msRequestFullscreen();
+            }
+        }
+
+        // Add recording indicator
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🎬 Failure demo page loaded. Ready for recording!');
+        });
+    </script>
+</body>
+</html>

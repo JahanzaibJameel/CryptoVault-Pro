@@ -1,4 +1,5 @@
 import 'jest-preset-angular/setup-jest';
+import { jest } from '@jest/globals';
 
 // Mock IndexedDB for tests
 const indexedDBMock = {

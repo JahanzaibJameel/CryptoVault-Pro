@@ -1,8 +1,9 @@
-import { signal, computed, inject } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { Holding, Transaction, PortfolioState, AllocationItem } from '../../../domain/models';
 import { calculatePnL, calculateAllocation, calculateROI } from '../../../domain/services/portfolio-metrics';
 import { IndexedDbService } from '../../../infrastructure/persistence/indexed-db.service';
 
+@Injectable({ providedIn: 'root' })
 export class PortfolioStore {
   private indexedDb = inject(IndexedDbService);
   

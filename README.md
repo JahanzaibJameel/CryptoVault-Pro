@@ -2,6 +2,12 @@
 
 > A frontend system design case study: resilient, offline‑first crypto portfolio tracker built with Angular, domain‑driven design, and production‑grade engineering patterns.
 
+## 🌐 Live Demo
+
+**[https://crypto-vault-pro.netlify.app](https://crypto-vault-pro.netlify.app)**
+
+*Experience the production-ready application with full offline capabilities, real-time market data, and resilient error handling.*
+
 ## Why This Project Stands Out
 
 - **Framework‑agnostic domain logic** (zero Angular imports)

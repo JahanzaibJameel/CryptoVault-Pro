@@ -1,8 +1,8 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { PortfolioStore } from '../../application/portfolio/store/portfolio.store';
-import { SettingsStore } from '../../application/settings/store/settings.store';
+import { PortfolioStore } from '../../../application/portfolio/store';
+import { SettingsStore } from '../../../application/settings/store';
 import { ButtonComponent } from '../../shared/design-system/button/button.component';
 import { CardComponent } from '../../shared/design-system/card/card.component';
 import { SkeletonComponent } from '../../shared/design-system/skeleton/skeleton.component';
@@ -787,11 +787,11 @@ import { AllocationItem } from '../../../domain/models/portfolio-state.model';
   `]
 })
 export class PortfolioComponent implements OnInit {
-  portfolioStore = inject(PortfolioStore);
-  settingsStore = inject(SettingsStore);
+  portfolioStore: PortfolioStore = inject(PortfolioStore);
+  settingsStore: SettingsStore = inject(SettingsStore);
 
   // Signals
-  private viewMode = signal<'cards' | 'table'>('cards');
+  viewMode = signal<'cards' | 'table'>('cards');
 
   // Computed properties
   holdings = this.portfolioStore.holdings;

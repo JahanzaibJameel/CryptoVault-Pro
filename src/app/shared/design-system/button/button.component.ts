@@ -10,7 +10,7 @@ export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   imports: [CommonModule],
   template: `
     <button
-      [class]="buttonClasses"
+      [class]="buttonClasses()"
       [disabled]="disabled || loading"
       [attr.aria-label]="ariaLabel"
       [attr.aria-describedby]="ariaDescribedBy"

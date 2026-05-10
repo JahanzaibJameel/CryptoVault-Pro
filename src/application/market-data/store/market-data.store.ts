@@ -1,7 +1,8 @@
-import { signal, computed, inject } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { Coin } from '../../../domain/models';
 import { CoinGeckoService } from '../../../infrastructure/api/coingecko.service';
 
+@Injectable({ providedIn: 'root' })
 export class MarketDataStore {
   private coinGecko = inject(CoinGeckoService);
   
@@ -24,99 +25,97 @@ export class MarketDataStore {
       .slice(0, 50)
   );
 
-  async fetchTopCoins(currency = 'usd'): Promise<void> {
-    try {
+  fetchTopCoins(currency = 'usd'): void {
       this.loadingState.update(state => new Set(state).add('top'));
       this.errorState.update(errors => ({ ...errors, top: '' }));
       
-      const coins = await this.coinGecko.getTopCoins(currency);
-      
-      this.state.update(current => {
-        const newState = { ...current };
-        coins.forEach(coin => {
-          newState[coin.id] = coin;
+      this.coinGecko.getTopCoins(currency).subscribe({
+        next: (coins: Coin[]) => {
+          this.state.update(current => {
+            const newState = { ...current };
+            coins.forEach((coin: Coin) => {
+              newState[coin.id] = coin;
+            });
+            return newState;
+          });
+          
+          this.lastUpdated.update(current => ({
+            ...current,
+            top: Date.now(),
+          }));
+          
+          this.loadingState.update(state => {
+            const newSet = new Set(state);
+            newSet.delete('top');
+            return newSet;
+          });
+        },
+        error: (error) => {
+          this.errorState.update(errors => ({
+            ...errors,
+            top: error.message || 'Failed to fetch top coins',
+          }));
+          this.loadingState.update(state => {
+            const newSet = new Set(state);
+            newSet.delete('top');
+            return newSet;
+          });
+        }
+      });
+  }
+
+  fetchCoinDetail(coinId: string, currency = 'usd'): void {
+    this.loadingState.update(state => new Set(state).add(coinId));
+    this.errorState.update(errors => ({ ...errors, [coinId]: '' }));
+    
+    this.coinGecko.getCoinDetail(coinId).subscribe({
+      next: (coin: Coin) => {
+        this.state.update(current => ({
+          ...current,
+          [coinId]: coin,
+        }));
+        
+        this.lastUpdated.update(current => ({
+          ...current,
+          [coinId]: Date.now(),
+        }));
+        
+        this.loadingState.update(state => {
+          const newSet = new Set(state);
+          newSet.delete(coinId);
+          return newSet;
         });
-        return newState;
-      });
-      
-      this.lastUpdated.update(current => ({
-        ...current,
-        top: Date.now(),
-      }));
-      
-    } catch (error) {
-      this.errorState.update(errors => ({
-        ...errors,
-        top: error instanceof Error ? error.message : 'Failed to fetch top coins',
-      }));
-      throw error;
-    } finally {
-      this.loadingState.update(state => {
-        const newState = new Set(state);
-        newState.delete('top');
-        return newState;
-      });
-    }
+      },
+      error: (error) => {
+        this.errorState.update(errors => ({
+          ...errors,
+          [coinId]: error.message || 'Failed to fetch coin detail',
+        }));
+        this.loadingState.update(state => {
+          const newSet = new Set(state);
+          newSet.delete(coinId);
+          return newSet;
+        });
+      }
+    });
   }
 
-  async fetchCoinDetail(coinId: string): Promise<void> {
-    if (this.loadingState().has(coinId)) {
-      return; // Already loading
-    }
-
-    try {
-      this.loadingState.update(state => new Set(state).add(coinId));
-      this.errorState.update(errors => ({ ...errors, [coinId]: '' }));
-      
-      const coin = await this.coinGecko.getCoinDetail(coinId);
-      
-      this.state.update(current => ({
-        ...current,
-        [coinId]: coin,
-      }));
-      
-      this.lastUpdated.update(current => ({
-        ...current,
-        [coinId]: Date.now(),
-      }));
-      
-    } catch (error) {
-      this.errorState.update(errors => ({
-        ...errors,
-        [coinId]: error instanceof Error ? error.message : `Failed to fetch ${coinId}`,
-      }));
-      throw error;
-    } finally {
-      this.loadingState.update(state => {
-        const newState = new Set(state);
-        newState.delete(coinId);
-        return newState;
-      });
-    }
-  }
-
-  async refreshPrices(currency = 'usd'): Promise<void> {
+  refreshPrices(currency = 'usd'): void {
     const coinIds = Object.keys(this.state());
     if (coinIds.length === 0) {
       return this.fetchTopCoins(currency);
     }
 
-    try {
-      this.loadingState.update(state => new Set(state).add('refresh'));
-      
-      // Fetch updated prices for all tracked coins
-      await this.fetchTopCoins(currency);
-      
-    } catch (error) {
-      console.error('Failed to refresh prices:', error);
-      throw error;
-    } finally {
-      this.loadingState.update(state => {
-        const newState = new Set(state);
-        newState.delete('refresh');
-        return newState;
-      });
-    }
+    this.loadingState.update(state => new Set(state).add('refresh'));
+    
+    // Fetch updated prices for all tracked coins
+    this.fetchTopCoins(currency);
+    
+    this.loadingState.update(state => {
+      const newState = new Set(state);
+      newState.delete('refresh');
+      return newState;
+    });
   }
 
   updatePrices(prices: Record<string, number>) {

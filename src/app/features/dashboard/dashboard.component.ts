@@ -1,9 +1,9 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { MarketDataStore } from '../../application/market-data/store/market-data.store';
-import { WatchlistStore } from '../../application/watchlist/store/watchlist.store';
-import { SettingsStore } from '../../application/settings/store/settings.store';
+import { MarketDataStore } from '../../../application/market-data/store';
+import { WatchlistStore } from '../../../application/watchlist/store';
+import { SettingsStore } from '../../../application/settings/store';
 import { ButtonComponent } from '../../shared/design-system/button/button.component';
 import { CardComponent } from '../../shared/design-system/card/card.component';
 import { SkeletonComponent } from '../../shared/design-system/skeleton/skeleton.component';
@@ -573,13 +573,13 @@ import { Coin } from '../../../domain/models/coin.model';
   `]
 })
 export class DashboardComponent implements OnInit {
-  private marketDataStore = inject(MarketDataStore);
-  private watchlistStore = inject(WatchlistStore);
-  private settingsStore = inject(SettingsStore);
+  private marketDataStore: MarketDataStore = inject(MarketDataStore);
+  private watchlistStore: WatchlistStore = inject(WatchlistStore);
+  private settingsStore: SettingsStore = inject(SettingsStore);
 
   // Signals
-  private viewMode = signal<'grid' | 'list'>('grid');
-  private globalMarketData = signal({
+  viewMode = signal<'grid' | 'list'>('grid');
+  globalMarketData = signal({
     totalMarketCap: 0,
     totalVolume24h: 0,
     marketCapChange24h: 0
@@ -590,7 +590,7 @@ export class DashboardComponent implements OnInit {
   isLoading = this.marketDataStore.isLoading();
   watchlistCoins = computed(() => {
     const watchlistIds = this.watchlistStore.coins();
-    return this.topCoins().filter(coin => watchlistIds.includes(coin.id));
+    return this.topCoins().filter((coin: Coin) => watchlistIds.includes(coin.id));
   });
   currency = this.settingsStore.currency;
 

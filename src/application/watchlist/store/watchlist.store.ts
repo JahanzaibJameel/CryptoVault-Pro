@@ -1,6 +1,7 @@
-import { signal, computed, inject } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { IndexedDbService } from '../../../infrastructure/persistence/indexed-db.service';
 
+@Injectable({ providedIn: 'root' })
 export class WatchlistStore {
   private indexedDb = inject(IndexedDbService);
   

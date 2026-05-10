@@ -2,7 +2,15 @@
   "name": "crypto-vault-pro",
   "version": "1.0.0",
   "description": "A frontend system design case study: resilient, offline‑first crypto portfolio tracker built with Angular, domain‑driven design, and production‑grade engineering patterns.",
-  "keywords": ["angular", "cryptocurrency", "portfolio", "typescript", "pwa", "offline-first", "resilience"],
+  "keywords": [
+    "angular",
+    "cryptocurrency",
+    "portfolio",
+    "typescript",
+    "pwa",
+    "offline-first",
+    "resilience"
+  ],
   "author": "Your Name",
   "license": "MIT",
   "repository": {
@@ -74,7 +82,8 @@
     "husky": "^8.0.3",
     "jasmine-core": "~5.1.0",
     "jest": "^30.4.1",
-    "jest-preset-angular": "^14.2.2",
+    "jest-environment-jsdom": "^30.4.1",
+    "jest-preset-angular": "^16.1.5",
     "lint-staged": "^15.2.0",
     "prettier": "^3.8.1",
     "rimraf": "^5.0.5",
@@ -99,7 +108,9 @@
   },
   "jest": {
     "preset": "jest-preset-angular",
-    "setupFilesAfterEnv": ["src/setup-jest.ts"],
+    "setupFilesAfterEnv": [
+      "src/setup-jest.ts"
+    ],
     "testMatch": [
       "**/__tests__/**/*.+(ts|tsx|js)",
       "**/*.(test|spec).+(ts|tsx|js)"
