@@ -1,0 +1,15 @@
+# Placeholder for Failure Simulation Demo GIF
+# This file should be replaced with actual GIF showing:
+# 1. App loads with live prices
+# 2. Toggle API Offline → banner appears, data falls back to cache
+# 3. Add a transaction while offline → it persists locally
+# 4. Toggle API Online → banner disappears, prices refresh
+
+# To generate:
+# 1. Run `ng serve`
+# 2. Open browser and navigate to app
+# 3. Open debug panel (bottom-right corner)
+# 4. Use screen recorder (OBS, QuickTime, or browser recorder)
+# 5. Record the sequence above (30 seconds max)
+# 6. Convert to GIF (<2MB) or upload to YouTube as unlisted
+# 7. Replace this placeholder with the actual file

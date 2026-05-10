@@ -1,0 +1,129 @@
+{
+  "name": "crypto-vault-pro",
+  "version": "1.0.0",
+  "description": "A frontend system design case study: resilient, offline‑first crypto portfolio tracker built with Angular, domain‑driven design, and production‑grade engineering patterns.",
+  "keywords": ["angular", "cryptocurrency", "portfolio", "typescript", "pwa", "offline-first", "resilience"],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/crypto-vault-pro.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/crypto-vault-pro/issues"
+  },
+  "homepage": "https://crypto-vault-pro.netlify.app",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "start:ssl": "ng serve --ssl",
+    "build": "ng build",
+    "build:production": "ng build --configuration production",
+    "build:analyze": "ng build --stats-json && npx webpack-bundle-analyzer dist/crypto-vault-pro/stats.json",
+    "watch": "ng build --watch",
+    "test": "jest",
+    "test:unit": "jest --testPathPattern=src/**/*.spec.ts",
+    "test:integration": "jest --testPathPattern=src/**/*.integration.spec.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:coverage": "jest --coverage",
+    "test:watch": "jest --watch",
+    "test:ci": "jest --watchAll=false --coverage --ci",
+    "lighthouse": "lhci autorun",
+    "lighthouse:ci": "lhci autorun --upload.target=temporary-public-storage",
+    "lint": "ng lint",
+    "lint:fix": "ng lint --fix",
+    "format": "prettier --write \"src/**/*.{ts,html,scss,css,json}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,html,scss,css,json}\"",
+    "type-check": "tsc --noEmit",
+    "analyze:bundle": "npx webpack-bundle-analyzer dist/crypto-vault-pro/stats.json",
+    "clean": "rimraf dist coverage",
+    "precommit": "lint-staged",
+    "prepare": "husky install"
+  },
+  "private": true,
+  "dependencies": {
+    "@angular/animations": "^21.2.0",
+    "@angular/cdk": "^21.2.10",
+    "@angular/common": "^21.2.0",
+    "@angular/compiler": "^21.2.0",
+    "@angular/core": "^21.2.0",
+    "@angular/forms": "^21.2.0",
+    "@angular/platform-browser": "^21.2.0",
+    "@angular/platform-browser-dynamic": "^21.2.0",
+    "@angular/router": "^21.2.0",
+    "@angular/service-worker": "^21.2.12",
+    "@angular/ssr": "^21.2.0",
+    "idb": "^8.0.3",
+    "lightweight-charts": "^5.2.0",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0",
+    "zone.js": "~0.13.0"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^21.2.10",
+    "@angular/cli": "^21.2.10",
+    "@angular/compiler-cli": "^21.2.0",
+    "@playwright/test": "^1.40.0",
+    "@types/jasmine": "~5.1.0",
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "eslint-config-prettier": "^9.0.0",
+    "husky": "^8.0.3",
+    "jasmine-core": "~5.1.0",
+    "jest": "^30.4.1",
+    "jest-preset-angular": "^14.2.2",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.8.1",
+    "rimraf": "^5.0.5",
+    "ts-node": "~10.9.0",
+    "typescript": "~5.9.2"
+  },
+  "browserslist": [
+    "Chrome >= 120",
+    "Firefox >= 120",
+    "Safari >= 16",
+    "Edge >= 120"
+  ],
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "lint-staged": {
+    "src/**/*.{ts,html,scss,css,json}": [
+      "prettier --write",
+      "eslint --fix"
+    ]
+  },
+  "jest": {
+    "preset": "jest-preset-angular",
+    "setupFilesAfterEnv": ["src/setup-jest.ts"],
+    "testMatch": [
+      "**/__tests__/**/*.+(ts|tsx|js)",
+      "**/*.(test|spec).+(ts|tsx|js)"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.{ts,tsx}",
+      "!src/**/*.d.ts",
+      "!src/**/*.spec.ts",
+      "!src/**/*.test.ts",
+      "!src/**/*.integration.spec.ts"
+    ],
+    "coverageDirectory": "coverage",
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "html"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 80,
+        "functions": 80,
+        "lines": 80,
+        "statements": 80
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+# Placeholder for Lighthouse Performance Screenshot
+# This file should be replaced with actual screenshot showing:
+# - Performance score ≥ 95
+# - Accessibility score = 100
+# - PWA installable
+# - Best practices score ≥ 90
+
+# To generate:
+# 1. Run `ng build --configuration production`
+# 2. Serve the dist folder locally
+# 3. Open Chrome DevTools → Lighthouse
+# 4. Run analysis and screenshot the results
+# 5. Replace this placeholder with the actual screenshot
