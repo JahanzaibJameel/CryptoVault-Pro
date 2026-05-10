@@ -1,0 +1,20 @@
+{
+  "name": "CryptoVault Pro",
+  "short_name": "CryptoVault",
+  "description": "Resilient offline-first crypto portfolio tracker",
+  "theme_color": "#1976d2",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "orientation": "portrait",
+  "start_url": "/",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "32x32",
+      "type": "image/x-icon"
+    }
+  ],
+  "categories": ["finance", "productivity"],
+  "lang": "en"
+}
