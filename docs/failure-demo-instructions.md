@@ -4,7 +4,7 @@
 
 ### Setup
 1. Open Chrome browser
-2. Navigate to: `http://localhost:4201`
+2. Navigate to: `http://localhost:4200`
 3. Open browser console (F12) to see debug logs
 4. Position browser window to capture both dashboard and debug panel
 

@@ -60,7 +60,7 @@
 
 ## Failure Simulation
 
-A hidden debug panel (only in dev) lets you toggle API offline, clear storage, and test resilience in real time. [🎬 Failure Demo Instructions](docs/failure-demo-instructions.md) (Record 30-sec demo on localhost:4201)
+A hidden debug panel (only in dev) lets you toggle API offline, clear storage, and test resilience in real time. [🎬 Failure Demo Instructions](docs/failure-demo-instructions.md) (Record 30-sec demo on localhost:4200)
 
 ## Architecture Decision Records
 
@@ -77,7 +77,7 @@ npm install
 ng serve
 ```
 
-Navigate to `http://localhost:4200`
+Navigate to `http://localhost:4200` (or any available port)
 
 ## Tech Stack
 
@@ -233,7 +233,7 @@ src/
 npm run test
 
 # E2E tests
-npm run e2e
+npm run test:e2e
 
 # Test coverage
 npm run test:coverage
@@ -252,13 +252,13 @@ npm run test:coverage
 
 ### Lighthouse Scores
 
-[📊 Lighthouse Instructions](docs/lighthouse-instructions.md) (Run on localhost:4201)
+[📊 Lighthouse Instructions](docs/lighthouse-instructions.md) (Run on localhost:4200)
 
 ### Bundle Analysis
 
 ```bash
 ng build --stats-json
-npx webpack-bundle-analyzer dist/crypto-vault-pro/stats.json
+npx webpack-bundle-analyzer dist/crypto-vault-pro/browser/stats.json
 ```
 
 ### Lighthouse CI
@@ -281,8 +281,8 @@ npm run lighthouse
 ### Netlify (Recommended)
 
 1. Connect your GitHub repository
-2. Build command: `ng build`
-3. Publish directory: `dist/crypto-vault-pro`
+2. Build command: `ng build --configuration production`
+3. Publish directory: `dist/crypto-vault-pro/browser`
 4. Add environment variables if needed
 
 ### Vercel Alternative
@@ -306,13 +306,13 @@ NG_APP_COINGECKO_API_KEY=your_api_key
 
 ```bash
 # Start dev server
-ng serve
+npm start
 
 # Start with SSL (for PWA testing)
-ng serve --ssl
+npm run start:ssl
 
 # Build for production
-ng build --configuration production
+npm run build
 ```
 
 ### Code Quality

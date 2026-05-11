@@ -3,7 +3,7 @@
 ## Steps to Generate Lighthouse Screenshot
 
 1. Open Chrome browser
-2. Navigate to: `http://localhost:4201`
+2. Navigate to: `http://localhost:4200`
 3. Wait for the page to fully load (all coins loaded, no loading spinners)
 4. Open Chrome DevTools (F12 or Ctrl+Shift+I)
 5. Go to the **Lighthouse** tab
@@ -30,7 +30,7 @@ Based on our optimizations, you should see:
 If you have Lighthouse CLI installed:
 
 ```bash
-npx lighthouse http://localhost:4201 \
+npx lighthouse http://localhost:4200 \
   --output=html \
   --output=json \
   --output-path=./lighthouse-report \
