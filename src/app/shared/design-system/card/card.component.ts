@@ -1,7 +1,7 @@
 import { Component, Input, HostBinding } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-export type CardVariant = 'elevated' | 'outlined' | 'filled';
+export type CardVariant = 'elevated' | 'outlined' | 'filled' | 'glass';
 export type CardSize = 'sm' | 'md' | 'lg';
 
 @Component({
@@ -32,80 +32,127 @@ export type CardSize = 'sm' | 'md' | 'lg';
 
     .card {
       border-radius: var(--radius-lg);
-      transition: all 0.2s ease-in-out;
+      transition: all var(--transition-normal);
       overflow: hidden;
       position: relative;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    /* Glass effect overlay */
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+      border-radius: inherit;
+      opacity: 0;
+      transition: opacity var(--transition-fast);
+      pointer-events: none;
+    }
+
+    .card:hover::before {
+      opacity: 1;
     }
 
     .card-header {
-      padding: var(--spacing-lg) var(--spacing-lg) var(--spacing-md);
-      border-bottom: 1px solid var(--color-border-default);
-      background-color: var(--color-background-elevated);
+      padding: var(--spacing-6) var(--spacing-6) var(--spacing-4);
+      border-bottom: 1px solid var(--color-border);
+      background: rgba(255, 255, 255, 0.02);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
     }
 
     .card-body {
-      padding: var(--spacing-lg);
+      padding: var(--spacing-6);
       flex: 1;
+      position: relative;
+      z-index: 1;
     }
 
     .card-footer {
-      padding: var(--spacing-md) var(--spacing-lg) var(--spacing-lg);
-      border-top: 1px solid var(--color-border-default);
-      background-color: var(--color-background-elevated);
+      padding: var(--spacing-4) var(--spacing-6) var(--spacing-6);
+      border-top: 1px solid var(--color-border);
+      background: rgba(255, 255, 255, 0.02);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
     }
 
     /* Variants */
     .elevated {
-      background-color: var(--color-background-paper);
-      box-shadow: var(--shadow-md);
-      border: 1px solid var(--color-border-light);
+      background: var(--color-bg-glass);
+      border: 1px solid var(--color-border-glass);
+      box-shadow: var(--shadow-glass);
     }
 
     .elevated:hover {
-      box-shadow: var(--shadow-lg);
-      transform: translateY(-1px);
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.12);
+      box-shadow: var(--shadow-glass-hover);
+      transform: translateY(-4px);
     }
 
     .outlined {
-      background-color: var(--color-background-paper);
-      border: 1px solid var(--color-border-default);
+      background: var(--color-bg-glass);
+      border: 1px solid var(--color-border);
       box-shadow: none;
     }
 
     .outlined:hover {
-      border-color: var(--color-border-dark);
-      box-shadow: var(--shadow-sm);
+      background: rgba(255, 255, 255, 0.06);
+      border-color: var(--color-primary);
+      box-shadow: 0 0 20px rgba(0, 194, 255, 0.2);
+      transform: translateY(-2px);
     }
 
-    .filled {
-      background-color: var(--color-background-elevated);
-      border: none;
-      box-shadow: none;
+    .glass {
+      background: var(--color-bg-glass);
+      border: 1px solid var(--color-border-glass);
+      box-shadow: var(--shadow-glass);
     }
 
-    .filled:hover {
-      background-color: var(--color-background-default);
+    .glass:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.16);
+      box-shadow: var(--shadow-glass-hover);
+      transform: translateY(-2px);
+    }
+
+    .neon {
+      background: var(--color-bg-glass);
+      border: 1px solid var(--color-primary);
+      box-shadow: 0 4px 16px rgba(0, 194, 255, 0.3);
+    }
+
+    .neon:hover {
+      background: rgba(0, 194, 255, 0.05);
+      border-color: var(--color-primary);
+      box-shadow: 0 8px 32px rgba(0, 194, 255, 0.5);
+      transform: translateY(-4px);
     }
 
     /* Sizes */
     .sm .card-header,
     .sm .card-body,
     .sm .card-footer {
-      padding: var(--spacing-sm) var(--spacing-md);
+      padding: var(--spacing-3) var(--spacing-4);
     }
 
     .sm .card-body {
-      padding: var(--spacing-md);
+      padding: var(--spacing-4);
     }
 
     .lg .card-header,
     .lg .card-body,
     .lg .card-footer {
-      padding: var(--spacing-xl) var(--spacing-2xl);
+      padding: var(--spacing-8) var(--spacing-8);
     }
 
     .lg .card-body {
-      padding: var(--spacing-xl);
+      padding: var(--spacing-8);
     }
 
     /* Clickable card */
@@ -114,11 +161,11 @@ export type CardSize = 'sm' | 'md' | 'lg';
     }
 
     .clickable:hover {
-      transform: translateY(-2px);
+      transform: translateY(-4px);
     }
 
     .clickable:active {
-      transform: translateY(0);
+      transform: translateY(-2px);
     }
 
     /* Loading state */
@@ -134,47 +181,69 @@ export type CardSize = 'sm' | 'md' | 'lg';
       left: 0;
       right: 0;
       bottom: 0;
-      background-color: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(1px);
+      background: rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+      border-radius: inherit;
+      z-index: 10;
     }
 
-    /* Dark theme */
-    [data-theme="dark"] .elevated {
-      background-color: var(--color-background-paper);
-      box-shadow: var(--shadow-dark-md);
-      border-color: var(--color-border-dark);
+    /* Accent border variants */
+    .accent-primary {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 1px rgba(0, 194, 255, 0.2);
     }
 
-    [data-theme="dark"] .elevated:hover {
-      box-shadow: var(--shadow-dark-lg);
+    .accent-success {
+      border-color: var(--color-success);
+      box-shadow: 0 0 0 1px rgba(0, 227, 150, 0.2);
     }
 
-    [data-theme="dark"] .outlined {
-      background-color: var(--color-background-paper);
-      border-color: var(--color-border-default);
+    .accent-danger {
+      border-color: var(--color-danger);
+      box-shadow: 0 0 0 1px rgba(255, 77, 106, 0.2);
     }
 
-    [data-theme="dark"] .outlined:hover {
-      border-color: var(--color-border-light);
-      box-shadow: var(--shadow-dark-sm);
+    .accent-warning {
+      border-color: var(--color-warning);
+      box-shadow: 0 0 0 1px rgba(255, 189, 0, 0.2);
     }
 
-    [data-theme="dark"] .filled {
-      background-color: var(--color-background-elevated);
+    /* Interactive states */
+    .interactive {
+      cursor: pointer;
+      transition: all var(--transition-normal);
     }
 
-    [data-theme="dark"] .filled:hover {
-      background-color: var(--color-background-paper);
+    .interactive:hover {
+      transform: translateY(-2px) scale(1.01);
     }
 
-    [data-theme="dark"] .card-header,
-    [data-theme="dark"] .card-footer {
-      border-color: var(--color-border-dark);
-      background-color: var(--color-background-elevated);
+    .interactive:active {
+      transform: translateY(0) scale(0.99);
     }
 
-    [data-theme="dark"] .loading::after {
-      background-color: rgba(0, 0, 0, 0.1);
+    /* Content animations */
+    .card-body > *:first-child {
+      animation: fadeInUp 0.6s ease-out;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Glow effect on hover */
+    .glow-on-hover:hover {
+      box-shadow: 
+        var(--shadow-glass-hover),
+        0 0 30px rgba(0, 194, 255, 0.3);
     }
   `]
 })

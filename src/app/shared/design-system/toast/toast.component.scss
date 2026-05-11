@@ -1,11 +1,12 @@
+/* Cyber-Glass 2026 Toast Component */
 .toast-container {
   position: fixed;
-  top: 1rem;
-  right: 1rem;
-  z-index: 9999;
+  top: var(--spacing-4);
+  right: var(--spacing-4);
+  z-index: var(--z-toast);
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--spacing-3);
   max-width: 400px;
   pointer-events: none;
 }
@@ -13,17 +14,39 @@
 .toast {
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  gap: var(--spacing-3);
+  padding: var(--spacing-4);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-modal);
   pointer-events: all;
   cursor: pointer;
   transform: translateX(100%);
   opacity: 0;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-normal);
   border: 1px solid;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Glass shimmer effect */
+.toast::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+  pointer-events: none;
+}
+
+.toast:hover::before {
+  opacity: 1;
 }
 
 .toast-show {
@@ -31,28 +54,83 @@
   opacity: 1;
 }
 
+/* Progress bar */
+.toast::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: currentColor;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  animation: progress 5s linear forwards;
+  opacity: 0.6;
+}
+
+@keyframes progress {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+/* Toast Variants */
 .toast-success {
-  background-color: rgba(34, 197, 94, 0.95);
-  border-color: #22c55e;
-  color: white;
+  background: var(--color-bg-glass);
+  border: 1px solid rgba(0, 227, 150, 0.3);
+  color: var(--color-success);
+  box-shadow: 0 8px 32px rgba(0, 227, 150, 0.2);
+}
+
+.toast-success:hover {
+  background: rgba(0, 227, 150, 0.05);
+  border-color: rgba(0, 227, 150, 0.5);
+  box-shadow: 0 12px 48px rgba(0, 227, 150, 0.4);
+  transform: translateX(-4px);
 }
 
 .toast-error {
-  background-color: rgba(239, 68, 68, 0.95);
-  border-color: #ef4444;
-  color: white;
+  background: var(--color-bg-glass);
+  border: 1px solid rgba(255, 77, 106, 0.3);
+  color: var(--color-danger);
+  box-shadow: 0 8px 32px rgba(255, 77, 106, 0.2);
+}
+
+.toast-error:hover {
+  background: rgba(255, 77, 106, 0.05);
+  border-color: rgba(255, 77, 106, 0.5);
+  box-shadow: 0 12px 48px rgba(255, 77, 106, 0.4);
+  transform: translateX(-4px);
 }
 
 .toast-warning {
-  background-color: rgba(245, 158, 11, 0.95);
-  border-color: #f59e0b;
-  color: white;
+  background: var(--color-bg-glass);
+  border: 1px solid rgba(255, 189, 0, 0.3);
+  color: var(--color-warning);
+  box-shadow: 0 8px 32px rgba(255, 189, 0, 0.2);
+}
+
+.toast-warning:hover {
+  background: rgba(255, 189, 0, 0.05);
+  border-color: rgba(255, 189, 0, 0.5);
+  box-shadow: 0 12px 48px rgba(255, 189, 0, 0.4);
+  transform: translateX(-4px);
 }
 
 .toast-info {
-  background-color: rgba(59, 130, 246, 0.95);
-  border-color: #3b82f6;
-  color: white;
+  background: var(--color-bg-glass);
+  border: 1px solid rgba(0, 194, 255, 0.3);
+  color: var(--color-primary);
+  box-shadow: 0 8px 32px rgba(0, 194, 255, 0.2);
+}
+
+.toast-info:hover {
+  background: rgba(0, 194, 255, 0.05);
+  border-color: rgba(0, 194, 255, 0.5);
+  box-shadow: 0 12px 48px rgba(0, 194, 255, 0.4);
+  transform: translateX(-4px);
 }
 
 .toast-icon {
@@ -63,51 +141,112 @@
   width: 20px;
   height: 20px;
   margin-top: 2px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Icon glow effects */
+.toast-success .toast-icon {
+  filter: drop-shadow(0 0 4px rgba(0, 227, 150, 0.5));
+}
+
+.toast-error .toast-icon {
+  filter: drop-shadow(0 0 4px rgba(255, 77, 106, 0.5));
+}
+
+.toast-warning .toast-icon {
+  filter: drop-shadow(0 0 4px rgba(255, 189, 0, 0.5));
+}
+
+.toast-info .toast-icon {
+  filter: drop-shadow(0 0 4px rgba(0, 194, 255, 0.5));
 }
 
 .toast-content {
   flex: 1;
   min-width: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .toast-title {
+  font-family: var(--font-heading);
   font-weight: 600;
   font-size: 0.875rem;
   line-height: 1.25rem;
-  margin-bottom: 0.25rem;
+  margin-bottom: var(--spacing-1);
+  color: inherit;
 }
 
 .toast-message {
+  font-family: var(--font-primary);
   font-size: 0.813rem;
   line-height: 1.25rem;
-  opacity: 0.9;
+  opacity: 0.8;
+  color: inherit;
 }
 
 .toast-close {
   flex-shrink: 0;
-  background: none;
+  background: transparent;
   border: none;
   color: inherit;
   cursor: pointer;
-  padding: 0.25rem;
-  border-radius: 0.25rem;
+  padding: var(--spacing-1);
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.7;
-  transition: opacity 0.2s ease;
+  opacity: 0.6;
+  transition: all var(--transition-fast);
+  position: relative;
+  z-index: 1;
 }
 
 .toast-close:hover {
   opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
 }
 
-@media (max-width: 640px) {
+/* Slide animations */
+.toast-enter {
+  animation: slideInRight 0.4s ease-out forwards;
+}
+
+.toast-exit {
+  animation: slideOutRight 0.3s ease-in forwards;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
   .toast-container {
     top: auto;
-    bottom: 1rem;
-    right: 1rem;
-    left: 1rem;
+    bottom: var(--spacing-4);
+    right: var(--spacing-4);
+    left: var(--spacing-4);
     max-width: none;
   }
   
@@ -118,4 +257,37 @@
   .toast-show {
     transform: translateY(0);
   }
+
+  .toast:hover {
+    transform: translateY(-4px);
+  }
 }
+
+@media (max-width: 480px) {
+  .toast-container {
+    top: auto;
+    bottom: var(--spacing-3);
+    right: var(--spacing-3);
+    left: var(--spacing-3);
+    gap: var(--spacing-2);
+  }
+  
+  .toast {
+    padding: var(--spacing-3);
+    gap: var(--spacing-2);
+  }
+  
+  .toast-title {
+    font-size: 0.813rem;
+  }
+  
+  .toast-message {
+    font-size: 0.75rem;
+  }
+}
+
+/* Stacking context for multiple toasts */
+.toast-container .toast:nth-child(1) { z-index: var(--z-toast); }
+.toast-container .toast:nth-child(2) { z-index: calc(var(--z-toast) - 1); }
+.toast-container .toast:nth-child(3) { z-index: calc(var(--z-toast) - 2); }
+.toast-container .toast:nth-child(4) { z-index: calc(var(--z-toast) - 3); }

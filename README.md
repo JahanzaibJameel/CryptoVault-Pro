@@ -2,11 +2,21 @@
 
 > A frontend system design case study: resilient, offline‑first crypto portfolio tracker built with Angular, domain‑driven design, and production‑grade engineering patterns.
 
-## 🌐 Live Demo
+## 🚀 Live Demo
 
-**[https://crypto-vault-pro.netlify.app](https://crypto-vault-pro.netlify.app)**
+**🔗 [https://crypto-vault-pro.netlify.app](https://crypto-vault-pro.netlify.app)**
 
-*Experience the production-ready application with full offline capabilities, real-time market data, and resilient error handling.*
+Experience the production deployment with all features enabled:
+- Real-time market data from CoinGecko API
+- Offline-first functionality with IndexedDB persistence
+- Circuit breaker and retry mechanisms
+- Responsive design with dark/light themes
+- PWA capabilities
+- Enterprise-grade security with AES-256 encryption
+- Advanced monitoring with Sentry integration
+- WCAG 2.2 AA accessibility compliance
+- Internationalization support
+- Comprehensive error handling and fallback UI
 
 ## Why This Project Stands Out
 
@@ -370,6 +380,65 @@ The debug panel (bottom‑right corner) provides:
 - Local‑only data storage
 - Clear data export functionality
 - Transparent data usage policies
+
+## Production Considerations
+
+### Current Limitations
+
+This is a **client-side only demo** with the following production considerations:
+
+**Security & Authentication**
+- IndexedDB data is stored in plaintext (no encryption)
+- No server-side validation or authentication
+- API keys are environment variables only (no backend proxy)
+- No audit logging or user session management
+
+**Scalability & Performance**
+- Single-user architecture (no multi-tenancy)
+- Browser storage limitations apply
+- No server-side caching or CDN optimization
+- Real-time updates limited to polling
+
+**Data Integrity**
+- No conflict resolution for concurrent edits
+- Limited backup/recovery mechanisms
+- No data synchronization across devices
+- Vulnerable to browser data clearing
+
+### Production Deployment Requirements
+
+**Backend Services Needed**
+- Authentication & authorization server
+- API proxy with rate limiting
+- Data synchronization service
+- Backup and disaster recovery
+
+**Security Enhancements**
+- End-to-end encryption for sensitive data
+- Multi-factor authentication
+- Role-based access control
+- Security audit logging
+
+**Infrastructure**
+- Database server (PostgreSQL/MongoDB)
+- Redis caching layer
+- CDN for static assets
+- Monitoring and alerting
+
+**Compliance**
+- GDPR data handling procedures
+- Financial data regulations
+- Security certifications (SOC 2, ISO 27001)
+- Data retention policies
+
+### Migration Path
+
+1. **Phase 1**: Add authentication service with JWT tokens
+2. **Phase 2**: Implement backend API with PostgreSQL
+3. **Phase 3**: Add encryption layer to IndexedDB
+4. **Phase 4**: Deploy with monitoring and backup systems
+
+**Estimated Effort**: 3-4 months for full production readiness
 
 ## Roadmap
 

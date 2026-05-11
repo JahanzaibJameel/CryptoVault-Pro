@@ -1,15 +1,444 @@
+/* Cyber-Glass 2026 Watchlist Styles */
 .watchlist-container {
-  padding: 2rem;
+  padding: var(--spacing-6);
   max-width: 1200px;
   margin: 0 auto;
+  min-height: 100vh;
 }
 
-h1 {
-  color: #1f2937;
-  margin-bottom: 1rem;
+.watchlist-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-8);
+  flex-wrap: wrap;
+  gap: var(--spacing-6);
 }
 
-p {
-  color: #6b7280;
-  line-height: 1.6;
+.header-content {
+  flex: 1;
+}
+
+.watchlist-title {
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-2) 0;
+  line-height: 1.2;
+}
+
+.watchlist-subtitle {
+  font-size: 1rem;
+  margin: 0;
+  opacity: 0.8;
+}
+
+.watchlist-actions {
+  display: flex;
+  gap: var(--spacing-3);
+  align-items: center;
+}
+
+/* Loading State */
+.watchlist-loading {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--spacing-6);
+}
+
+.watchlist-skeleton {
+  margin-bottom: 0;
+}
+
+.skeleton-content {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  padding: var(--spacing-6);
+}
+
+.skeleton-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+/* Empty State */
+.empty-watchlist {
+  text-align: center;
+  padding: var(--spacing-10);
+}
+
+.empty-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-6);
+}
+
+.empty-icon {
+  width: 64px;
+  height: 64px;
+  color: var(--color-text-hint);
+  opacity: 0.5;
+  margin-bottom: var(--spacing-4);
+}
+
+.empty-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-3) 0;
+}
+
+.empty-description {
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+  margin: 0;
+  max-width: 400px;
+  opacity: 0.8;
+  line-height: 1.5;
+}
+
+/* Watchlist Card */
+.watchlist-card {
+  margin-bottom: var(--spacing-8);
+}
+
+.watchlist-card [slot="header"] {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-6);
+}
+
+.watchlist-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.watchlist-count {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.drag-hint {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-glass);
+  border: 1px solid var(--color-border-glass);
+  padding: var(--spacing-2) var(--spacing-3);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: all var(--transition-fast);
+}
+
+.drag-hint:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--color-primary);
+}
+
+/* Virtual Scroll Viewport */
+.watchlist-viewport {
+  height: 600px;
+  max-height: 70vh;
+  border-radius: var(--radius-lg);
+}
+
+.watchlist-list {
+  padding: var(--spacing-3);
+}
+
+/* Watchlist Items */
+.watchlist-item {
+  margin-bottom: var(--spacing-4);
+  background: var(--color-bg-glass);
+  border: 1px solid var(--color-border-glass);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-normal);
+  cursor: move;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  position: relative;
+  overflow: hidden;
+}
+
+.watchlist-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+  pointer-events: none;
+}
+
+.watchlist-item:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-primary);
+  box-shadow: 0 8px 32px rgba(0, 194, 255, 0.2);
+}
+
+.watchlist-item:hover::before {
+  opacity: 1;
+}
+
+/* Drag and Drop */
+.cdk-drag-preview {
+  box-shadow: var(--shadow-modal);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-glass);
+  border: 1px solid var(--color-primary);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.cdk-drag-placeholder {
+  opacity: 0.4;
+  background: rgba(0, 194, 255, 0.1);
+  border: 2px dashed var(--color-primary);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-4);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Coin Content */
+.coin-content {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  padding: var(--spacing-5);
+}
+
+.coin-drag-handle {
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-2);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.coin-drag-handle:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--color-primary);
+}
+
+.coin-drag-handle:active {
+  cursor: grabbing;
+}
+
+.drag-icon {
+  font-size: 1.25rem;
+  color: var(--color-text-hint);
+  font-weight: 600;
+  line-height: 1;
+  opacity: 0.6;
+}
+
+.coin-image {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  border: 2px solid var(--color-border);
+}
+
+.coin-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.coin-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.coin-symbol {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.coin-price {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  align-items: flex-end;
+  min-width: 140px;
+}
+
+.current-price {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.2;
+}
+
+.price-change {
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--radius-sm);
+}
+
+.price-change.positive {
+  color: var(--color-success);
+  background: rgba(0, 227, 150, 0.1);
+  border: 1px solid rgba(0, 227, 150, 0.2);
+}
+
+.price-change.negative {
+  color: var(--color-danger);
+  background: rgba(255, 77, 106, 0.1);
+  border: 1px solid rgba(255, 77, 106, 0.2);
+}
+
+.coin-actions {
+  display: flex;
+  gap: var(--spacing-3);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .watchlist-loading {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .watchlist-container {
+    padding: var(--spacing-4);
+  }
+
+  .watchlist-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-4);
+  }
+
+  .watchlist-title {
+    font-size: 2rem;
+  }
+
+  .watchlist-viewport {
+    height: 500px;
+  }
+
+  .coin-content {
+    padding: var(--spacing-4);
+    gap: var(--spacing-3);
+  }
+
+  .coin-image {
+    width: 40px;
+    height: 40px;
+  }
+
+  .coin-price {
+    min-width: 120px;
+  }
+
+  .drag-hint {
+    display: none;
+  }
+
+  .watchlist-loading {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .watchlist-title {
+    font-size: 1.75rem;
+  }
+
+  .coin-content {
+    flex-wrap: wrap;
+    gap: var(--spacing-2);
+  }
+
+  .coin-info {
+    flex: 1 0 100%;
+    margin-top: var(--spacing-2);
+  }
+
+  .coin-price {
+    min-width: auto;
+    align-items: flex-start;
+  }
+
+  .coin-actions {
+    flex: 1 0 100%;
+    justify-content: center;
+    margin-top: var(--spacing-2);
+  }
+
+  .watchlist-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .watchlist-actions ui-button {
+    width: 100%;
+  }
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+/* Glass effects for cards */
+.glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+  pointer-events: none;
+}
+
+.glass-card:hover::before {
+  opacity: 1;
 }

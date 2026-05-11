@@ -4,47 +4,478 @@ on:
   push:
     branches: [ main, develop ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - production
+
+env:
+  NODE_VERSION: '20'
+  NODE_CACHE_DIR: ~/.npm
+  NG_CLI_ANALYTICS: false
 
 jobs:
-  test:
+  # Code Quality & Security
+  code-quality:
+    name: Code Quality & Security
     runs-on: ubuntu-latest
-    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.NODE_CACHE_DIR }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit
+
+      - name: Run ESLint
+        run: npm run lint
+        continue-on-error: false
+
+      - name: Run Prettier check
+        run: npm run format:check
+        continue-on-error: false
+
+      - name: Run type checking
+        run: npm run type-check
+        continue-on-error: false
+
+      - name: Run security audit
+        run: npm audit --audit-level=high
+        continue-on-error: false
+
+      - name: Run Snyk security scan
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        continue-on-error: false
+
+  # Unit & Integration Tests
+  test:
+    name: Unit & Integration Tests
+    runs-on: ubuntu-latest
+    needs: code-quality
     strategy:
       matrix:
-        node-version: [18.x]
-    
+        node-version: [18, 20]
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-        
-    - name: Install dependencies
-      run: npm ci
-      
-    - name: Run type checking
-      run: npm run type-check
-      
-    - name: Run linting
-      run: npm run lint
-      
-    - name: Run unit tests
-      run: npm run test:unit -- --coverage --watchAll=false
-      
-    - name: Run integration tests
-      run: npm run test:integration
-      
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./coverage/lcov.info
-        flags: unittests
-        name: codecov-umbrella
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.NODE_CACHE_DIR }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit
+
+      - name: Run unit tests
+        run: npm run test:unit
+        env:
+          NODE_OPTIONS: '--max-old-space-size=4096'
+
+      - name: Run integration tests
+        run: npm run test:integration
+        env:
+          NODE_OPTIONS: '--max-old-space-size=4096'
+
+      - name: Generate coverage report
+        run: npm run test:coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-${{ matrix.node-version }}
+          path: coverage/
+          retention-days: 30
+
+  # E2E Tests
+  e2e-test:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.NODE_CACHE_DIR }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Build application
+        run: npm run build:prod
+        env:
+          NODE_OPTIONS: '--max-old-space-size=4096'
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+        env:
+          NODE_OPTIONS: '--max-old-space-size=4096'
+
+      - name: Upload E2E test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-test-results
+          path: test-results/
+          retention-days: 30
+
+      - name: Upload E2E screenshots
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-screenshots
+          path: test-results/screenshots/
+          retention-days: 30
+
+      - name: Upload E2E videos
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-videos
+          path: test-results/videos/
+          retention-days: 30
+
+  # Performance Tests
+  performance-test:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    needs: e2e-test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.NODE_CACHE_DIR }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit
+
+      - name: Build application
+        run: npm run build:prod
+
+      - name: Run Lighthouse CI
+        run: |
+          npm install -g @lhci/cli@0.12.x
+          lhci autorun
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+          LHCI_BUILD_CONTEXT__CURRENT_BRANCH: ${{ github.ref_name }}
+          LHCI_BUILD_CONTEXT__GITHUB_REPO_SLUG: ${{ github.repository }}
+          LHCI_BUILD_CONTEXT__GITHUB_PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
+          LHCI_SERVER_BASE_URL: https://your-lhci-server.com
+          LHCI_SERVER_TOKEN: ${{ secrets.LHCI_SERVER_TOKEN }}
+
+      - name: Upload Lighthouse results
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-results
+          path: .lighthouseci/
+          retention-days: 30
+
+  # Build & Deploy
+  build-and-deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+    needs: [test, e2e-test]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    outputs:
+      deploy-url: ${{ steps.deploy.outputs.url }}
+      environment: ${{ steps.deploy.outputs.environment }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.NODE_CACHE_DIR }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit
+
+      - name: Build application
+        run: npm run build:prod
+        env:
+          NODE_OPTIONS: '--max-old-space-size=4096'
+          NODE_ENV: production
+
+      - name: Generate build info
+        id: build-info
+        run: |
+          echo "BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_OUTPUTS
+          echo "BUILD_COMMIT=${{ github.sha }}" >> $GITHUB_OUTPUTS
+          echo "BUILD_BRANCH=${{ github.ref_name }}" >> $GITHUB_OUTPUTS
+          echo "BUILD_NUMBER=${{ github.run_number }}" >> $GITHUB_OUTPUTS
+
+      - name: Create deployment package
+        run: |
+          tar -czf deploy-package.tar.gz \
+            dist/crypto-vault-pro/ \
+            netlify/ \
+            public/ \
+            netlify.toml \
+            _redirects
+
+      - name: Deploy to Netlify
+        id: deploy
+        uses: nwtgck/actions-netlify@v2.0
+        with:
+          publish-dir: ./
+          production-branch: main
+          production-deploy: ${{ github.ref == 'refs/heads/main' }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: "Deploy from GitHub Actions"
+          enable-pull-request-comment: true
+          enable-commit-comment: true
+          overwrites-pull-request-comment: true
+          netlify-config-path: ./netlify.toml
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+
+      - name: Create GitHub Release
+        if: github.ref == 'refs/heads/main'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ github.run_number }}
+          release_name: Release v${{ github.run_number }}
+          body: |
+            ## Changes
+            ${{ github.event.head_commit.message }}
+            
+            ## Build Information
+            - **Commit**: ${{ github.sha }}
+            - **Branch**: ${{ github.ref_name }}
+            - **Build**: #${{ github.run_number }}
+            - **Time**: ${{ steps.build-info.outputs.BUILD_TIME }}
+            
+            ## Deployment
+            - **Environment**: Production
+            - **URL**: ${{ steps.deploy.outputs.url }}
+          draft: false
+          prerelease: false
+
+      - name: Update deployment status
+        if: always()
+        uses: chrnorm/deployment-status@v2
+        with:
+          token: '${{ secrets.GITHUB_TOKEN }}'
+          environment-url: ${{ steps.deploy.outputs.url }}
+          environment: ${{ steps.deploy.outputs.environment }}
+
+  # Visual Regression Tests
+  visual-regression:
+    name: Visual Regression Tests
+    runs-on: ubuntu-latest
+    needs: build-and-deploy
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.NODE_CACHE_DIR }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit
+
+      - name: Build Storybook
+        run: npm run build-storybook
+
+      - name: Run visual regression tests
+        run: npm run test:visual
+        env:
+          CHROMIUM_PATH: $(npx playwright install chromium --dry-run | grep -oP '/.*/chromium-[^/]*' | head -1)
+
+      - name: Upload visual regression results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: visual-regression-results
+          path: visual-tests/results/
+          retention-days: 30
+
+  # Security Scanning
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    needs: build-and-deploy
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Run OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.10.0
+        with:
+          target: ${{ steps.deploy.outputs.url }}
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '-a -j'
+
+      - name: Upload ZAP results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zap-scan-results
+          path: report_html.html
+          retention-days: 30
+
+  # Notification
+  notify:
+    name: Notify
+    runs-on: ubuntu-latest
+    needs: [build-and-deploy, test, e2e-test]
+    if: always()
+    steps:
+      - name: Notify Slack on success
+        if: ${{ needs.build-and-deploy.result == 'success' }}
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          channel: '#deployments'
+          text: |
+            🚀 Deployment successful!
+            *Repository*: ${{ github.repository }}
+            *Branch*: ${{ github.ref_name }}
+            *Commit*: ${{ github.sha }}
+            *URL*: ${{ needs.build-and-deploy.outputs.deploy-url }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Notify Slack on failure
+        if: ${{ needs.build-and-deploy.result == 'failure' }}
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          channel: '#deployments'
+          text: |
+            ❌ Deployment failed!
+            *Repository*: ${{ github.repository }}
+            *Branch*: ${{ github.ref_name }}
+            *Commit*: ${{ github.sha }}
+            *Workflow*: ${{ github.workflow }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Notify Teams
+        if: always()
+        uses: joshjohanning/teams-notify@v1
+        with:
+          webhook_url: ${{ secrets.TEAMS_WEBHOOK_URL }}
+          title: ${{ github.workflow }}
+          summary: |
+            ${{ needs.build-and-deploy.result == 'success' && '✅ Deployment successful' || '❌ Deployment failed' }}
+            Repository: ${{ github.repository }}
+            Branch: ${{ github.ref_name }}
+            Commit: ${{ github.sha }}
+            URL: ${{ needs.build-and-deploy.outputs.deploy-url || 'N/A' }}
+          details_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         
   build:
     needs: test

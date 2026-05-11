@@ -29,15 +29,36 @@ export type SkeletonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
       display: inline-block;
       background: linear-gradient(
         90deg,
-        var(--color-gray-200) 25%,
-        var(--color-gray-100) 50%,
-        var(--color-gray-200) 75%
+        rgba(255, 255, 255, 0.02) 0%,
+        rgba(255, 255, 255, 0.08) 50%,
+        rgba(255, 255, 255, 0.02) 100%
       );
       background-size: 200% 100%;
-      animation: loading 1.5s infinite;
+      animation: shimmer 1.5s ease-in-out infinite;
       border-radius: var(--radius-md);
       position: relative;
       overflow: hidden;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    /* Glass shimmer effect */
+    .skeleton::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(0, 194, 255, 0.1) 50%,
+        transparent 100%
+      );
+      animation: glassShimmer 2s ease-in-out infinite;
+      border-radius: inherit;
     }
 
     .skeleton::after {
@@ -49,28 +70,34 @@ export type SkeletonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
       bottom: 0;
       background: linear-gradient(
         90deg,
-        transparent,
-        rgba(255, 255, 255, 0.4),
-        transparent
+        transparent 0%,
+        rgba(255, 255, 255, 0.1) 50%,
+        transparent 100%
       );
-      animation: shimmer 1.5s infinite;
-    }
-
-    @keyframes loading {
-      0% {
-        background-position: 200% 0;
-      }
-      100% {
-        background-position: -200% 0;
-      }
+      animation: shimmer 1.5s ease-in-out infinite;
+      border-radius: inherit;
     }
 
     @keyframes shimmer {
       0% {
-        transform: translateX(-100%);
+        background-position: -200% 0;
       }
       100% {
-        transform: translateX(100%);
+        background-position: 200% 0;
+      }
+    }
+
+    @keyframes glassShimmer {
+      0% {
+        background-position: -300% 0;
+        opacity: 0;
+      }
+      50% {
+        opacity: 1;
+      }
+      100% {
+        background-position: 300% 0;
+        opacity: 0;
       }
     }
 
@@ -79,6 +106,12 @@ export type SkeletonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
       border-radius: var(--radius-sm);
       height: 1em;
       margin: 0.25em 0;
+      background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.03) 0%,
+        rgba(255, 255, 255, 0.06) 50%,
+        rgba(255, 255, 255, 0.03) 100%
+      );
     }
 
     .rectangular {
@@ -87,6 +120,28 @@ export type SkeletonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
     .circular {
       border-radius: 50%;
+    }
+
+    .glass {
+      background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.02) 0%,
+        rgba(255, 255, 255, 0.08) 50%,
+        rgba(255, 255, 255, 0.02) 100%
+      );
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .neon {
+      background: linear-gradient(
+        90deg,
+        rgba(0, 194, 255, 0.02) 0%,
+        rgba(0, 194, 255, 0.08) 50%,
+        rgba(0, 194, 255, 0.02) 100%
+      );
+      border: 1px solid rgba(0, 194, 255, 0.2);
+      box-shadow: 0 0 10px rgba(0, 194, 255, 0.2);
     }
 
     /* Sizes */
@@ -141,6 +196,33 @@ export type SkeletonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
       height: 1.25rem;
     }
 
+    /* Card skeleton */
+    .card-skeleton {
+      width: 100%;
+      height: 120px;
+      border-radius: var(--radius-lg);
+      background: var(--color-bg-glass);
+      border: 1px solid var(--color-border-glass);
+      box-shadow: var(--shadow-glass);
+      overflow: hidden;
+    }
+
+    .card-skeleton::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 40px;
+      background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.04) 0%,
+        rgba(255, 255, 255, 0.08) 50%,
+        rgba(255, 255, 255, 0.04) 100%
+      );
+      border-bottom: 1px solid var(--color-border);
+    }
+
     /* Animation speed variants */
     .fast {
       animation-duration: 1s;
@@ -151,11 +233,25 @@ export type SkeletonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
     }
 
     .slow {
-      animation-duration: 2s;
+      animation-duration: 2.5s;
     }
 
     .slow::after {
-      animation-duration: 2s;
+      animation-duration: 2.5s;
+    }
+
+    /* Pulse variant */
+    .pulse {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.4;
+      }
     }
 
     /* Screen reader only */
@@ -171,24 +267,18 @@ export type SkeletonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
       border: 0;
     }
 
-    /* Dark theme */
-    [data-theme="dark"] .skeleton {
-      background: linear-gradient(
-        90deg,
-        var(--color-gray-700) 25%,
-        var(--color-gray-600) 50%,
-        var(--color-gray-700) 75%
-      );
+    /* Group skeleton for multiple elements */
+    .skeleton-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-2);
     }
 
-    [data-theme="dark"] .skeleton::after {
-      background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(255, 255, 255, 0.1),
-        transparent
-      );
+    .skeleton-group .skeleton {
+      margin: 0;
     }
+
+    /* Dark theme is now default - no separate dark theme needed */
   `]
 })
 export class SkeletonComponent {

@@ -1,6 +1,6 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of, throwError, timer } from 'rxjs';
+import { Observable, throwError, timer, of } from 'rxjs';
 import { retry, tap, catchError } from 'rxjs/operators';
 import { CircuitBreakerState } from './circuit-breaker.state';
 
@@ -13,6 +13,7 @@ export class ResilientApiService {
   private cache = new Map<string, { data: any; timestamp: number; etag?: string }>();
   private readonly CACHE_DURATION = 30_000; // 30 seconds
 
+  
   get<T>(url: string, options?: { useCache?: boolean; cacheKey?: string }): Observable<T> {
     const cacheKey = options?.cacheKey || url;
     const useCache = options?.useCache ?? true;
@@ -35,23 +36,25 @@ export class ResilientApiService {
     return this.http.get<T>(url).pipe(
       retry({
         count: 3,
-        delay: (error, retryCount) => {
+        delay: (error: any, retryCount: number) => {
           // Only retry on network errors or 5xx server errors
           if (error.status >= 500 || error.status === 0) {
-            return timer(1000 * Math.pow(2, retryCount)); // Exponential backoff: 1s, 2s, 4s
+            return timer(1000 * Math.pow(2, retryCount));
           }
-          throw error; // Don't retry on 4xx client errors
+          throw error;
         }
       }),
-      tap(data => {
+      tap((data: any) => {
         this.circuitBreaker.recordSuccess();
-        this.cache.set(cacheKey, { 
-          data, 
+        
+        // Cache the response
+        this.cache.set(cacheKey, {
+          data,
           timestamp: Date.now(),
           etag: this.extractEtag(data)
         });
       }),
-      catchError(error => {
+      catchError((error: any) => {
         this.circuitBreaker.recordFailure();
         
         // Try to serve stale cache on failure
@@ -60,7 +63,10 @@ export class ResilientApiService {
           return cached;
         }
         
-        return throwError(() => error);
+        return throwError(() => {
+          const userMessage = this.getUserFriendlyErrorMessage(error);
+          return new Error(userMessage);
+        });
       })
     );
   }
@@ -90,7 +96,10 @@ export class ResilientApiService {
       }),
       catchError(error => {
         this.circuitBreaker.recordFailure();
-        return throwError(() => error);
+        return throwError(() => {
+        const userMessage = this.getUserFriendlyErrorMessage(error);
+        return new Error(userMessage);
+      });
       })
     );
   }
@@ -116,7 +125,10 @@ export class ResilientApiService {
       }),
       catchError(error => {
         this.circuitBreaker.recordFailure();
-        return throwError(() => error);
+        return throwError(() => {
+        const userMessage = this.getUserFriendlyErrorMessage(error);
+        return new Error(userMessage);
+      });
       })
     );
   }
@@ -142,9 +154,47 @@ export class ResilientApiService {
       }),
       catchError(error => {
         this.circuitBreaker.recordFailure();
-        return throwError(() => error);
+        return throwError(() => {
+        const userMessage = this.getUserFriendlyErrorMessage(error);
+        return new Error(userMessage);
+      });
       })
     );
+  }
+
+  private getUserFriendlyErrorMessage(error: any): string {
+    if (error.status === 0) {
+      return 'No internet connection. Please check your network connection and try again.';
+    }
+    
+    if (error.status >= 500) {
+      return 'Server is temporarily unavailable. Please try again in a few moments.';
+    }
+    
+    if (error.status === 429) {
+      return 'Too many requests. Please wait a moment before trying again.';
+    }
+    
+    if (error.status === 404) {
+      return 'The requested data was not found. Please refresh and try again.';
+    }
+    
+    if (error.status >= 400 && error.status < 500) {
+      return 'There was a problem with your request. Please check your input and try again.';
+    }
+    
+    // Network related errors
+    if (error.message?.includes('NetworkError') || error.message?.includes('ERR_NETWORK')) {
+      return 'Network connection lost. Showing cached data. Please check your internet connection.';
+    }
+    
+    // Timeout errors
+    if (error.message?.includes('timeout') || error.message?.includes('TIMEOUT')) {
+      return 'Request timed out. The server is taking too long to respond. Please try again.';
+    }
+    
+    // Default fallback
+    return 'Something went wrong. Please try again or contact support if the problem persists.';
   }
 
   // Cache management methods

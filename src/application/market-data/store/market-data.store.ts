@@ -1,6 +1,16 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
+import { Observable, throwError } from 'rxjs';
+import { tap, catchError } from 'rxjs/operators';
 import { Coin } from '../../../domain/models';
 import { CoinGeckoService } from '../../../infrastructure/api/coingecko.service';
+
+export interface GlobalMarketData {
+  totalMarketCap: number;
+  totalVolume24h: number;
+  marketCapChange24h: number;
+  volumeChange24h: number;
+  marketCapPercentage: { [coinId: string]: number };
+}
 
 @Injectable({ providedIn: 'root' })
 export class MarketDataStore {
@@ -10,6 +20,7 @@ export class MarketDataStore {
   private loadingState = signal<Set<string>>(new Set());
   private errorState = signal<Record<string, string>>({});
   private lastUpdated = signal<Record<string, number>>({});
+  private globalMarketData = signal<GlobalMarketData | null>(null);
 
   // Selectors
   allCoins = computed(() => Object.values(this.state()));
@@ -24,6 +35,9 @@ export class MarketDataStore {
       .sort((a, b) => b.marketCap - a.marketCap)
       .slice(0, 50)
   );
+  
+  // Global market data selectors
+  lastGlobalMarket = computed(() => this.globalMarketData());
 
   fetchTopCoins(currency = 'usd'): void {
       this.loadingState.update(state => new Set(state).add('top'));
@@ -162,5 +176,33 @@ export class MarketDataStore {
     const maxAgeMs = maxAgeMinutes * 60 * 1000;
     
     return ageMs > maxAgeMs;
+  }
+
+  fetchGlobalMarket(currency = 'usd'): Observable<GlobalMarketData> {
+    this.loadingState.update(state => new Set(state).add('global'));
+    this.errorState.update(errors => ({ ...errors, global: '' }));
+    
+    return this.coinGecko.getGlobalMarketData(currency).pipe(
+      tap((data: GlobalMarketData) => {
+        this.globalMarketData.set(data);
+        this.loadingState.update(state => {
+          const newSet = new Set(state);
+          newSet.delete('global');
+          return newSet;
+        });
+      }),
+      catchError((error) => {
+        this.errorState.update(errors => ({
+          ...errors,
+          global: error.message || 'Failed to fetch global market data',
+        }));
+        this.loadingState.update(state => {
+          const newSet = new Set(state);
+          newSet.delete('global');
+          return newSet;
+        });
+        return throwError(() => error);
+      })
+    );
   }
 }

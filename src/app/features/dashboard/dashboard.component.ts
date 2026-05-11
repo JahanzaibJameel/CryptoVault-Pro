@@ -1,13 +1,19 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { ScrollingModule } from '@angular/cdk/scrolling';
 import { MarketDataStore } from '../../../application/market-data/store';
 import { WatchlistStore } from '../../../application/watchlist/store';
 import { SettingsStore } from '../../../application/settings/store';
 import { ButtonComponent } from '../../shared/design-system/button/button.component';
 import { CardComponent } from '../../shared/design-system/card/card.component';
 import { SkeletonComponent } from '../../shared/design-system/skeleton/skeleton.component';
+import { MarketChartComponent } from '../../shared/market-chart/market-chart.component';
+import { NewsComponent } from '../../features/news/news.component';
 import { Coin } from '../../../domain/models/coin.model';
+import { MarketStatsCardComponent } from './components/market-stats-card.component';
+import { CoinListComponent } from './components/coin-list.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -15,81 +21,99 @@ import { Coin } from '../../../domain/models/coin.model';
   imports: [
     CommonModule,
     RouterLink,
+    ScrollingModule,
     ButtonComponent,
     CardComponent,
-    SkeletonComponent
+    SkeletonComponent,
+    MarketChartComponent,
+    NewsComponent,
+    MarketStatsCardComponent,
+    CoinListComponent
   ],
   template: `
-    <div class="dashboard">
+    <div class="dashboard animate-fade-in">
       <header class="dashboard-header">
-        <h1 class="dashboard-title">Crypto Dashboard</h1>
+        <div class="header-content">
+          <h1 class="dashboard-title text-heading">Market Dashboard</h1>
+          <p class="dashboard-subtitle text-secondary">Real-time cryptocurrency market analysis</p>
+        </div>
         <div class="dashboard-actions">
           <ui-button 
             variant="secondary" 
             size="sm"
             (click)="refreshData()"
             [loading]="isLoading()"
+            class="glass"
           >
-            Refresh
+            <svg class="button-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+            </svg>
+            Refresh Data
           </ui-button>
           <ui-button 
             variant="ghost" 
             size="sm"
             routerLink="/watchlist"
+            class="glass"
           >
-            Manage Watchlist
+            <svg class="button-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>
+            Watchlist
           </ui-button>
         </div>
       </header>
 
-      <!-- Market Overview -->
-      <section class="market-overview">
-        <ui-card variant="elevated" size="lg">
-          <div slot="header">
-            <h2>Market Overview</h2>
-            <span class="last-updated">
-              Last updated: {{ formatLastUpdated() }}
-            </span>
-          </div>
-          <div class="overview-content">
-            @if (isLoading()) {
-              <div class="overview-loading">
-                <ui-skeleton variant="text" size="lg" width="200px" />
-                <ui-skeleton variant="text" size="md" width="150px" />
-                <ui-skeleton variant="rectangular" size="md" width="100px" height="100px" />
-              </div>
-            } @else {
-              <div class="overview-stats">
-                <div class="stat-item">
-                  <span class="stat-label">Total Market Cap</span>
-                  <span class="stat-value">{{ formatCurrency(globalMarketData().totalMarketCap) }}</span>
-                </div>
-                <div class="stat-item">
-                  <span class="stat-label">24h Volume</span>
-                  <span class="stat-value">{{ formatCurrency(globalMarketData().totalVolume24h) }}</span>
-                </div>
-                <div class="stat-item">
-                  <span class="stat-label">Market Cap Change</span>
-                  <span class="stat-value" [class]="getChangeClass(globalMarketData().marketCapChange24h)">
-                    {{ formatPercentage(globalMarketData().marketCapChange24h) }}
-                  </span>
-                </div>
-              </div>
-            }
-          </div>
-        </ui-card>
+      <!-- Market Overview Stats -->
+      <section class="market-stats">
+        <div class="stats-grid grid-cols-4">
+          <app-market-stats-card 
+            label="Total Market Cap"
+            [value]="globalMarketData().totalMarketCap"
+            type="market-cap"
+            [currency]="currency()"
+            style="animation-delay: 0s"
+          />
+          <app-market-stats-card 
+            label="24h Volume"
+            [value]="globalMarketData().totalVolume24h"
+            type="volume"
+            [currency]="currency()"
+            style="animation-delay: 0.1s"
+          />
+          <app-market-stats-card 
+            label="Market Cap Change"
+            [value]="globalMarketData().marketCapChange24h"
+            type="change"
+            [currency]="currency()"
+            style="animation-delay: 0.2s"
+          />
+          <app-market-stats-card 
+            label="Fear & Greed Index"
+            [value]="72"
+            type="index"
+            [currency]="currency()"
+            style="animation-delay: 0.3s"
+          />
+        </div>
       </section>
 
       <!-- Top Coins -->
       <section class="top-coins">
         <div class="section-header">
-          <h2>Top Cryptocurrencies</h2>
-          <div class="view-options">
+          <div class="header-left">
+            <h2 class="text-heading">Top Cryptocurrencies</h2>
+            <p class="section-subtitle text-secondary">Market leaders by market capitalization</p>
+          </div>
+          <div class="view-options glass">
             <button 
               class="view-toggle" 
               [class.active]="viewMode() === 'grid'"
               (click)="setViewMode('grid')"
             >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3 3h8v8H3zm10 0h8v8h-8zM3 13h8v8H3zm10 0h8v8h-8z"/>
+              </svg>
               Grid
             </button>
             <button 
@@ -97,71 +121,72 @@ import { Coin } from '../../../domain/models/coin.model';
               [class.active]="viewMode() === 'list'"
               (click)="setViewMode('list')"
             >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
+              </svg>
               List
             </button>
           </div>
         </div>
 
-        @if (isLoading()) {
-          <div class="coins-loading">
-            @for (i of [1,2,3,4,5,6,7,8]; track i) {
-              <ui-card variant="elevated" size="md" class="coin-skeleton">
-                <div class="coin-skeleton-content">
-                  <ui-skeleton variant="circular" size="md" />
-                  <div class="coin-skeleton-info">
-                    <ui-skeleton variant="text" size="sm" width="100px" />
-                    <ui-skeleton variant="text" size="xs" width="80px" />
-                  </div>
-                  <div class="coin-skeleton-price">
-                    <ui-skeleton variant="text" size="md" width="120px" />
-                    <ui-skeleton variant="text" size="xs" width="60px" />
-                  </div>
-                </div>
-              </ui-card>
-            }
-          </div>
-        } @else {
-          <div class="coins-container" [class.grid-view]="viewMode() === 'grid'" [class.list-view]="viewMode() === 'list'">
-            @for (coin of topCoins(); track coin.id) {
-              <ui-card 
-                variant="elevated" 
-                size="md" 
-                class="coin-card"
-                [clickable]="true"
-                (click)="navigateToCoin(coin.id)"
-              >
-                <div class="coin-content">
-                  <div class="coin-header">
-                    <img [src]="coin.image" [alt]="coin.name" class="coin-image" loading="lazy" />
-                    <div class="coin-info">
-                      <h3 class="coin-name">{{ coin.name }}</h3>
-                      <span class="coin-symbol">{{ coin.symbol }}</span>
+        <app-coin-list
+          [coins]="topCoins()"
+          [isLoading]="isLoading()"
+          [viewMode]="viewMode()"
+          [watchlistCoins]="watchlistCoins()"
+          [currency]="currency()"
+          (navigateToCoin)="navigateToCoin($event)"
+          (toggleWatchlist)="toggleWatchlist($event)"
+        />
+      </section>
+
+      <!-- Market Chart (Deferred) -->
+      @defer (on viewport) {
+        <section class="market-chart-section">
+          <app-market-chart [data]="{
+            symbol: 'MARKET',
+            currentPrice: globalMarketData().totalMarketCap,
+            change24h: globalMarketData().marketCapChange24h,
+            volume24h: globalMarketData().totalVolume24h,
+            chartData: []
+          }" />
+        </section>
+      } @placeholder {
+        <section class="market-chart-section">
+          <ui-card variant="elevated" size="lg">
+            <div class="chart-placeholder">
+              <ui-skeleton variant="rectangular" size="lg" width="100%" height="300px" />
+            </div>
+          </ui-card>
+        </section>
+      }
+
+      <!-- News Feed (Deferred) -->
+      @defer (on viewport) {
+        <section class="news-section">
+          <app-news />
+        </section>
+      } @placeholder {
+        <section class="news-section">
+          <ui-card variant="elevated" size="lg">
+            <div class="news-placeholder">
+              <h3>Latest Crypto News</h3>
+              <div class="news-skeletons">
+                @for (i of [1,2,3]; track i) {
+                  <div class="news-skeleton-item">
+                    <ui-skeleton variant="rectangular" size="md" width="100%" height="120px" />
+                    <div class="news-skeleton-text">
+                      <ui-skeleton variant="text" size="md" width="80%" />
+                      <ui-skeleton variant="text" size="sm" width="100%" />
+                      <ui-skeleton variant="text" size="sm" width="60%" />
                     </div>
                   </div>
-                  <div class="coin-price">
-                    <span class="current-price">{{ formatCurrency(coin.currentPrice) }}</span>
-                    <span class="price-change" [class]="getChangeClass(coin.priceChange24h)">
-                      {{ formatPercentage(coin.priceChange24h) }}
-                    </span>
-                  </div>
-                  <div class="coin-stats">
-                    <span class="market-cap">{{ formatMarketCap(coin.marketCap) }}</span>
-                  </div>
-                  <div class="coin-actions">
-                    <ui-button 
-                      variant="ghost" 
-                      size="sm"
-                      (click)="toggleWatchlist(coin.id); $event.stopPropagation()"
-                    >
-                      {{ isInWatchlist(coin.id) ? 'Remove' : 'Add' }}
-                    </ui-button>
-                  </div>
-                </div>
-              </ui-card>
-            }
-          </div>
-        }
-      </section>
+                }
+              </div>
+            </div>
+          </ui-card>
+        </section>
+      }
 
       <!-- Watchlist Preview -->
       @if (watchlistCoins().length > 0) {
@@ -233,134 +258,217 @@ import { Coin } from '../../../domain/models/coin.model';
     </div>
   `,
   styles: [`
+    /* Cyber-Glass 2026 Dashboard Styles */
     .dashboard {
-      padding: var(--spacing-lg);
+      padding: var(--spacing-6);
       max-width: 1400px;
       margin: 0 auto;
+      min-height: 100vh;
     }
 
     .dashboard-header {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      margin-bottom: var(--spacing-xl);
+      align-items: flex-start;
+      margin-bottom: var(--spacing-8);
       flex-wrap: wrap;
-      gap: var(--spacing-md);
+      gap: var(--spacing-6);
+    }
+
+    .header-content {
+      flex: 1;
     }
 
     .dashboard-title {
-      font-size: var(--font-size-3xl);
-      font-weight: var(--font-weight-bold);
+      font-size: 2.5rem;
+      font-weight: 600;
       color: var(--color-text-primary);
+      margin: 0 0 var(--spacing-2) 0;
+      line-height: 1.2;
+    }
+
+    .dashboard-subtitle {
+      font-size: 1rem;
       margin: 0;
+      opacity: 0.8;
     }
 
     .dashboard-actions {
       display: flex;
-      gap: var(--spacing-sm);
+      gap: var(--spacing-3);
       align-items: center;
     }
 
-    .market-overview {
-      margin-bottom: var(--spacing-2xl);
+    /* Market Stats Section */
+    .market-stats {
+      margin-bottom: var(--spacing-8);
     }
 
-    .overview-content {
-      padding: var(--spacing-lg);
-    }
-
-    .overview-loading {
-      display: flex;
-      flex-direction: column;
-      gap: var(--spacing-md);
-      align-items: flex-start;
-    }
-
-    .overview-stats {
+    .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: var(--spacing-lg);
+      gap: var(--spacing-6);
     }
 
-    .stat-item {
+    .stat-card {
+      transition: all var(--transition-normal);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+    }
+
+    .stat-content {
+      padding: 0;
+    }
+
+    .stat-header {
       display: flex;
-      flex-direction: column;
-      gap: var(--spacing-xs);
+      align-items: center;
+      gap: var(--spacing-4);
+    }
+
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .stat-icon.success {
+      background: rgba(0, 227, 150, 0.1);
+      color: var(--color-success);
+      box-shadow: 0 0 20px rgba(0, 227, 150, 0.2);
+    }
+
+    .stat-icon.primary {
+      background: rgba(0, 194, 255, 0.1);
+      color: var(--color-primary);
+      box-shadow: 0 0 20px rgba(0, 194, 255, 0.2);
+    }
+
+    .stat-icon.warning {
+      background: rgba(255, 189, 0, 0.1);
+      color: var(--color-warning);
+      box-shadow: 0 0 20px rgba(255, 189, 0, 0.2);
+    }
+
+    .stat-icon.info {
+      background: rgba(0, 194, 255, 0.1);
+      color: var(--color-primary);
+      box-shadow: 0 0 20px rgba(0, 194, 255, 0.2);
+    }
+
+    .stat-info {
+      flex: 1;
     }
 
     .stat-label {
-      font-size: var(--font-size-sm);
-      color: var(--color-text-secondary);
-      font-weight: var(--font-weight-medium);
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: var(--spacing-1);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     .stat-value {
-      font-size: var(--font-size-xl);
-      font-weight: var(--font-weight-bold);
-      color: var(--color-text-primary);
+      font-size: 1.5rem;
+      font-weight: 600;
+      line-height: 1.2;
     }
 
     .stat-value.positive {
-      color: var(--color-success-500);
+      color: var(--color-success);
     }
 
     .stat-value.negative {
-      color: var(--color-danger-500);
+      color: var(--color-danger);
     }
 
-    .last-updated {
-      font-size: var(--font-size-xs);
-      color: var(--color-text-hint);
-    }
-
+    /* Top Coins Section */
     .top-coins {
-      margin-bottom: var(--spacing-2xl);
+      margin-bottom: var(--spacing-8);
     }
 
     .section-header {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      margin-bottom: var(--spacing-lg);
+      align-items: flex-start;
+      margin-bottom: var(--spacing-6);
+      flex-wrap: wrap;
+      gap: var(--spacing-4);
     }
 
-    .section-header h2 {
-      font-size: var(--font-size-2xl);
-      font-weight: var(--font-weight-semibold);
+    .header-left h2 {
+      font-size: 2rem;
+      font-weight: 600;
       color: var(--color-text-primary);
+      margin: 0 0 var(--spacing-1) 0;
+      line-height: 1.3;
+    }
+
+    .section-subtitle {
+      font-size: 1rem;
       margin: 0;
+      opacity: 0.7;
     }
 
     .view-options {
       display: flex;
-      gap: var(--spacing-xs);
-      background-color: var(--color-gray-100);
-      border-radius: var(--radius-md);
-      padding: var(--spacing-xs);
+      gap: var(--spacing-1);
+      background: var(--color-bg-glass);
+      border: 1px solid var(--color-border-glass);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-1);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
     }
 
     .view-toggle {
-      padding: var(--spacing-xs) var(--spacing-sm);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      padding: var(--spacing-2) var(--spacing-3);
       border: none;
       background: transparent;
-      border-radius: var(--radius-sm);
-      font-size: var(--font-size-sm);
+      border-radius: var(--radius-md);
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--color-text-secondary);
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all var(--transition-fast);
+    }
+
+    .view-toggle:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--color-text-primary);
     }
 
     .view-toggle.active {
-      background-color: var(--color-primary-500);
-      color: var(--color-white);
+      background: rgba(0, 194, 255, 0.2);
+      color: var(--color-primary);
+      border: 1px solid rgba(0, 194, 255, 0.3);
+    }
+
+    .coins-viewport {
+      height: 600px;
+      max-height: 70vh;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
     }
 
     .coins-container {
       display: grid;
-      gap: var(--spacing-lg);
+      gap: var(--spacing-6);
+      padding: var(--spacing-2);
     }
 
     .coins-container.grid-view {
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     }
 
     .coins-container.list-view {
@@ -369,63 +477,71 @@ import { Coin } from '../../../domain/models/coin.model';
 
     .coins-loading {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: var(--spacing-lg);
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: var(--spacing-6);
     }
 
     .coin-skeleton {
-      margin-bottom: var(--spacing-md);
+      margin-bottom: 0;
     }
 
     .coin-skeleton-content {
       display: flex;
       align-items: center;
-      gap: var(--spacing-md);
-      padding: var(--spacing-md);
+      gap: var(--spacing-4);
+      padding: var(--spacing-6);
     }
 
     .coin-skeleton-info {
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: var(--spacing-xs);
+      gap: var(--spacing-2);
     }
 
     .coin-skeleton-price {
       display: flex;
       flex-direction: column;
-      gap: var(--spacing-xs);
+      gap: var(--spacing-2);
       align-items: flex-end;
     }
 
     .coin-card {
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      transition: all var(--transition-normal);
+      cursor: pointer;
+    }
+
+    .coin-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--color-primary);
     }
 
     .coin-content {
-      padding: var(--spacing-lg);
+      padding: var(--spacing-6);
       display: flex;
       flex-direction: column;
-      gap: var(--spacing-md);
+      gap: var(--spacing-4);
       height: 100%;
     }
 
     .coin-header {
       display: flex;
       align-items: center;
-      gap: var(--spacing-md);
+      gap: var(--spacing-4);
     }
 
     .coin-image {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-full);
+      border: 2px solid var(--color-border);
     }
 
     .coin-image-small {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--color-border);
     }
 
     .coin-info {
@@ -433,53 +549,63 @@ import { Coin } from '../../../domain/models/coin.model';
     }
 
     .coin-name {
-      font-size: var(--font-size-base);
-      font-weight: var(--font-weight-semibold);
+      font-size: 1.125rem;
+      font-weight: 600;
       color: var(--color-text-primary);
       margin: 0;
+      line-height: 1.3;
     }
 
     .coin-symbol {
-      font-size: var(--font-size-sm);
+      font-size: 0.875rem;
       color: var(--color-text-secondary);
       text-transform: uppercase;
+      font-weight: 500;
     }
 
     .coin-price {
       display: flex;
       flex-direction: column;
-      gap: var(--spacing-xs);
-      align-items: flex-start;
+      gap: var(--spacing-1);
+      align-items: flex-end;
     }
 
     .current-price {
-      font-size: var(--font-size-lg);
-      font-weight: var(--font-weight-bold);
+      font-size: 1.25rem;
+      font-weight: 600;
       color: var(--color-text-primary);
+      line-height: 1.2;
     }
 
     .price-change {
-      font-size: var(--font-size-sm);
-      font-weight: var(--font-weight-medium);
+      font-size: 0.875rem;
+      font-weight: 500;
+      padding: var(--spacing-1) var(--spacing-2);
+      border-radius: var(--radius-sm);
     }
 
     .price-change.positive {
-      color: var(--color-success-500);
+      color: var(--color-success);
+      background: rgba(0, 227, 150, 0.1);
     }
 
     .price-change.negative {
-      color: var(--color-danger-500);
+      color: var(--color-danger);
+      background: rgba(255, 77, 106, 0.1);
     }
 
     .coin-stats {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      padding: var(--spacing-2) 0;
+      border-top: 1px solid var(--color-border);
     }
 
     .market-cap {
-      font-size: var(--font-size-sm);
+      font-size: 0.875rem;
       color: var(--color-text-secondary);
+      font-weight: 500;
     }
 
     .coin-actions {
@@ -488,62 +614,130 @@ import { Coin } from '../../../domain/models/coin.model';
       justify-content: flex-end;
     }
 
+    /* Market Chart Section */
+    .market-chart-section {
+      margin-bottom: var(--spacing-8);
+    }
+
+    .chart-placeholder {
+      padding: var(--spacing-8);
+      text-align: center;
+    }
+
+    /* News Section */
+    .news-section {
+      margin-bottom: var(--spacing-8);
+    }
+
+    .news-placeholder h3 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      margin: 0 0 var(--spacing-6) 0;
+    }
+
+    .news-skeletons {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: var(--spacing-6);
+    }
+
+    .news-skeleton-item {
+      margin-bottom: 0;
+    }
+
+    .news-skeleton-text {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-2);
+      margin-top: var(--spacing-4);
+    }
+
+    /* Watchlist Preview */
     .watchlist-preview {
-      margin-bottom: var(--spacing-2xl);
+      margin-bottom: var(--spacing-8);
     }
 
     .watchlist-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: var(--spacing-md);
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: var(--spacing-4);
     }
 
     .watchlist-item {
-      transition: transform 0.2s ease;
+      transition: all var(--transition-normal);
+    }
+
+    .watchlist-item:hover {
+      transform: translateY(-2px);
     }
 
     .watchlist-content {
-      padding: var(--spacing-md);
+      padding: var(--spacing-4);
       display: flex;
       align-items: center;
-      gap: var(--spacing-md);
+      gap: var(--spacing-3);
     }
 
     .watchlist-info {
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: var(--spacing-xs);
+      gap: var(--spacing-1);
     }
 
+    .watchlist-info .coin-name {
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin: 0;
+    }
+
+    .watchlist-info .coin-price {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--color-primary);
+    }
+
+    /* Quick Actions */
     .quick-actions {
-      margin-bottom: var(--spacing-2xl);
+      margin-bottom: var(--spacing-8);
     }
 
     .actions-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: var(--spacing-md);
-      padding: var(--spacing-lg);
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: var(--spacing-4);
+      padding: var(--spacing-6);
     }
 
     .action-button {
       width: 100%;
     }
 
-    /* Responsive design */
+    /* Responsive Design */
+    @media (max-width: 1024px) {
+      .stats-grid.grid-cols-4 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
     @media (max-width: 768px) {
       .dashboard {
-        padding: var(--spacing-md);
+        padding: var(--spacing-4);
       }
 
       .dashboard-header {
         flex-direction: column;
         align-items: flex-start;
-        gap: var(--spacing-md);
+        gap: var(--spacing-4);
       }
 
-      .overview-stats {
+      .dashboard-title {
+        font-size: 2rem;
+      }
+
+      .stats-grid.grid-cols-4,
+      .stats-grid.grid-cols-2 {
         grid-template-columns: 1fr;
       }
 
@@ -554,21 +748,79 @@ import { Coin } from '../../../domain/models/coin.model';
       .section-header {
         flex-direction: column;
         align-items: flex-start;
-        gap: var(--spacing-sm);
+        gap: var(--spacing-3);
       }
 
       .actions-grid {
         grid-template-columns: 1fr;
       }
+
+      .watchlist-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
-    /* Dark theme */
-    [data-theme="dark"] .view-options {
-      background-color: var(--color-gray-800);
+    @media (max-width: 480px) {
+      .dashboard-title {
+        font-size: 1.75rem;
+      }
+
+      .coin-header {
+        gap: var(--spacing-3);
+      }
+
+      .coin-image {
+        width: 40px;
+        height: 40px;
+      }
+
+      .current-price {
+        font-size: 1.125rem;
+      }
+
+      .dashboard-actions {
+        flex-direction: column;
+        width: 100%;
+      }
+
+      .dashboard-actions ui-button {
+        width: 100%;
+      }
     }
 
-    [data-theme="dark"] .view-toggle.active {
-      background-color: var(--color-primary-400);
+    /* Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-fade-in {
+      animation: fadeInUp 0.6s ease-out;
+    }
+
+    /* Glass effects for cards */
+    .glass-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.02) 100%);
+      border-radius: inherit;
+      opacity: 0;
+      transition: opacity var(--transition-fast);
+      pointer-events: none;
+    }
+
+    .glass-card:hover::before {
+      opacity: 1;
     }
   `]
 })
@@ -609,13 +861,30 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  private async loadGlobalMarketData(): Promise<void> {
-    // This would be implemented with a real API call
-    // For now, using placeholder data
-    this.globalMarketData.set({
-      totalMarketCap: 2500000000000, // $2.5T
-      totalVolume24h: 120000000000, // $120B
-      marketCapChange24h: 2.5 // 2.5%
+  private loadGlobalMarketData(): void {
+    this.marketDataStore.fetchGlobalMarket(this.currency()).subscribe({
+      next: (data: any) => {
+        this.globalMarketData.set({
+          totalMarketCap: data.totalMarketCap,
+          totalVolume24h: data.totalVolume24h,
+          marketCapChange24h: data.marketCapChange24h
+        });
+      },
+      error: (error: any) => {
+        console.error('Failed to load global market data:', error);
+        // Use last cached value from store or empty state; never hardcode
+        const cached = this.marketDataStore.lastGlobalMarket();
+        if (cached) {
+          this.globalMarketData.set(cached);
+        } else {
+          // Set empty state as last resort
+          this.globalMarketData.set({
+            totalMarketCap: 0,
+            totalVolume24h: 0,
+            marketCapChange24h: 0
+          });
+        }
+      }
     });
   }
 

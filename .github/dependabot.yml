@@ -1,0 +1,323 @@
+version: 2
+updates:
+  # Enable version updates for npm packages
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - jahanzaibjameel
+    assignees:
+      - jahanzaibjameel
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "npm"
+
+  # Update Angular dependencies
+  - package-ecosystem: npm
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: wednesday
+      time: "10:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - jahanzaibjameel
+    assignees:
+      - jahanzaibjameel
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "angular"
+    allow:
+      - dependency-type: "direct"
+      - dependency-type: "peer"
+      - dependency-type: "dev"
+      - dependency-name: "@angular/*"
+      - dependency-name: "@angular/cdk"
+      - dependency-name: "@angular/material"
+      - dependency-name: "@angular/animations"
+      - dependency-name: "@angular/forms"
+      - dependency-name: "@angular/router"
+      - dependency-name: "@angular/common"
+      - dependency-name: "@angular/platform-browser"
+      - dependency-name: "@angular/platform-browser-dynamic"
+      - dependency-name: "@angular/service-worker"
+      - dependency-name: "@angular/localize"
+      - dependency-name: "@angular/build"
+      - dependency-name: "zone.js"
+      - dependency-name: "rxjs"
+      - dependency-name: "typescript"
+
+  # Update Playwright
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: friday
+      time: "11:00"
+    open-pull-requests-limit: 3
+    reviewers:
+      - jahanzaibjameel
+    assignees:
+      - jahanzaibjameel
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "testing"
+    allow:
+      - dependency-type: "direct"
+      - dependency-type: "dev"
+      - dependency-name: "@playwright/*"
+
+  # Update testing dependencies
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: thursday
+      time: "14:00"
+    open-pull-requests-limit: 3
+    reviewers:
+      - jahanzaibjameel
+    assignees:
+      - jahanzaibjameel
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "testing"
+    allow:
+      - dependency-type: "direct"
+      - dependency-type: "dev"
+      - dependency-name: "@testing-library/*"
+      - dependency-name: "jest"
+      - dependency-name: "jest-image-snapshot"
+      - dependency-name: "@storybook/*"
+
+  # Update build tools
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: tuesday
+      time: "12:00"
+    open-pull-requests-limit: 3
+    reviewers:
+      - jahanzaibjameel
+    assignees:
+      - jahanzaibjameel
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "build"
+    allow:
+      - dependency-type: "dev"
+      - dependency-name: "@angular-devkit/*"
+      - dependency-name: "webpack*"
+      - dependency-name: "terser"
+      - dependency-name: "@types/node"
+
+  # Update security tools
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: saturday
+      time: "15:00"
+    open-pull-requests-limit: 3
+    reviewers:
+      - jahanzaibjameel
+    assignees:
+      - jahanzaibjameel
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "security"
+    allow:
+      - dependency-type: "dev"
+      - dependency-name: "snyk"
+      - dependency-name: "audit-ci"
+      - dependency-name: "npm-audit-resolver"
+
+  # Update Node.js (major versions only)
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+      day: 1
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - jahanzaibjameel
+    assignees:
+      - jahanzaibjameel
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "nodejs"
+      - "major"
+    allow:
+      - dependency-type: "direct"
+      - dependency-name: "node"
+      - dependency-type: "production"
+      - update-types: ["version-update:semver-major"]
+      - versioning-strategy: lockfile-only
+
+  # Docker updates
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+      day: sunday
+      time: "10:00"
+    open-pull-requests-limit: 3
+    reviewers:
+      - jahanzaibjameel
+    assignees:
+      - jahanzaibjameel
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "docker"
+
+  # GitHub Actions updates
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "08:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - jahanzaibjameel
+    assignees:
+      - jahanzaibjameel
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    allow:
+      - dependency-name: "actions/*"
+      - dependency-type: "direct"
+      - dependency-type: "production"
+
+  # Group updates for better organization
+  groups:
+    # Angular ecosystem
+    angular:
+      patterns:
+        - "@angular/*"
+        - "zone.js"
+        - "rxjs"
+        - "typescript"
+      update-types:
+        - "version-update:semver-patch"
+        - "version-update:semver-minor"
+      reviewers:
+        - jahanzaibjameel
+      assignees:
+        - jahanzaibjameel
+
+    # Testing ecosystem
+    testing:
+      patterns:
+        - "@testing-library/*"
+        - "@playwright/*"
+        - "jest*"
+        - "@storybook/*"
+      update-types:
+        - "version-update:semver-patch"
+        - "version-update:semver-minor"
+      reviewers:
+        - jahanzaibjameel
+      assignees:
+        - jahanzaibjameel
+
+    # Build tools
+    build-tools:
+      patterns:
+        - "@angular-devkit/*"
+        - "webpack*"
+        - "terser"
+        - "@types/node"
+      update-types:
+        - "version-update:semver-patch"
+        - "version-update:semver-minor"
+      reviewers:
+        - jahanzaibjameel
+      assignees:
+        - jahanzaibjameel
+
+    # Security tools
+    security:
+      patterns:
+        - "snyk"
+        - "audit-ci"
+        - "npm-audit-resolver"
+      update-types:
+        - "version-update:semver-patch"
+        - "version-update:semver-minor"
+      reviewers:
+        - jahanzaibjameel
+      assignees:
+        - jahanzaibjameel
+
+# Configure dependency review settings
+reviewers:
+  - type: users
+    reviewers:
+      - jahanzaibjameel
+
+# Configure auto-merge settings
+auto-merge:
+  - auto-merge: minor
+    - auto-merge: patch
+    - auto-merge: major
+
+# Configure PR settings
+pull-requests:
+  # Auto-merge minor and patch updates
+  - auto-merge: minor
+  - auto-merge: patch
+  
+  # Require approval for major updates
+  - require-approval: major
+  
+  # Add labels based on update type
+  - add-labels: 
+      - "dependencies"
+      - "automated-pr"
+
+# Configure security scanning
+security:
+  # Run security audit on PRs
+  - security-audit: true
+  
+  # Block PRs that introduce security vulnerabilities
+  - block:
+      - dependency-type: direct
+      - dependency-name: "lodash"
+      - vulnerability: ">= 4.0.0"

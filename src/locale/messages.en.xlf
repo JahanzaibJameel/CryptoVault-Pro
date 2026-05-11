@@ -1,0 +1,472 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+  <file source-language="en" datatype="plaintext" original="ng2.template">
+    <body>
+      <!-- Navigation -->
+      <trans-unit id="navigation.dashboard" datatype="html">
+        <source>Dashboard</source>
+        <target>Dashboard</target>
+      </trans-unit>
+      <trans-unit id="navigation.portfolio" datatype="html">
+        <source>Portfolio</source>
+        <target>Portfolio</target>
+      </trans-unit>
+      <trans-unit id="navigation.watchlist" datatype="html">
+        <source>Watchlist</source>
+        <target>Watchlist</target>
+      </trans-unit>
+      <trans-unit id="navigation.news" datatype="html">
+        <source>News</source>
+        <target>News</target>
+      </trans-unit>
+      <trans-unit id="navigation.settings" datatype="html">
+        <source>Settings</source>
+        <target>Settings</target>
+      </trans-unit>
+
+      <!-- Dashboard -->
+      <trans-unit id="dashboard.title" datatype="html">
+        <source>CryptoVault Pro Dashboard</source>
+        <target>CryptoVault Pro Dashboard</target>
+      </trans-unit>
+      <trans-unit id="dashboard.totalPortfolioValue" datatype="html">
+        <source>Total Portfolio Value</source>
+        <target>Total Portfolio Value</target>
+      </trans-unit>
+      <trans-unit id="dashboard.totalInvested" datatype="html">
+        <source>Total Invested</source>
+        <target>Total Invested</target>
+      </trans-unit>
+      <trans-unit id="dashboard.totalProfitLoss" datatype="html">
+        <source>Total Profit/Loss</source>
+        <target>Total Profit/Loss</target>
+      </trans-unit>
+      <trans-unit id="dashboard.dayChange" datatype="html">
+        <source>Day Change</source>
+        <target>Day Change</target>
+      </trans-unit>
+      <trans-unit id="dashboard.bestPerformer" datatype="html">
+        <source>Best Performer</source>
+        <target>Best Performer</target>
+      </trans-unit>
+      <trans-unit id="dashboard.worstPerformer" datatype="html">
+        <source>Worst Performer</source>
+        <target>Worst Performer</target>
+      </trans-unit>
+
+      <!-- Portfolio -->
+      <trans-unit id="portfolio.title" datatype="html">
+        <source>Portfolio</source>
+        <target>Portfolio</target>
+      </trans-unit>
+      <trans-unit id="portfolio.holdings" datatype="html">
+        <source>Holdings</source>
+        <target>Holdings</target>
+      </trans-unit>
+      <trans-unit id="portfolio.transactions" datatype="html">
+        <source>Transactions</source>
+        <target>Transactions</target>
+      </trans-unit>
+      <trans-unit id="portfolio.addTransaction" datatype="html">
+        <source>Add Transaction</source>
+        <target>Add Transaction</target>
+      </trans-unit>
+      <trans-unit id="portfolio.buy" datatype="html">
+        <source>Buy</source>
+        <target>Buy</target>
+      </trans-unit>
+      <trans-unit id="portfolio.sell" datatype="html">
+        <source>Sell</source>
+        <target>Sell</target>
+      </trans-unit>
+      <trans-unit id="portfolio.amount" datatype="html">
+        <source>Amount</source>
+        <target>Amount</target>
+      </trans-unit>
+      <trans-unit id="portfolio.price" datatype="html">
+        <source>Price</source>
+        <target>Price</target>
+      </trans-unit>
+      <trans-unit id="portfolio.date" datatype="html">
+        <source>Date</source>
+        <target>Date</target>
+      </trans-unit>
+      <trans-unit id="portfolio.totalValue" datatype="html">
+        <source>Total Value</source>
+        <target>Total Value</target>
+      </trans-unit>
+      <trans-unit id="portfolio.profitLoss" datatype="html">
+        <source>Profit/Loss</source>
+        <target>Profit/Loss</target>
+      </trans-unit>
+      <trans-unit id="portfolio.returnOnInvestment" datatype="html">
+        <source>Return on Investment</source>
+        <target>Return on Investment</target>
+      </trans-unit>
+
+      <!-- Watchlist -->
+      <trans-unit id="watchlist.title" datatype="html">
+        <source>Watchlist</source>
+        <target>Watchlist</target>
+      </trans-unit>
+      <trans-unit id="watchlist.addToWatchlist" datatype="html">
+        <source>Add to Watchlist</source>
+        <target>Add to Watchlist</target>
+      </trans-unit>
+      <trans-unit id="watchlist.removeFromWatchlist" datatype="html">
+        <source>Remove from Watchlist</source>
+        <target>Remove from Watchlist</target>
+      </trans-unit>
+      <trans-unit id="watchlist.noCoins" datatype="html">
+        <source>No coins in watchlist</source>
+        <target>No coins in watchlist</target>
+      </trans-unit>
+      <trans-unit id="watchlist.addCoinsToTrack" datatype="html">
+        <source>Add coins to track their performance</source>
+        <target>Add coins to track their performance</target>
+      </trans-unit>
+
+      <!-- News -->
+      <trans-unit id="news.title" datatype="html">
+        <source>Crypto News</source>
+        <target>Crypto News</target>
+      </trans-unit>
+      <trans-unit id="news.latestNews" datatype="html">
+        <source>Latest News</source>
+        <target>Latest News</target>
+      </trans-unit>
+      <trans-unit id="news.readMore" datatype="html">
+        <source>Read More</source>
+        <target>Read More</target>
+      </trans-unit>
+      <trans-unit id="news.noNews" datatype="html">
+        <source>No news available</source>
+        <target>No news available</target>
+      </trans-unit>
+
+      <!-- Settings -->
+      <trans-unit id="settings.title" datatype="html">
+        <source>Settings</source>
+        <target>Settings</target>
+      </trans-unit>
+      <trans-unit id="settings.appearance" datatype="html">
+        <source>Appearance</source>
+        <target>Appearance</target>
+      </trans-unit>
+      <trans-unit id="settings.theme" datatype="html">
+        <source>Theme</source>
+        <target>Theme</target>
+      </trans-unit>
+      <trans-unit id="settings.darkMode" datatype="html">
+        <source>Dark Mode</source>
+        <target>Dark Mode</target>
+      </trans-unit>
+      <trans-unit id="settings.lightMode" datatype="html">
+        <source>Light Mode</source>
+        <target>Light Mode</target>
+      </trans-unit>
+      <trans-unit id="settings.auto" datatype="html">
+        <source>Auto</source>
+        <target>Auto</target>
+      </trans-unit>
+      <trans-unit id="settings.language" datatype="html">
+        <source>Language</source>
+        <target>Language</target>
+      </trans-unit>
+      <trans-unit id="settings.notifications" datatype="html">
+        <source>Notifications</source>
+        <target>Notifications</target>
+      </trans-unit>
+      <trans-unit id="settings.priceAlerts" datatype="html">
+        <source>Price Alerts</source>
+        <target>Price Alerts</target>
+      </trans-unit>
+      <trans-unit id="settings.newsUpdates" datatype="html">
+        <source>News Updates</source>
+        <target>News Updates</target>
+      </trans-unit>
+      <trans-unit id="settings.emailNotifications" datatype="html">
+        <source>Email Notifications</source>
+        <target>Email Notifications</target>
+      </trans-unit>
+      <trans-unit id="settings.privacy" datatype="html">
+        <source>Privacy</source>
+        <target>Privacy</target>
+      </trans-unit>
+      <trans-unit id="settings.shareUsageData" datatype="html">
+        <source>Share Usage Data</source>
+        <target>Share Usage Data</target>
+      </trans-unit>
+      <trans-unit id="settings.analytics" datatype="html">
+        <source>Analytics</source>
+        <target>Analytics</target>
+      </trans-unit>
+      <trans-unit id="settings.security" datatype="html">
+        <source>Security & Encryption</source>
+        <target>Security & Encryption</target>
+      </trans-unit>
+      <trans-unit id="settings.encryptionStatus" datatype="html">
+        <source>Encryption Status</source>
+        <target>Encryption Status</target>
+      </trans-unit>
+      <trans-unit id="settings.enableEncryption" datatype="html">
+        <source>Enable Encryption</source>
+        <target>Enable Encryption</target>
+      </trans-unit>
+      <trans-unit id="settings.advanced" datatype="html">
+        <source>Advanced</source>
+        <target>Advanced</target>
+      </trans-unit>
+      <trans-unit id="settings.apiKey" datatype="html">
+        <source>API Key</source>
+        <target>API Key</target>
+      </trans-unit>
+      <trans-unit id="settings.dataRefreshRate" datatype="html">
+        <source>Data Refresh Rate</source>
+        <target>Data Refresh Rate</target>
+      </trans-unit>
+
+      <!-- Common -->
+      <trans-unit id="common.loading" datatype="html">
+        <source>Loading...</source>
+        <target>Loading...</target>
+      </trans-unit>
+      <trans-unit id="common.error" datatype="html">
+        <source>Error</source>
+        <target>Error</target>
+      </trans-unit>
+      <trans-unit id="common.retry" datatype="html">
+        <source>Retry</source>
+        <target>Retry</target>
+      </trans-unit>
+      <trans-unit id="common.cancel" datatype="html">
+        <source>Cancel</source>
+        <target>Cancel</target>
+      </trans-unit>
+      <trans-unit id="common.save" datatype="html">
+        <source>Save</source>
+        <target>Save</target>
+      </trans-unit>
+      <trans-unit id="common.delete" datatype="html">
+        <source>Delete</source>
+        <target>Delete</target>
+      </trans-unit>
+      <trans-unit id="common.edit" datatype="html">
+        <source>Edit</source>
+        <target>Edit</target>
+      </trans-unit>
+      <trans-unit id="common.close" datatype="html">
+        <source>Close</source>
+        <target>Close</target>
+      </trans-unit>
+      <trans-unit id="common.confirm" datatype="html">
+        <source>Confirm</source>
+        <target>Confirm</target>
+      </trans-unit>
+      <trans-unit id="common.search" datatype="html">
+        <source>Search</source>
+        <target>Search</target>
+      </trans-unit>
+      <trans-unit id="common.filter" datatype="html">
+        <source>Filter</source>
+        <target>Filter</target>
+      </trans-unit>
+      <trans-unit id="common.sort" datatype="html">
+        <source>Sort</source>
+        <target>Sort</target>
+      </trans-unit>
+
+      <!-- Error Messages -->
+      <trans-unit id="error.networkError" datatype="html">
+        <source>Network Error</source>
+        <target>Network Error</target>
+      </trans-unit>
+      <trans-unit id="error.noInternetConnection" datatype="html">
+        <source>No internet connection. Please check your network connection and try again.</source>
+        <target>No internet connection. Please check your network connection and try again.</target>
+      </trans-unit>
+      <trans-unit id="error.serverUnavailable" datatype="html">
+        <source>Server is temporarily unavailable. Please try again in a few moments.</source>
+        <target>Server is temporarily unavailable. Please try again in a few moments.</target>
+      </trans-unit>
+      <trans-unit id="error.tooManyRequests" datatype="html">
+        <source>Too many requests. Please wait a moment before trying again.</source>
+        <target>Too many requests. Please wait a moment before trying again.</target>
+      </trans-unit>
+      <trans-unit id="error.dataNotFound" datatype="html">
+        <source>The requested data was not found. Please refresh and try again.</source>
+        <target>The requested data was not found. Please refresh and try again.</target>
+      </trans-unit>
+      <trans-unit id="error.invalidRequest" datatype="html">
+        <source>There was a problem with your request. Please check your input and try again.</source>
+        <target>There was a problem with your request. Please check your input and try again.</target>
+      </trans-unit>
+
+      <!-- Success Messages -->
+      <trans-unit id="success.transactionAdded" datatype="html">
+        <source>Transaction added successfully</source>
+        <target>Transaction added successfully</target>
+      </trans-unit>
+      <trans-unit id="success.transactionDeleted" datatype="html">
+        <source>Transaction deleted successfully</source>
+        <target>Transaction deleted successfully</target>
+      </trans-unit>
+      <trans-unit id="success.settingsSaved" datatype="html">
+        <source>Settings saved successfully</source>
+        <target>Settings saved successfully</target>
+      </trans-unit>
+      <trans-unit id="success.encryptionEnabled" datatype="html">
+        <source>Encryption enabled successfully</source>
+        <target>Encryption enabled successfully</target>
+      </trans-unit>
+
+      <!-- Empty States -->
+      <trans-unit id="empty.noTransactions" datatype="html">
+        <source>No transactions yet</source>
+        <target>No transactions yet</target>
+      </trans-unit>
+      <trans-unit id="empty.noTransactionsDescription" datatype="html">
+        <source>Start tracking your crypto portfolio by adding your first transaction.</source>
+        <target>Start tracking your crypto portfolio by adding your first transaction.</target>
+      </trans-unit>
+      <trans-unit id="empty.noHoldings" datatype="html">
+        <source>No holdings yet</source>
+        <target>No holdings yet</target>
+      </trans-unit>
+      <trans-unit id="empty.noHoldingsDescription" datatype="html">
+        <source>Add transactions to see your portfolio holdings.</source>
+        <target>Add transactions to see your portfolio holdings.</target>
+      </trans-unit>
+
+      <!-- Time and Date -->
+      <trans-unit id="time.justNow" datatype="html">
+        <source>just now</source>
+        <target>just now</target>
+      </trans-unit>
+      <trans-unit id="time.minuteAgo" datatype="html">
+        <source>1 minute ago</source>
+        <target>1 minute ago</target>
+      </trans-unit>
+      <trans-unit id="time.minutesAgo" datatype="html">
+        <source><x id="INTERPOLATION" equiv="{{count}}"/> minutes ago</source>
+        <target><x id="INTERPOLATION" equiv="{{count}}"/> minutes ago</target>
+      </trans-unit>
+      <trans-unit id="time.hourAgo" datatype="html">
+        <source>1 hour ago</source>
+        <target>1 hour ago</target>
+      </trans-unit>
+      <trans-unit id="time.hoursAgo" datatype="html">
+        <source><x id="INTERPOLATION" equiv="{{count}}"/> hours ago</source>
+        <target><x id="INTERPOLATION" equiv="{{count}}"/> hours ago</target>
+      </trans-unit>
+      <trans-unit id="time.dayAgo" datatype="html">
+        <source>1 day ago</source>
+        <target>1 day ago</target>
+      </trans-unit>
+      <trans-unit id="time.daysAgo" datatype="html">
+        <source><x id="INTERPOLATION" equiv="{{count}}"/> days ago</source>
+        <target><x id="INTERPOLATION" equiv="{{count}}"/> days ago</target>
+      </trans-unit>
+
+      <!-- Numbers and Currency -->
+      <trans-unit id="currency.usd" datatype="html">
+        <source>USD</source>
+        <target>USD</target>
+      </trans-unit>
+      <trans-unit id="currency.eur" datatype="html">
+        <source>EUR</source>
+        <target>EUR</target>
+      </trans-unit>
+      <trans-unit id="currency.gbp" datatype="html">
+        <source>GBP</source>
+        <target>GBP</target>
+      </trans-unit>
+      <trans-unit id="currency.jpy" datatype="html">
+        <source>JPY</source>
+        <target>JPY</target>
+      </trans-unit>
+
+      <!-- Units -->
+      <trans-unit id="unit.bitcoin" datatype="html">
+        <source>BTC</source>
+        <target>BTC</target>
+      </trans-unit>
+      <trans-unit id="unit.ethereum" datatype="html">
+        <source>ETH</source>
+        <target>ETH</target>
+      </trans-unit>
+      <trans-unit id="unit.million" datatype="html">
+        <source>M</source>
+        <target>M</target>
+      </trans-unit>
+      <trans-unit id="unit.billion" datatype="html">
+        <source>B</source>
+        <target>B</target>
+      </trans-unit>
+      <trans-unit id="unit.trillion" datatype="html">
+        <source>T</source>
+        <target>T</target>
+      </trans-unit>
+
+      <!-- Performance Metrics -->
+      <trans-unit id="metrics.volatility" datatype="html">
+        <source>Volatility</source>
+        <target>Volatility</target>
+      </trans-unit>
+      <trans-unit id="metrics.sharpeRatio" datatype="html">
+        <source>Sharpe Ratio</source>
+        <target>Sharpe Ratio</target>
+      </trans-unit>
+      <trans-unit id="metrics.maxDrawdown" datatype="html">
+        <source>Max Drawdown</source>
+        <target>Max Drawdown</target>
+      </trans-unit>
+      <trans-unit id="metrics.diversification" datatype="html">
+        <source>Diversification</source>
+        <target>Diversification</target>
+      </trans-unit>
+      <trans-unit id="metrics.risk" datatype="html">
+        <source>Risk</source>
+        <target>Risk</target>
+      </trans-unit>
+      <trans-unit id="metrics.low" datatype="html">
+        <source>Low</source>
+        <target>Low</target>
+      </trans-unit>
+      <trans-unit id="metrics.medium" datatype="html">
+        <source>Medium</source>
+        <target>Medium</target>
+      </trans-unit>
+      <trans-unit id="metrics.high" datatype="html">
+        <source>High</source>
+        <target>High</target>
+      </trans-unit>
+
+      <!-- Status Messages -->
+      <trans-unit id="status.online" datatype="html">
+        <source>Online</source>
+        <target>Online</target>
+      </trans-unit>
+      <trans-unit id="status.offline" datatype="html">
+        <source>Offline</source>
+        <target>Offline</target>
+      </trans-unit>
+      <trans-unit id="status.syncing" datatype="html">
+        <source>Syncing</source>
+        <target>Syncing</target>
+      </trans-unit>
+      <trans-unit id="status.synced" datatype="html">
+        <source>Synced</source>
+        <target>Synced</target>
+      </trans-unit>
+      <trans-unit id="status.pending" datatype="html">
+        <source>Pending</source>
+        <target>Pending</target>
+      </trans-unit>
+      <trans-unit id="status.failed" datatype="html">
+        <source>Failed</source>
+        <target>Failed</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

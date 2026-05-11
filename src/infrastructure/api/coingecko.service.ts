@@ -78,7 +78,7 @@ export interface CoinGeckoDetail {
 })
 export class CoinGeckoService {
   private api = inject(ResilientApiService);
-  private readonly baseUrl = 'https://api.coingecko.com/api/v3';
+  private readonly baseUrl = '/api';
 
   getTopCoins(currency = 'usd', perPage = 50, page = 1): Observable<Coin[]> {
     const url = `${this.baseUrl}/coins/markets?vs_currency=${currency}&order=market_cap_desc&per_page=${perPage}&page=${page}&sparkline=false&price_change_percentage=24h`;

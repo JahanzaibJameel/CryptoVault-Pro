@@ -40,189 +40,238 @@ export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: var(--spacing-sm);
+      gap: var(--spacing-2);
       border: none;
       border-radius: var(--radius-md);
-      font-family: var(--font-family-primary);
-      font-weight: var(--font-weight-medium);
+      font-family: var(--font-primary);
+      font-weight: 500;
+      font-size: 0.875rem;
       text-decoration: none;
       cursor: pointer;
-      transition: all 0.2s ease-in-out;
+      transition: all var(--transition-normal);
       position: relative;
       overflow: hidden;
       white-space: nowrap;
       user-select: none;
       outline: none;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
     }
 
     button:focus-visible {
-      outline: 2px solid var(--color-primary-500);
-      outline-offset: 2px;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(0, 194, 255, 0.2);
     }
 
     button:disabled {
       cursor: not-allowed;
-      opacity: 0.6;
+      opacity: 0.5;
+      transform: none !important;
     }
 
-    /* Variants */
+    button:active:not(:disabled) {
+      transform: scale(0.97);
+    }
+
+    /* Glass Base */
+    button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+      border-radius: inherit;
+      opacity: 0;
+      transition: opacity var(--transition-fast);
+    }
+
+    button:hover::before {
+      opacity: 1;
+    }
+
+    /* Primary Variant - Electric Blue Glass */
     .primary {
-      background-color: var(--color-primary-500);
-      color: var(--color-white);
-      box-shadow: var(--shadow-sm);
+      background: var(--color-bg-glass);
+      color: var(--color-primary);
+      border: 1px solid rgba(0, 194, 255, 0.3);
+      box-shadow: 0 4px 16px rgba(0, 194, 255, 0.2);
     }
 
     .primary:hover:not(:disabled) {
-      background-color: var(--color-primary-600);
-      box-shadow: var(--shadow-md);
+      background: rgba(0, 194, 255, 0.1);
+      border-color: rgba(0, 194, 255, 0.5);
+      box-shadow: 0 8px 32px rgba(0, 194, 255, 0.4);
+      transform: translateY(-2px);
     }
 
     .primary:active:not(:disabled) {
-      background-color: var(--color-primary-700);
-      box-shadow: var(--shadow-sm);
+      box-shadow: 0 4px 16px rgba(0, 194, 255, 0.3);
     }
 
+    /* Secondary Variant - Outlined Glass */
     .secondary {
-      background-color: var(--color-gray-100);
-      color: var(--color-gray-900);
-      border: 1px solid var(--color-gray-300);
+      background: var(--color-bg-glass);
+      color: var(--color-text-primary);
+      border: 1px solid var(--color-border-glass);
+      box-shadow: var(--shadow-glass);
     }
 
     .secondary:hover:not(:disabled) {
-      background-color: var(--color-gray-200);
-      border-color: var(--color-gray-400);
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.12);
+      box-shadow: var(--shadow-glass-hover);
+      transform: translateY(-2px);
     }
 
     .secondary:active:not(:disabled) {
-      background-color: var(--color-gray-300);
+      transform: scale(0.97);
     }
 
+    /* Success Variant - Emerald Mint Glass */
     .success {
-      background-color: var(--color-success-500);
-      color: var(--color-white);
-      box-shadow: var(--shadow-sm);
+      background: var(--color-bg-glass);
+      color: var(--color-success);
+      border: 1px solid rgba(0, 227, 150, 0.3);
+      box-shadow: 0 4px 16px rgba(0, 227, 150, 0.2);
     }
 
     .success:hover:not(:disabled) {
-      background-color: var(--color-success-600);
-      box-shadow: var(--shadow-md);
+      background: rgba(0, 227, 150, 0.1);
+      border-color: rgba(0, 227, 150, 0.5);
+      box-shadow: 0 8px 32px rgba(0, 227, 150, 0.4);
+      transform: translateY(-2px);
     }
 
     .success:active:not(:disabled) {
-      background-color: var(--color-success-700);
-      box-shadow: var(--shadow-sm);
+      box-shadow: 0 4px 16px rgba(0, 227, 150, 0.3);
     }
 
+    /* Warning Variant - Golden Glass */
     .warning {
-      background-color: var(--color-warning-500);
-      color: var(--color-white);
-      box-shadow: var(--shadow-sm);
+      background: var(--color-bg-glass);
+      color: var(--color-warning);
+      border: 1px solid rgba(255, 189, 0, 0.3);
+      box-shadow: 0 4px 16px rgba(255, 189, 0, 0.2);
     }
 
     .warning:hover:not(:disabled) {
-      background-color: var(--color-warning-600);
-      box-shadow: var(--shadow-md);
+      background: rgba(255, 189, 0, 0.1);
+      border-color: rgba(255, 189, 0, 0.5);
+      box-shadow: 0 8px 32px rgba(255, 189, 0, 0.4);
+      transform: translateY(-2px);
     }
 
     .warning:active:not(:disabled) {
-      background-color: var(--color-warning-700);
-      box-shadow: var(--shadow-sm);
+      box-shadow: 0 4px 16px rgba(255, 189, 0, 0.3);
     }
 
+    /* Danger Variant - Soft Crimson Glass */
     .danger {
-      background-color: var(--color-danger-500);
-      color: var(--color-white);
-      box-shadow: var(--shadow-sm);
+      background: var(--color-bg-glass);
+      color: var(--color-danger);
+      border: 1px solid rgba(255, 77, 106, 0.3);
+      box-shadow: 0 4px 16px rgba(255, 77, 106, 0.2);
     }
 
     .danger:hover:not(:disabled) {
-      background-color: var(--color-danger-600);
-      box-shadow: var(--shadow-md);
+      background: rgba(255, 77, 106, 0.1);
+      border-color: rgba(255, 77, 106, 0.5);
+      box-shadow: 0 8px 32px rgba(255, 77, 106, 0.4);
+      transform: translateY(-2px);
     }
 
     .danger:active:not(:disabled) {
-      background-color: var(--color-danger-700);
-      box-shadow: var(--shadow-sm);
+      box-shadow: 0 4px 16px rgba(255, 77, 106, 0.3);
     }
 
+    /* Info Variant - Electric Blue Glass */
     .info {
-      background-color: var(--color-info-500);
-      color: var(--color-white);
-      box-shadow: var(--shadow-sm);
+      background: var(--color-bg-glass);
+      color: var(--color-primary);
+      border: 1px solid rgba(0, 194, 255, 0.3);
+      box-shadow: 0 4px 16px rgba(0, 194, 255, 0.2);
     }
 
     .info:hover:not(:disabled) {
-      background-color: var(--color-info-600);
-      box-shadow: var(--shadow-md);
+      background: rgba(0, 194, 255, 0.1);
+      border-color: rgba(0, 194, 255, 0.5);
+      box-shadow: 0 8px 32px rgba(0, 194, 255, 0.4);
+      transform: translateY(-2px);
     }
 
     .info:active:not(:disabled) {
-      background-color: var(--color-info-700);
-      box-shadow: var(--shadow-sm);
+      box-shadow: 0 4px 16px rgba(0, 194, 255, 0.3);
     }
 
+    /* Ghost Variant */
     .ghost {
-      background-color: transparent;
-      color: var(--color-primary-500);
+      background: transparent;
+      color: var(--color-text-secondary);
       border: 1px solid transparent;
     }
 
     .ghost:hover:not(:disabled) {
-      background-color: var(--color-primary-50);
-      border-color: var(--color-primary-200);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--color-text-primary);
+      border-color: var(--color-border);
     }
 
     .ghost:active:not(:disabled) {
-      background-color: var(--color-primary-100);
+      background: rgba(255, 255, 255, 0.08);
     }
 
+    /* Link Variant */
     .link {
-      background-color: transparent;
-      color: var(--color-primary-500);
+      background: transparent;
+      color: var(--color-primary);
       border: none;
       padding: 0;
       box-shadow: none;
-      text-decoration: underline;
+      text-decoration: none;
+      font-weight: 500;
     }
 
     .link:hover:not(:disabled) {
-      color: var(--color-primary-600);
-      text-decoration: none;
+      color: var(--color-primary);
+      text-decoration: underline;
+      text-underline-offset: 2px;
     }
 
     .link:active:not(:disabled) {
-      color: var(--color-primary-700);
+      text-decoration: underline;
     }
 
     /* Sizes */
     .xs {
-      padding: var(--spacing-xs) var(--spacing-sm);
-      font-size: var(--font-size-xs);
+      padding: var(--spacing-1) var(--spacing-2);
+      font-size: 0.75rem;
       min-height: 1.5rem;
       border-radius: var(--radius-sm);
     }
 
     .sm {
-      padding: var(--spacing-sm) var(--spacing-md);
-      font-size: var(--font-size-sm);
+      padding: var(--spacing-2) var(--spacing-3);
+      font-size: 0.875rem;
       min-height: 2rem;
     }
 
     .md {
-      padding: var(--spacing-sm) var(--spacing-lg);
-      font-size: var(--font-size-base);
+      padding: var(--spacing-3) var(--spacing-4);
+      font-size: 0.875rem;
       min-height: 2.5rem;
     }
 
     .lg {
-      padding: var(--spacing-md) var(--spacing-xl);
-      font-size: var(--font-size-lg);
+      padding: var(--spacing-4) var(--spacing-6);
+      font-size: 1rem;
       min-height: 3rem;
     }
 
     .xl {
-      padding: var(--spacing-lg) var(--spacing-2xl);
-      font-size: var(--font-size-xl);
+      padding: var(--spacing-5) var(--spacing-8);
+      font-size: 1.125rem;
       min-height: 3.5rem;
     }
 
@@ -236,6 +285,7 @@ export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
       display: flex;
       align-items: center;
       justify-content: center;
+      flex-shrink: 0;
     }
 
     .button-text {
@@ -258,29 +308,23 @@ export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
       100% { transform: rotate(360deg); }
     }
 
-    /* Dark theme */
-    [data-theme="dark"] .secondary {
-      background-color: var(--color-gray-800);
-      color: var(--color-gray-100);
-      border-color: var(--color-gray-600);
+    /* Ripple effect */
+    button::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
     }
 
-    [data-theme="dark"] .secondary:hover:not(:disabled) {
-      background-color: var(--color-gray-700);
-      border-color: var(--color-gray-500);
-    }
-
-    [data-theme="dark"] .secondary:active:not(:disabled) {
-      background-color: var(--color-gray-600);
-    }
-
-    [data-theme="dark"] .ghost:hover:not(:disabled) {
-      background-color: var(--color-primary-900);
-      border-color: var(--color-primary-700);
-    }
-
-    [data-theme="dark"] .ghost:active:not(:disabled) {
-      background-color: var(--color-primary-800);
+    button:active::after {
+      width: 300px;
+      height: 300px;
     }
   `]
 })

@@ -39,6 +39,11 @@ export class WatchlistStore {
     await this.indexedDb.saveWatchlist(this.state());
   }
 
+  async reorderFromList(coins: string[]) {
+    this.state.set(coins);
+    await this.indexedDb.saveWatchlist(this.state());
+  }
+
   isInWatchlist(coinId: string): boolean {
     return this.state().includes(coinId);
   }

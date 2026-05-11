@@ -35,6 +35,14 @@ interface CryptoVaultDB extends DBSchema {
     key: string;
     value: any;
   };
+  'encryption-keys': {
+    key: string;
+    value: any;
+  };
+  'encrypted-data': {
+    key: string;
+    value: any;
+  };
 }
 
 @Injectable({
@@ -77,6 +85,16 @@ export class IndexedDbService {
           // Settings store
           if (!db.objectStoreNames.contains('settings')) {
             db.createObjectStore('settings', { keyPath: 'key' });
+          }
+
+          // Encryption keys store
+          if (!db.objectStoreNames.contains('encryption-keys')) {
+            db.createObjectStore('encryption-keys', { keyPath: 'key' });
+          }
+
+          // Encrypted data store
+          if (!db.objectStoreNames.contains('encrypted-data')) {
+            db.createObjectStore('encrypted-data', { keyPath: 'key' });
           }
         }
       });
@@ -340,5 +358,31 @@ export class IndexedDbService {
       version: this.DB_VERSION,
       ready: this.db !== null
     };
+  }
+
+  // Generic methods for encrypted storage
+  async get(storeName: 'encryption-keys' | 'encrypted-data', key: string): Promise<any> {
+    const db = await this.ensureDb();
+    return await db.get(storeName, key);
+  }
+
+  async set(storeName: 'encryption-keys' | 'encrypted-data', key: string, value: any): Promise<void> {
+    const db = await this.ensureDb();
+    await db.put(storeName, { key, ...value });
+  }
+
+  async delete(storeName: 'encryption-keys' | 'encrypted-data', key: string): Promise<void> {
+    const db = await this.ensureDb();
+    await db.delete(storeName, key);
+  }
+
+  async getAll(storeName: 'encryption-keys' | 'encrypted-data'): Promise<any[]> {
+    const db = await this.ensureDb();
+    return await db.getAll(storeName);
+  }
+
+  async clear(storeName: 'encryption-keys' | 'encrypted-data'): Promise<void> {
+    const db = await this.ensureDb();
+    await db.clear(storeName);
   }
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { calculatePnL, calculateVolatility, diversificationScore, calculateROI } from './portfolio-metrics';
+import { calculatePnL, calculateVolatility, diversificationScore, calculateAllocation, calculateRiskScore, calculateROI } from './portfolio-metrics';
 import { Holding } from '../models/holding.model';
 
 describe('Portfolio Metrics', () => {
@@ -129,6 +129,89 @@ describe('Portfolio Metrics', () => {
       const roi = calculateROI(mockHoldings, lossPrices);
       
       expect(roi).toBeLessThan(0);
+    });
+  });
+
+  describe('calculateAllocation', () => {
+    it('should calculate allocation percentages correctly', () => {
+      const holdings: Holding[] = [
+        { coinId: 'btc', amount: 1, avgBuyPrice: 40000 },
+        { coinId: 'eth', amount: 10, avgBuyPrice: 2000 }
+      ];
+      const currentPrices = { btc: 50000, eth: 2500 };
+      
+      const allocation = calculateAllocation(holdings, currentPrices);
+      
+      expect(allocation).toHaveLength(2);
+      expect(allocation[0].coinId).toBe('btc');
+      expect(allocation[0].percentage).toBe(66.67); // 50000/75000 * 100
+      expect(allocation[0].value).toBe(50000);
+      expect(allocation[1].coinId).toBe('eth');
+      expect(allocation[1].percentage).toBe(33.33); // 25000/75000 * 100
+      expect(allocation[1].value).toBe(25000);
+    });
+
+    it('should handle zero total value', () => {
+      const holdings: Holding[] = [
+        { coinId: 'btc', amount: 1, avgBuyPrice: 40000 }
+      ];
+      const currentPrices = { btc: 0 };
+      
+      const allocation = calculateAllocation(holdings, currentPrices);
+      
+      expect(allocation).toHaveLength(0);
+    });
+
+    it('should filter out zero-value holdings', () => {
+      const holdings: Holding[] = [
+        { coinId: 'btc', amount: 1, avgBuyPrice: 40000 },
+        { coinId: 'eth', amount: 10, avgBuyPrice: 2000 }
+      ];
+      const currentPrices = { btc: 50000, eth: 0 };
+      
+      const allocation = calculateAllocation(holdings, currentPrices);
+      
+      expect(allocation).toHaveLength(1);
+      expect(allocation[0].coinId).toBe('btc');
+      expect(allocation[0].percentage).toBe(100);
+    });
+  });
+
+  describe('calculateRiskScore', () => {
+    it('should calculate moderate risk score', () => {
+      const holdings: Holding[] = [
+        { coinId: 'btc', amount: 1, avgBuyPrice: 40000 },
+        { coinId: 'eth', amount: 10, avgBuyPrice: 2000 }
+      ];
+      const priceHistory = {
+        btc: [100, 110, 105, 120, 115], // Some volatility
+        eth: [200, 210, 205, 220, 215]  // Some volatility
+      };
+      
+      const riskScore = calculateRiskScore(holdings, priceHistory);
+      
+      expect(riskScore).toBeGreaterThan(0);
+      expect(riskScore).toBeLessThan(100);
+    });
+
+    it('should handle empty holdings', () => {
+      const holdings: Holding[] = [];
+      const priceHistory = {};
+      
+      const riskScore = calculateRiskScore(holdings, priceHistory);
+      
+      expect(riskScore).toBe(0);
+    });
+
+    it('should handle missing price history', () => {
+      const holdings: Holding[] = [
+        { coinId: 'btc', amount: 1, avgBuyPrice: 40000 }
+      ];
+      const priceHistory = {};
+      
+      const riskScore = calculateRiskScore(holdings, priceHistory);
+      
+      expect(riskScore).toBeGreaterThan(0);
     });
   });
 });

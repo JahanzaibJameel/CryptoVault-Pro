@@ -2,7 +2,10 @@ export const typography = {
   fontFamily: {
     primary: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
     mono: '"JetBrains Mono", "Fira Code", "Consolas", "Monaco", "Courier New", monospace',
-    display: '"Inter Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    display: '"Space Grotesk", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    heading: '"Space Grotesk", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    body: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    ticker: '"JetBrains Mono", "Fira Code", "Consolas", "Monaco", monospace',
   },
   fontSize: {
     xs: '0.75rem',    // 12px
@@ -100,115 +103,139 @@ export const typography = {
     '9px': '0.5625rem',
     '10px': '0.625rem',
   },
-  // Text styles for consistent typography
+  // Cyber-Glass 2026 text styles
   textStyles: {
     h1: {
-      fontSize: '2.25rem',
-      fontWeight: 700,
+      fontFamily: '"Space Grotesk", sans-serif',
+      fontSize: '2.5rem', // 40px
+      fontWeight: 600,
       lineHeight: 1.2,
       letterSpacing: '-0.025em',
     },
     h2: {
-      fontSize: '1.875rem',
+      fontFamily: '"Space Grotesk", sans-serif',
+      fontSize: '2rem', // 32px
       fontWeight: 600,
       lineHeight: 1.3,
       letterSpacing: '-0.025em',
     },
     h3: {
-      fontSize: '1.5rem',
+      fontFamily: '"Space Grotesk", sans-serif',
+      fontSize: '1.5rem', // 24px
       fontWeight: 600,
       lineHeight: 1.4,
       letterSpacing: '0em',
     },
     h4: {
-      fontSize: '1.25rem',
+      fontFamily: '"Space Grotesk", sans-serif',
+      fontSize: '1.25rem', // 20px
       fontWeight: 600,
       lineHeight: 1.4,
       letterSpacing: '0em',
     },
     h5: {
-      fontSize: '1.125rem',
+      fontFamily: '"Space Grotesk", sans-serif',
+      fontSize: '1.125rem', // 18px
       fontWeight: 600,
       lineHeight: 1.5,
       letterSpacing: '0em',
     },
     h6: {
-      fontSize: '1rem',
+      fontFamily: '"Space Grotesk", sans-serif',
+      fontSize: '1rem', // 16px
       fontWeight: 600,
       lineHeight: 1.5,
       letterSpacing: '0em',
     },
     subtitle1: {
-      fontSize: '1rem',
+      fontFamily: '"Inter", sans-serif',
+      fontSize: '1rem', // 16px
       fontWeight: 500,
       lineHeight: 1.5,
       letterSpacing: '0em',
     },
     subtitle2: {
-      fontSize: '0.875rem',
+      fontFamily: '"Inter", sans-serif',
+      fontSize: '0.875rem', // 14px
       fontWeight: 500,
       lineHeight: 1.5,
       letterSpacing: '0.025em',
     },
     body1: {
-      fontSize: '1rem',
+      fontFamily: '"Inter", sans-serif',
+      fontSize: '1rem', // 16px
       fontWeight: 400,
       lineHeight: 1.6,
       letterSpacing: '0em',
     },
     body2: {
-      fontSize: '0.875rem',
+      fontFamily: '"Inter", sans-serif',
+      fontSize: '0.875rem', // 14px
       fontWeight: 400,
       lineHeight: 1.6,
       letterSpacing: '0.025em',
     },
     button: {
-      fontSize: '0.875rem',
+      fontFamily: '"Inter", sans-serif',
+      fontSize: '0.875rem', // 14px
       fontWeight: 500,
       lineHeight: 1.4,
       letterSpacing: '0.025em',
       textTransform: 'none',
     },
     caption: {
-      fontSize: '0.75rem',
+      fontFamily: '"Inter", sans-serif',
+      fontSize: '0.75rem', // 12px
       fontWeight: 400,
       lineHeight: 1.4,
       letterSpacing: '0.025em',
     },
     overline: {
-      fontSize: '0.75rem',
+      fontFamily: '"Inter", sans-serif',
+      fontSize: '0.75rem', // 12px
       fontWeight: 500,
       lineHeight: 1.4,
       letterSpacing: '0.1em',
       textTransform: 'uppercase',
     },
     label: {
-      fontSize: '0.875rem',
+      fontFamily: '"Inter", sans-serif',
+      fontSize: '0.875rem', // 14px
       fontWeight: 500,
       lineHeight: 1.4,
       letterSpacing: '0.025em',
     },
     input: {
-      fontSize: '1rem',
+      fontFamily: '"Inter", sans-serif',
+      fontSize: '1rem', // 16px
       fontWeight: 400,
+      lineHeight: 1.5,
+      letterSpacing: '0em',
+    },
+    ticker: {
+      fontFamily: '"JetBrains Mono", monospace',
+      fontSize: '0.875rem', // 14px
+      fontWeight: 500,
       lineHeight: 1.5,
       letterSpacing: '0em',
     },
     code: {
       fontFamily: '"JetBrains Mono", monospace',
-      fontSize: '0.875rem',
+      fontSize: '0.875rem', // 14px
       fontWeight: 400,
       lineHeight: 1.5,
       letterSpacing: '0em',
     },
     small: {
-      fontSize: '0.75rem',
+      fontFamily: '"Inter", sans-serif',
+      fontSize: '0.75rem', // 12px
       fontWeight: 400,
       lineHeight: 1.4,
       letterSpacing: '0.025em',
     },
     micro: {
-      fontSize: '0.625rem',
+      fontFamily: '"Inter", sans-serif',
+      fontSize: '0.625rem', // 10px
       fontWeight: 400,
       lineHeight: 1.4,
       letterSpacing: '0.025em',

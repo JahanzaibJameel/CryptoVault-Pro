@@ -47,6 +47,11 @@ export class SettingsStore {
     this.applyTheme(newTheme);
   }
 
+  private applyTheme(theme: Theme): void {
+    // Apply theme to document
+    document.documentElement.setAttribute('data-theme', theme);
+  }
+
   setTheme(theme: Theme) {
     this.updateSetting('theme', theme);
     this.applyTheme(theme);
@@ -141,12 +146,4 @@ export class SettingsStore {
     }
   }
 
-  private applyTheme(theme: Theme) {
-    const html = document.documentElement;
-    if (theme === 'dark') {
-      html.setAttribute('data-theme', 'dark');
-    } else {
-      html.removeAttribute('data-theme');
-    }
   }
-}
