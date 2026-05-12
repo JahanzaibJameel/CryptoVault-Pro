@@ -32,7 +32,7 @@ describe('TransactionFormComponent', () => {
     } as any;
 
     await TestBed.configureTestingModule({
-      imports: [ReactiveFormsModule, FormsModule, TransactionFormComponent],
+      imports: [TransactionFormComponent],
       providers: [
         { provide: PortfolioStore, useValue: portfolioStore },
         { provide: MarketDataStore, useValue: marketDataStore }

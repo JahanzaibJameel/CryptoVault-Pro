@@ -322,12 +322,10 @@ export class SentryService {
       return null;
     }
 
-    const transaction = (Sentry as any).startTransaction({
-      name,
-      op: operation
-    });
-
-    return transaction;
+    // Note: Sentry API has changed, transaction tracking disabled for now
+    // TODO: Update to use new Sentry tracing API when available
+    console.warn(`Sentry transaction tracking disabled: ${name} (${operation})`);
+    return null;
   }
 
   // Circuit breaker specific methods

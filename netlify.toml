@@ -1,7 +1,6 @@
 [build]
-  base = "dist/crypto-vault-pro"
   command = "ng build --configuration production"
-  publish = "dist/crypto-vault-pro"
+  publish = "dist/crypto-vault-pro/browser"
 
 [build.environment]
   NODE_VERSION = "18"
