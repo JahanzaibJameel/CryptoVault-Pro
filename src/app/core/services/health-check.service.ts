@@ -228,7 +228,7 @@ export class HealthCheckService {
       const testKey = `health-check-${Date.now()}`;
       const testData = { test: true, timestamp: Date.now() };
       
-      await this.indexedDbService.saveSetting(testKey, testData);
+      await this.indexedDbService.setSetting(testKey, testData);
       const retrieved = await this.indexedDbService.getSetting(testKey);
       // Note: IndexedDbService doesn't have a delete method for settings, so we'll just leave it
 

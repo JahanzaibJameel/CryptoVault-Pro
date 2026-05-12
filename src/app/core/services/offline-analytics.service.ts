@@ -88,7 +88,7 @@ export class OfflineAnalyticsService {
 
   private async saveEvents(): Promise<void> {
     try {
-      await this.indexedDbService.saveSetting('analytics-events', this.events());
+      await this.indexedDbService.setSetting('analytics-events', this.events());
     } catch (error) {
       this.loggerService.error('Failed to save events', error, 'analytics');
     }
@@ -281,7 +281,7 @@ export class OfflineAnalyticsService {
         existingSessions.splice(0, existingSessions.length - 100);
       }
       
-      await this.indexedDbService.saveSetting('analytics-sessions', existingSessions);
+      await this.indexedDbService.setSetting('analytics-sessions', existingSessions);
     } catch (error) {
       this.loggerService.error('Failed to store session', error, 'analytics');
     }
@@ -385,7 +385,7 @@ export class OfflineAnalyticsService {
     await this.saveEvents();
     
     // Clear stored sessions
-    await this.indexedDbService.saveSetting('analytics-sessions', []);
+    await this.indexedDbService.setSetting('analytics-sessions', []);
     
     this.loggerService.info('Analytics data cleared', {}, 'analytics');
   }
@@ -402,7 +402,7 @@ export class OfflineAnalyticsService {
     // Clean old sessions
     const sessions = await this.getStoredSessions();
     const filteredSessions = sessions.filter(session => session.startTime > cutoff);
-    await this.indexedDbService.saveSetting('analytics-sessions', filteredSessions);
+    await this.indexedDbService.setSetting('analytics-sessions', filteredSessions);
     
     this.loggerService.info('Old analytics data cleaned up', {
       removedEvents: this.events().length - filteredEvents.length,

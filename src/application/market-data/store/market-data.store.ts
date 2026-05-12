@@ -36,6 +36,9 @@ export class MarketDataStore {
       .slice(0, 50)
   );
   
+  // Public method to get loading state for dashboard
+  getIsLoadingTopCoins = computed(() => this.loadingState().has('top'));
+  
   // Global market data selectors
   lastGlobalMarket = computed(() => this.globalMarketData());
 

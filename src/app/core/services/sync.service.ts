@@ -139,7 +139,7 @@ export class SyncService {
 
   private async saveSyncQueue(): Promise<void> {
     try {
-      await this.indexedDbService.saveSetting('sync-queue', this.syncQueue());
+      await this.indexedDbService.setSetting('sync-queue', this.syncQueue());
     } catch (error) {
       this.loggerService.error('Failed to save sync queue', error, 'sync');
     }

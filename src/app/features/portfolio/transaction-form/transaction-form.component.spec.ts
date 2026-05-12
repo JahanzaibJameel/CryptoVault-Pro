@@ -3,14 +3,40 @@ import { TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { TransactionFormComponent } from './transaction-form.component';
+import { PortfolioStore } from '../../../../application/portfolio/store/portfolio.store';
+import { MarketDataStore } from '../../../../application/market-data/store/market-data.store';
 
 describe('TransactionFormComponent', () => {
   let component: TransactionFormComponent;
   let fixture: any;
+  let portfolioStore: jest.Mocked<PortfolioStore>;
+  let marketDataStore: jest.Mocked<MarketDataStore>;
 
   beforeEach(async () => {
+    // Create mock stores
+    portfolioStore = {
+      addTransaction: jest.fn(),
+      transactions: jest.fn(),
+      portfolioValue: jest.fn(),
+      totalPnL: jest.fn(),
+      totalAllocation: jest.fn()
+    } as any;
+
+    marketDataStore = {
+      topCoins: jest.fn().mockReturnValue([
+        { id: 'bitcoin', name: 'Bitcoin', symbol: 'BTC', current_price: 50000 },
+        { id: 'ethereum', name: 'Ethereum', symbol: 'ETH', current_price: 3000 }
+      ]),
+      isLoading: jest.fn().mockReturnValue(false),
+      error: jest.fn().mockReturnValue(null)
+    } as any;
+
     await TestBed.configureTestingModule({
-      imports: [ReactiveFormsModule, FormsModule, TransactionFormComponent]
+      imports: [ReactiveFormsModule, FormsModule, TransactionFormComponent],
+      providers: [
+        { provide: PortfolioStore, useValue: portfolioStore },
+        { provide: MarketDataStore, useValue: marketDataStore }
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(TransactionFormComponent);

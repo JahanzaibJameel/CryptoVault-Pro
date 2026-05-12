@@ -1,4 +1,5 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, ChangeDetectionStrategy, untracked, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { firstValueFrom } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -18,6 +19,7 @@ import { CoinListComponent } from './components/coin-list.component';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     RouterLink,
@@ -828,6 +830,7 @@ export class DashboardComponent implements OnInit {
   private marketDataStore: MarketDataStore = inject(MarketDataStore);
   private watchlistStore: WatchlistStore = inject(WatchlistStore);
   private settingsStore: SettingsStore = inject(SettingsStore);
+  private destroyRef = inject(DestroyRef);
 
   // Signals
   viewMode = signal<'grid' | 'list'>('grid');
@@ -837,14 +840,15 @@ export class DashboardComponent implements OnInit {
     marketCapChange24h: 0
   });
 
-  // Computed properties
+  // Simplified computed properties to avoid signal nesting
   topCoins = this.marketDataStore.topCoins;
-  isLoading = this.marketDataStore.isLoading();
+  isLoading = this.marketDataStore.getIsLoadingTopCoins;
   watchlistCoins = computed(() => {
     const watchlistIds = this.watchlistStore.coins();
     return this.topCoins().filter((coin: Coin) => watchlistIds.includes(coin.id));
   });
   currency = this.settingsStore.currency;
+  hasWatchlist = computed(() => this.watchlistStore.coins().length > 0);
 
   ngOnInit(): void {
     this.loadDashboardData();
@@ -862,30 +866,32 @@ export class DashboardComponent implements OnInit {
   }
 
   private loadGlobalMarketData(): void {
-    this.marketDataStore.fetchGlobalMarket(this.currency()).subscribe({
-      next: (data: any) => {
-        this.globalMarketData.set({
-          totalMarketCap: data.totalMarketCap,
-          totalVolume24h: data.totalVolume24h,
-          marketCapChange24h: data.marketCapChange24h
-        });
-      },
-      error: (error: any) => {
-        console.error('Failed to load global market data:', error);
-        // Use last cached value from store or empty state; never hardcode
-        const cached = this.marketDataStore.lastGlobalMarket();
-        if (cached) {
-          this.globalMarketData.set(cached);
-        } else {
-          // Set empty state as last resort
+    this.marketDataStore.fetchGlobalMarket(this.currency())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (data: any) => {
           this.globalMarketData.set({
-            totalMarketCap: 0,
-            totalVolume24h: 0,
-            marketCapChange24h: 0
+            totalMarketCap: data.totalMarketCap,
+            totalVolume24h: data.totalVolume24h,
+            marketCapChange24h: data.marketCapChange24h
           });
+        },
+        error: (error: any) => {
+          console.error('Failed to load global market data:', error);
+          // Use last cached value from store or empty state; never hardcode
+          const cached = this.marketDataStore.lastGlobalMarket();
+          if (cached) {
+            this.globalMarketData.set(cached);
+          } else {
+            // Set empty state as last resort
+            this.globalMarketData.set({
+              totalMarketCap: 0,
+              totalVolume24h: 0,
+              marketCapChange24h: 0
+            });
+          }
         }
-      }
-    });
+      });
   }
 
   refreshData(): void {
@@ -909,40 +915,39 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  isInWatchlist(coinId: string): boolean {
-    return this.watchlistStore.coins().includes(coinId);
-  }
+  isInWatchlist = (coinId: string): boolean => {
+    return untracked(() => this.watchlistStore.coins().includes(coinId));
+  };
 
-  // Utility methods
-  formatCurrency(value: number): string {
-    return new Intl.NumberFormat('en-US', {
+  // Optimized utility methods using untracked for expensive operations
+  formatCurrency = (value: number): string => {
+    return untracked(() => new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: this.currency(),
       minimumFractionDigits: 0,
       maximumFractionDigits: value < 1 ? 6 : 2
-    }).format(value);
-  }
+    }).format(value));
+  };
 
-  formatMarketCap(value: number): string {
-    if (value >= 1e12) {
-      return `$${(value / 1e12).toFixed(2)}T`;
-    } else if (value >= 1e9) {
-      return `$${(value / 1e9).toFixed(2)}B`;
-    } else if (value >= 1e6) {
-      return `$${(value / 1e6).toFixed(2)}M`;
-    } else {
+  formatMarketCap = (value: number): string => {
+    return untracked(() => {
+      if (value >= 1e12) return `$${(value / 1e12).toFixed(2)}T`;
+      if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
+      if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
       return this.formatCurrency(value);
-    }
-  }
+    });
+  };
 
-  formatPercentage(value: number): string {
-    const sign = value >= 0 ? '+' : '';
-    return `${sign}${value.toFixed(2)}%`;
-  }
+  formatPercentage = (value: number): string => {
+    return untracked(() => {
+      const sign = value >= 0 ? '+' : '';
+      return `${sign}${value.toFixed(2)}%`;
+    });
+  };
 
-  getChangeClass(value: number): string {
-    return value >= 0 ? 'positive' : 'negative';
-  }
+  getChangeClass = (value: number): string => {
+    return untracked(() => value >= 0 ? 'positive' : 'negative');
+  };
 
   formatLastUpdated(): string {
     return new Date().toLocaleTimeString();

@@ -1,9 +1,12 @@
 import { Injectable, ErrorHandler, inject } from '@angular/core';
 import { NotificationService } from './notification.service';
+import { SentryService } from './sentry.service';
+import { environment } from '../../../environments/environment';
 
 @Injectable()
 export class GlobalErrorHandler implements ErrorHandler {
   private notificationService = inject(NotificationService);
+  private sentryService = inject(SentryService);
 
   handleError(error: any): void {
     console.error('[CryptoVault] Unexpected error:', error);
@@ -60,9 +63,9 @@ export class GlobalErrorHandler implements ErrorHandler {
 
     console.warn('[CryptoVault] Error logged for monitoring:', errorInfo);
 
-    // TODO: Integrate with monitoring service like Sentry, LogRocket, etc.
-    // if (environment.production) {
-    //   Sentry.captureException(error, { extra: errorInfo });
-    // }
+    // Integrate with monitoring service like Sentry, LogRocket, etc.
+    if (environment.production) {
+      this.sentryService.captureException(error, { extra: errorInfo });
+    }
   }
 }

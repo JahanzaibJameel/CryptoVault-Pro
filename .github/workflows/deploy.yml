@@ -1,0 +1,266 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main, develop]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: cryptovault-pro
+  DEPLOYMENT_URL: https://api.cryptovault.com
+  FRONTEND_URL: https://cryptovault.com
+  NODE_VERSION: '20.x'
+
+jobs:
+  security-scan:
+    name: Security Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run security audit
+        run: npm audit --audit-level=high --production
+
+      - name: Run Snyk security scan
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high
+
+      - name: Run CodeQL analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          languages: typescript
+
+  test-and-quality:
+    name: Test and Quality Checks
+    runs-on: ubuntu-latest
+    needs: security-scan
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: npm run test:unit -- --coverage --watchAll=false --bail
+
+      - name: Run integration tests
+        run: npm run test:integration
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+
+      - name: Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v11
+        with:
+          configPath: './lighthouse.config.js'
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+
+      - name: Check bundle size
+        run: npm run analyze:bundle
+
+      - name: Run ESLint
+        run: npm run lint --max-warnings=0
+
+      - name: Check Prettier formatting
+        run: npm run format:check
+
+      - name: TypeScript type checking
+        run: npm run type-check
+
+  build-and-deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+    needs: test-and-quality
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build:production
+        env:
+          NODE_OPTIONS: '--max-old-space-size=4096'
+
+      - name: Optimize bundle
+        run: npm run optimize:bundle
+
+      - name: Run security headers check
+        run: npm run security:check
+
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ env.REGISTRY }}/$IMAGE_NAME:${{ github.sha }} .
+          docker tag ${{ env.REGISTRY }}/$IMAGE_NAME:latest ${{ env.REGISTRY }}/$IMAGE_NAME:${{ github.sha }}
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push Docker image
+        run: |
+          docker push ${{ env.REGISTRY }}/$IMAGE_NAME:${{ github.sha }}
+          docker push ${{ env.REGISTRY }}/$IMAGE_NAME:latest
+
+      - name: Deploy to production
+        run: |
+          echo "Deploying to production..."
+          # Trigger deployment webhook
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.DEPLOYMENT_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "image": "'${{ env.IMAGE_NAME }}:${{ github.sha }}'",
+              "environment": "production",
+              "version": "'${{ github.sha }}'",
+              "deployed_by": "'${{ github.actor }}'",
+              "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
+            }' \
+            ${{ env.DEPLOYMENT_URL }}/deploy
+
+      - name: Update deployment status
+        if: success()
+        run: |
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "state": "success",
+              "environment": "production",
+              "version": "'${{ github.sha }}'",
+              "url": "'${{ env.FRONTEND_URL }}'",
+              "deployed_at": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
+            }' \
+            ${{ env.DEPLOYMENT_URL }}/status
+
+  rollback:
+    name: Rollback Deployment
+    runs-on: ubuntu-latest
+    needs: build-and-deploy
+    if: failure() && github.ref == 'refs/heads/main'
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Get previous version
+        id: previous
+        run: |
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD~1 || echo "v1.0.0")
+          echo "previous_tag=$PREVIOUS_TAG" >> $GITHUB_OUTPUT
+
+      - name: Rollback to previous version
+        run: |
+          echo "Rolling back to ${{ steps.previous.outputs.previous_tag }}"
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.DEPLOYMENT_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "action": "rollback",
+              "image": "'${{ env.IMAGE_NAME }}:${{ steps.previous.outputs.previous_tag }}'",
+              "environment": "production",
+              "reason": "Deployment failed",
+              "rolled_back_by": "'${{ github.actor }}'",
+              "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
+            }' \
+            ${{ env.DEPLOYMENT_URL }}/rollback
+
+  performance-monitoring:
+    name: Performance Monitoring
+    runs-on: ubuntu-latest
+    needs: build-and-deploy
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Wait for deployment
+        run: |
+          echo "Waiting for deployment to stabilize..."
+          sleep 300
+
+      - name: Run performance tests
+        run: |
+          echo "Running post-deployment performance tests..."
+          curl -f -s -o /dev/null \
+            -w "time_namelookup: %{time_namelookup}\n" \
+            -w "time_connect: %{time_connect}\n" \
+            -w "time_appconnect: %{time_appconnect}\n" \
+            -w "time_pretransfer: %{time_pretransfer}\n" \
+            -w "time_starttransfer: %{time_starttransfer}\n" \
+            -w "time_total: %{time_total}\n" \
+            -w "size_download: %{size_download}\n" \
+            ${{ env.FRONTEND_URL }}
+
+      - name: Check Core Web Vitals
+        run: |
+          echo "Checking Core Web Vitals..."
+          npx lighthouse ${{ env.FRONTEND_URL }} \
+            --chrome-flags="--headless" \
+            --output=json \
+            --quiet \
+            --only-categories=performance \
+            --preset=desktop
+
+      - name: Update performance metrics
+        run: |
+          echo "Updating performance metrics dashboard..."
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.PERFORMANCE_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "url": "'${{ env.FRONTEND_URL }}'",
+              "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'",
+              "metrics": "lighthouse_results"
+            }' \
+            ${{ env.PERFORMANCE_DASHBOARD_URL }}/metrics

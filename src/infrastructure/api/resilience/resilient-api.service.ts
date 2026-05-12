@@ -1,7 +1,7 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, throwError, timer, of } from 'rxjs';
-import { retry, tap, catchError } from 'rxjs/operators';
+import { Observable, throwError, timer, of, Subject } from 'rxjs';
+import { retry, tap, catchError, shareReplay, takeUntil } from 'rxjs/operators';
 import { CircuitBreakerState } from './circuit-breaker.state';
 
 @Injectable({
@@ -12,11 +12,17 @@ export class ResilientApiService {
   private circuitBreaker = new CircuitBreakerState();
   private cache = new Map<string, { data: any; timestamp: number; etag?: string }>();
   private readonly CACHE_DURATION = 30_000; // 30 seconds
+  private pendingRequests = new Map<string, Observable<any>>();
 
   
   get<T>(url: string, options?: { useCache?: boolean; cacheKey?: string }): Observable<T> {
     const cacheKey = options?.cacheKey || url;
     const useCache = options?.useCache ?? true;
+
+    // Check if request is already pending
+    if (this.pendingRequests.has(cacheKey)) {
+      return this.pendingRequests.get(cacheKey) as Observable<T>;
+    }
 
     if (this.circuitBreaker.isOpen()) {
       const cached = this.serveFromCache<T>(cacheKey);
@@ -33,7 +39,8 @@ export class ResilientApiService {
       }
     }
 
-    return this.http.get<T>(url).pipe(
+    // Create the request observable with deduplication and caching
+    const request$ = this.http.get<T>(url).pipe(
       retry({
         count: 3,
         delay: (error: any, retryCount: number) => {
@@ -53,9 +60,15 @@ export class ResilientApiService {
           timestamp: Date.now(),
           etag: this.extractEtag(data)
         });
+        
+        // Remove from pending requests when complete
+        this.pendingRequests.delete(cacheKey);
       }),
       catchError((error: any) => {
         this.circuitBreaker.recordFailure();
+        
+        // Remove from pending requests on error
+        this.pendingRequests.delete(cacheKey);
         
         // Try to serve stale cache on failure
         const cached = this.serveFromCache<T>(cacheKey);
@@ -67,8 +80,15 @@ export class ResilientApiService {
           const userMessage = this.getUserFriendlyErrorMessage(error);
           return new Error(userMessage);
         });
-      })
+      }),
+      // Share the request to prevent duplicates and replay last value
+      shareReplay(1, this.CACHE_DURATION)
     );
+
+    // Store the pending request
+    this.pendingRequests.set(cacheKey, request$);
+    
+    return request$;
   }
 
   post<T>(url: string, body: any, options?: { bypassCache?: boolean }): Observable<T> {

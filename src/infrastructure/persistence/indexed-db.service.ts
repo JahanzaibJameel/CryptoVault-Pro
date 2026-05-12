@@ -35,6 +35,10 @@ interface CryptoVaultDB extends DBSchema {
     key: string;
     value: any;
   };
+  cache: {
+    key: string;
+    value: any;
+  };
   'encryption-keys': {
     key: string;
     value: any;
@@ -85,6 +89,11 @@ export class IndexedDbService {
           // Settings store
           if (!db.objectStoreNames.contains('settings')) {
             db.createObjectStore('settings', { keyPath: 'key' });
+          }
+
+          // Cache store
+          if (!db.objectStoreNames.contains('cache')) {
+            db.createObjectStore('cache', { keyPath: 'key' });
           }
 
           // Encryption keys store
@@ -238,26 +247,27 @@ export class IndexedDbService {
     const cutoffTime = Date.now() - (maxAgeDays * 24 * 60 * 60 * 1000);
     const tx = db.transaction('priceHistory', 'readwrite');
     
-    let cursor = await tx.store.index('by-updated').openCursor(IDBKeyRange.upperBound(cutoffTime));
-    
+    const cursor = await tx.store.openCursor();
     while (cursor) {
-      await cursor.delete();
-      cursor = await cursor.continue();
+      if (cursor.value.lastUpdated < cutoffTime) {
+        await cursor.delete();
+      }
+      await cursor.continue();
     }
     
     await tx.done;
   }
 
   // Settings methods
-  async saveSetting(key: string, value: any): Promise<void> {
-    const db = await this.ensureDb();
-    await db.put('settings', { key, value });
-  }
-
   async getSetting(key: string): Promise<any> {
     const db = await this.ensureDb();
     const result = await db.get('settings', key);
     return result?.value;
+  }
+
+  async setSetting(key: string, value: any): Promise<void> {
+    const db = await this.ensureDb();
+    await db.put('settings', { key, value });
   }
 
   async getAllSettings(): Promise<{ [key: string]: any }> {
@@ -272,7 +282,56 @@ export class IndexedDbService {
     return result;
   }
 
-  // Utility methods
+  // Encryption methods
+  async saveEncryptionKey(key: string, data: any): Promise<void> {
+    const db = await this.ensureDb();
+    await db.put('encryption-keys', { key, data });
+  }
+
+  async getEncryptionKey(key: string): Promise<any> {
+    const db = await this.ensureDb();
+    const result = await db.get('encryption-keys', key);
+    return result?.data;
+  }
+
+  async saveEncryptedData(key: string, data: any): Promise<void> {
+    const db = await this.ensureDb();
+    await db.put('encrypted-data', { key, data });
+  }
+
+  async getEncryptedData(key: string): Promise<any> {
+    const db = await this.ensureDb();
+    const result = await db.get('encrypted-data', key);
+    return result?.data;
+  }
+
+  // Cache methods
+  async getAllCache(): Promise<any> {
+    const db = await this.ensureDb();
+    return await db.getAll('cache');
+  }
+
+  async getCache(key: string): Promise<any> {
+    const db = await this.ensureDb();
+    return await db.get('cache', key);
+  }
+
+  async setCache(key: string, value: any): Promise<void> {
+    const db = await this.ensureDb();
+    await db.put('cache', { key, ...value });
+  }
+
+  async deleteCache(key: string): Promise<void> {
+    const db = await this.ensureDb();
+    await db.delete('cache', key);
+  }
+
+  async clearCache(): Promise<void> {
+    const db = await this.ensureDb();
+    await db.clear('cache');
+  }
+
+  
   async clearAllData(): Promise<void> {
     const db = await this.ensureDb();
     const tx = db.transaction(['transactions', 'watchlist', 'priceHistory', 'settings'], 'readwrite');

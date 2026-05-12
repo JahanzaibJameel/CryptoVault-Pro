@@ -1,0 +1,861 @@
+openapi: 3.0.3
+info:
+  title: CryptoVault Pro API
+  description: Enterprise-grade cryptocurrency portfolio management and tracking API
+  version: 2.0.0
+  contact:
+    name: CryptoVault Pro Team
+    email: api-support@cryptovault.com
+    url: https://cryptovault.com/support
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: https://cryptovault.com/terms
+  servers:
+    - url: https://api.cryptovault.com/v2
+      description: Production server
+    - url: https://staging-api.cryptovault.com/v2
+      description: Staging server
+    - url: http://localhost:3000/v2
+      description: Development server
+
+security:
+  - bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+paths:
+  /portfolio:
+    get:
+      summary: Get user portfolio
+      description: Retrieve the complete cryptocurrency portfolio with current holdings, transactions, and performance metrics
+      tags:
+        - Portfolio
+      security:
+        - bearerAuth
+      parameters:
+        - name: includeZeroBalance
+          in: query
+          description: Include cryptocurrencies with zero balance
+          required: false
+          schema:
+            type: boolean
+            default: false
+        - name: currency
+          in: query
+          description: Convert all values to specified currency
+          required: false
+          schema:
+            type: string
+            enum: [USD, EUR, BTC, ETH]
+            default: USD
+      responses:
+        '200':
+          description: Portfolio retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Portfolio'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    post:
+      summary: Add transaction to portfolio
+      description: Add a new buy/sell transaction to the portfolio
+      tags:
+        - Portfolio
+      security:
+        - bearerAuth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionRequest'
+      responses:
+        '201':
+          description: Transaction added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /portfolio/transactions:
+    get:
+      summary: Get transaction history
+      description: Retrieve paginated transaction history with filtering options
+      tags:
+        - Portfolio
+      security:
+        - bearerAuth
+      parameters:
+        - name: page
+          in: query
+          description: Page number for pagination
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Number of transactions per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: type
+          in: query
+          description: Filter by transaction type
+          required: false
+          schema:
+            type: string
+            enum: [buy, sell, transfer, deposit, withdrawal]
+        - name: startDate
+          in: query
+          description: Filter transactions from this date
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          description: Filter transactions to this date
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: coin
+          in: query
+          description: Filter by cryptocurrency
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Transactions retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionHistory'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /market/data:
+    get:
+      summary: Get market data
+      description: Retrieve real-time cryptocurrency market data including prices, volumes, and statistics
+      tags:
+        - Market
+      parameters:
+        - name: coins
+          in: query
+          description: Comma-separated list of cryptocurrency symbols
+          required: true
+          schema:
+            type: string
+            example: "BTC,ETH,ADA"
+        - name: vs_currency
+          in: query
+          description: Convert prices to specified currency
+          required: false
+          schema:
+            type: string
+            enum: [USD, EUR, BTC, ETH]
+            default: USD
+        - name: include_24h_change
+          in: query
+          description: Include 24-hour price change percentage
+          required: false
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: Market data retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketData'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /watchlist:
+    get:
+      summary: Get watchlist
+      description: Retrieve user's cryptocurrency watchlist with price alerts
+      tags:
+        - Watchlist
+      security:
+        - bearerAuth
+      responses:
+        '200':
+          description: Watchlist retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Watchlist'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    post:
+      summary: Add coin to watchlist
+      description: Add a cryptocurrency to the watchlist with optional price alerts
+      tags:
+        - Watchlist
+      security:
+        - bearerAuth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WatchlistItem'
+      responses:
+        '201':
+          description: Coin added to watchlist successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WatchlistItem'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: Coin already in watchlist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /watchlist/{coinId}:
+    delete:
+      summary: Remove coin from watchlist
+      description: Remove a cryptocurrency from the watchlist
+      tags:
+        - Watchlist
+      security:
+        - bearerAuth
+      parameters:
+        - name: coinId
+          in: path
+          required: true
+          description: Cryptocurrency identifier
+          schema:
+            type: string
+            example: "bitcoin"
+      responses:
+        '204':
+          description: Coin removed from watchlist successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Coin not found in watchlist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /analytics/performance:
+    get:
+      summary: Get portfolio performance analytics
+      description: Retrieve comprehensive performance analytics including returns, volatility, and asset allocation
+      tags:
+        - Analytics
+      security:
+        - bearerAuth
+      parameters:
+        - name: period
+          in: query
+          description: Time period for analytics
+          required: false
+          schema:
+            type: string
+            enum: [1d, 1w, 1m, 3m, 6m, 1y, all]
+            default: 1m
+        - name: benchmark
+          in: query
+          description: Benchmark index for comparison
+          required: false
+          schema:
+            type: string
+            enum: [SP500, NASDAQ, BTC, ETH]
+            default: BTC
+      responses:
+        '200':
+          description: Analytics data retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerformanceAnalytics'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+components:
+  schemas:
+    Portfolio:
+      type: object
+      properties:
+        total_value:
+          type: number
+          format: float
+          description: Total portfolio value in specified currency
+        currency:
+          type: string
+          description: Portfolio base currency
+        holdings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Holding'
+        performance_24h:
+          type: number
+          format: float
+          description: 24-hour performance percentage
+        performance_7d:
+          type: number
+          format: float
+          description: 7-day performance percentage
+        performance_30d:
+          type: number
+          format: float
+          description: 30-day performance percentage
+        last_updated:
+          type: string
+          format: date-time
+          description: Last portfolio update timestamp
+      required:
+        - total_value
+        - currency
+        - holdings
+
+    Holding:
+      type: object
+      properties:
+        coin_id:
+          type: string
+          description: Cryptocurrency identifier
+        symbol:
+          type: string
+          description: Trading symbol
+        name:
+          type: string
+          description: Cryptocurrency name
+        amount:
+          type: number
+          format: float
+          description: Amount held
+        value:
+          type: number
+          format: float
+          description: Current value in portfolio currency
+        average_buy_price:
+          type: number
+          format: float
+          description: Average purchase price
+        current_price:
+          type: number
+          format: float
+          description: Current market price
+        profit_loss:
+          type: number
+          format: float
+          description: Profit/loss amount
+        profit_loss_percentage:
+          type: number
+          format: float
+          description: Profit/loss percentage
+      required:
+        - coin_id
+        - symbol
+        - name
+        - amount
+        - value
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique transaction identifier
+        type:
+          type: string
+          enum: [buy, sell, transfer, deposit, withdrawal]
+          description: Transaction type
+        coin_id:
+          type: string
+          description: Cryptocurrency identifier
+        symbol:
+          type: string
+          description: Trading symbol
+        amount:
+          type: number
+          format: float
+          description: Transaction amount
+        price:
+          type: number
+          format: float
+          description: Price per unit
+        total_value:
+          type: number
+          format: float
+          description: Total transaction value
+        fee:
+          type: number
+          format: float
+          description: Transaction fee
+        exchange:
+          type: string
+          description: Exchange where transaction occurred
+        notes:
+          type: string
+          description: User notes
+        created_at:
+          type: string
+          format: date-time
+          description: Transaction timestamp
+      required:
+        - id
+        - type
+        - coin_id
+        - amount
+        - price
+        - created_at
+
+    TransactionRequest:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [buy, sell]
+          description: Transaction type
+        coin_id:
+          type: string
+          description: Cryptocurrency identifier
+        amount:
+          type: number
+          format: float
+          minimum: 0.00000001
+          description: Transaction amount
+        price:
+          type: number
+          format: float
+          minimum: 0
+          description: Price per unit (omit for market price)
+        exchange:
+          type: string
+          description: Exchange name
+        notes:
+          type: string
+          description: Optional transaction notes
+      required:
+        - type
+        - coin_id
+        - amount
+
+    TransactionHistory:
+      type: object
+      properties:
+        transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+        total_count:
+          type: integer
+          description: Total number of transactions
+      required:
+        - transactions
+        - pagination
+
+    MarketData:
+      type: object
+      properties:
+        coins:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoinData'
+        market_stats:
+          $ref: '#/components/schemas/MarketStats'
+        last_updated:
+          type: string
+          format: date-time
+          description: Last market data update
+      required:
+        - coins
+
+    CoinData:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Cryptocurrency identifier
+        symbol:
+          type: string
+          description: Trading symbol
+        name:
+          type: string
+          description: Cryptocurrency name
+        current_price:
+          type: number
+          format: float
+          description: Current price
+        price_change_24h:
+          type: number
+          format: float
+          description: 24-hour price change
+        price_change_percentage_24h:
+          type: number
+          format: float
+          description: 24-hour price change percentage
+        market_cap:
+          type: number
+          format: float
+          description: Market capitalization
+        volume_24h:
+          type: number
+          format: float
+          description: 24-hour trading volume
+        circulating_supply:
+          type: number
+          format: float
+          description: Circulating supply
+        last_updated:
+          type: string
+          format: date-time
+          description: Last price update
+      required:
+        - id
+        - symbol
+        - name
+        - current_price
+
+    MarketStats:
+      type: object
+      properties:
+        total_market_cap:
+          type: number
+          format: float
+          description: Total market capitalization
+        total_volume_24h:
+          type: number
+          format: float
+          description: Total 24-hour volume
+        btc_dominance:
+          type: number
+          format: float
+          description: Bitcoin market dominance percentage
+        active_cryptocurrencies:
+          type: integer
+          description: Number of active cryptocurrencies
+        market_cap_change_24h:
+          type: number
+          format: float
+          description: 24-hour market cap change
+      required:
+        - total_market_cap
+
+    Watchlist:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/WatchlistItem'
+        total_count:
+          type: integer
+          description: Total number of watchlist items
+      required:
+        - items
+
+    WatchlistItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique watchlist identifier
+        coin_id:
+          type: string
+          description: Cryptocurrency identifier
+        symbol:
+          type: string
+          description: Trading symbol
+        name:
+          type: string
+          description: Cryptocurrency name
+        current_price:
+          type: number
+          format: float
+          description: Current price
+        price_alert_high:
+          type: number
+          format: float
+          description: High price alert
+        price_alert_low:
+          type: number
+          format: float
+          description: Low price alert
+        percentage_alert:
+          type: number
+          format: float
+          description: Percentage change alert
+        added_at:
+          type: string
+          format: date-time
+          description: When added to watchlist
+      required:
+        - id
+        - coin_id
+        - symbol
+        - name
+
+    PerformanceAnalytics:
+      type: object
+      properties:
+        period:
+          type: string
+          description: Analysis period
+        benchmark:
+          type: string
+          description: Benchmark index
+        total_return:
+          type: number
+          format: float
+          description: Total return percentage
+        annualized_return:
+          type: number
+          format: float
+          description: Annualized return percentage
+        volatility:
+          type: number
+          format: float
+          description: Portfolio volatility
+        sharpe_ratio:
+          type: number
+          format: float
+          description: Sharpe ratio
+        max_drawdown:
+          type: number
+          format: float
+          description: Maximum drawdown
+        asset_allocation:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssetAllocation'
+        performance_by_coin:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoinPerformance'
+      required:
+        - period
+        - total_return
+
+    AssetAllocation:
+      type: object
+      properties:
+        coin_id:
+          type: string
+          description: Cryptocurrency identifier
+        symbol:
+          type: string
+          description: Trading symbol
+        name:
+          type: string
+          description: Cryptocurrency name
+        allocation_percentage:
+          type: number
+          format: float
+          description: Percentage allocation in portfolio
+        value:
+          type: number
+          format: float
+          description: Current value
+      required:
+        - coin_id
+        - allocation_percentage
+
+    CoinPerformance:
+      type: object
+      properties:
+        coin_id:
+          type: string
+          description: Cryptocurrency identifier
+        symbol:
+          type: string
+          description: Trading symbol
+        return_percentage:
+          type: number
+          format: float
+          description: Return percentage for the period
+        contribution_to_return:
+          type: number
+          format: float
+          description: Contribution to total portfolio return
+      required:
+        - coin_id
+        - return_percentage
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: Current page number
+        limit:
+          type: integer
+          description: Items per page
+        total_pages:
+          type: integer
+          description: Total number of pages
+        has_next:
+          type: boolean
+          description: Whether next page exists
+        has_previous:
+          type: boolean
+          description: Whether previous page exists
+      required:
+        - page
+        - limit
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: object
+          description: Additional error details
+        timestamp:
+          type: string
+          format: date-time
+          description: Error timestamp
+      required:
+        - code
+        - message
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "INVALID_REQUEST"
+            message: "Request validation failed"
+            details:
+              field: "amount"
+              reason: "Amount must be greater than 0"
+
+    Unauthorized:
+      description: Unauthorized access
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "UNAUTHORIZED"
+            message: "Invalid or expired authentication token"
+            timestamp: "2023-01-01T12:00:00Z"
+
+    Forbidden:
+      description: Access forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "FORBIDDEN"
+            message: "Access to this resource is forbidden"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "NOT_FOUND"
+            message: "Requested resource not found"
+
+    Conflict:
+      description: Resource conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "CONFLICT"
+            message: "Resource already exists"
+
+    RateLimited:
+      description: Too many requests
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "RATE_LIMITED"
+            message: "Rate limit exceeded. Please try again later."
+            details:
+              retry_after: 60
+              limit: 100
+
+    ServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "INTERNAL_ERROR"
+            message: "An unexpected error occurred"
+            timestamp: "2023-01-01T12:00:00Z"
+
+tags:
+  - name: Portfolio
+    description: Portfolio management operations
+  - name: Market
+    description: Market data and statistics
+  - name: Watchlist
+    description: Watchlist management
+  - name: Analytics
+    description: Performance analytics
