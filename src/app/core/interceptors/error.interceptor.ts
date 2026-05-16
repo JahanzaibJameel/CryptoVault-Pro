@@ -1,11 +1,14 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError, EMPTY } from 'rxjs';
 import { catchError, retry, timeout } from 'rxjs/operators';
 import { NotificationService } from '../services/notification.service';
+import { EncryptedStorageService } from '../services/encrypted-storage.service';
 
 @Injectable()
 export class ErrorInterceptor implements HttpInterceptor {
+  private encryptedStorage = inject(EncryptedStorageService);
+
   constructor(private notificationService: NotificationService) {}
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
@@ -281,7 +284,7 @@ export class ErrorInterceptor implements HttpInterceptor {
     return `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  private logError(error: any): void {
+  private async logError(error: any): Promise<void> {
     // In a real app, this would send to error tracking service
     console.group('HTTP Error Details');
     console.error('Request URL:', error.url);
@@ -294,7 +297,7 @@ export class ErrorInterceptor implements HttpInterceptor {
 
     // Store error locally for debugging
     try {
-      const errorLog = JSON.parse(localStorage.getItem('error-log') || '[]');
+      const errorLog = await this.encryptedStorage.get<any[]>('error-log') || [];
       errorLog.push({
         ...error,
         timestamp: Date.now()
@@ -305,44 +308,48 @@ export class ErrorInterceptor implements HttpInterceptor {
         errorLog.splice(0, errorLog.length - 50);
       }
       
-      localStorage.setItem('error-log', JSON.stringify(errorLog));
+      await this.encryptedStorage.set('error-log', errorLog);
     } catch (e) {
-      console.warn('Failed to log error to localStorage:', e);
+      console.warn('Failed to log error to encrypted storage:', e);
     }
   }
 
   // Public API for error management
-  getErrorLog(): any[] {
+  async getErrorLog(): Promise<any[]> {
     try {
-      return JSON.parse(localStorage.getItem('error-log') || '[]');
+      return await this.encryptedStorage.get<any[]>('error-log') || [];
     } catch (e) {
       return [];
     }
   }
 
-  clearErrorLog(): void {
-    localStorage.removeItem('error-log');
+  async clearErrorLog(): Promise<void> {
+    try {
+      await this.encryptedStorage.remove('error-log');
+    } catch (e) {
+      console.warn('Failed to clear error log:', e);
+    }
   }
 
-  getErrorStats(): {
+  async getErrorStats(): Promise<{
     total: number;
     byStatus: Record<number, number>;
     byUrl: Record<string, number>;
     recent: number;
-  } {
-    const errors = this.getErrorLog();
+  }> {
+    const errors = await this.getErrorLog();
     const now = Date.now();
     const oneHourAgo = now - (60 * 60 * 1000);
 
     const byStatus: Record<number, number> = {};
     const byUrl: Record<string, number> = {};
 
-    errors.forEach(error => {
+    errors.forEach((error: any) => {
       byStatus[error.status] = (byStatus[error.status] || 0) + 1;
       byUrl[error.url] = (byUrl[error.url] || 0) + 1;
     });
 
-    const recent = errors.filter(error => error.timestamp > oneHourAgo).length;
+    const recent = errors.filter((error: any) => error.timestamp > oneHourAgo).length;
 
     return {
       total: errors.length,
