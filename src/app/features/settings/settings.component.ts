@@ -26,9 +26,9 @@ import { NotificationService } from '../../core/services/notification.service';
           </div>
           <div class="settings-group">
             <div class="setting-item">
-              <label class="setting-label">Theme</label>
+              <label for="theme-select" class="setting-label">Theme</label>
               <div class="setting-control">
-                <select class="glass-select">
+                <select id="theme-select" class="glass-select">
                   <option value="dark">Dark Mode</option>
                   <option value="light">Light Mode</option>
                   <option value="auto">Auto</option>
@@ -36,9 +36,9 @@ import { NotificationService } from '../../core/services/notification.service';
               </div>
             </div>
             <div class="setting-item">
-              <label class="setting-label">Language</label>
+              <label for="language-select" class="setting-label">Language</label>
               <div class="setting-control">
-                <select class="glass-select">
+                <select id="language-select" class="glass-select">
                   <option value="en">English</option>
                   <option value="es">Español</option>
                   <option value="fr">Français</option>
@@ -56,28 +56,28 @@ import { NotificationService } from '../../core/services/notification.service';
           </div>
           <div class="settings-group">
             <div class="setting-item">
-              <label class="setting-label">Price Alerts</label>
+              <label for="price-alerts-toggle" class="setting-label">Price Alerts</label>
               <div class="setting-control">
                 <label class="glass-toggle">
-                  <input type="checkbox" checked>
+                  <input id="price-alerts-toggle" type="checkbox" checked>
                   <span class="toggle-slider"></span>
                 </label>
               </div>
             </div>
             <div class="setting-item">
-              <label class="setting-label">News Updates</label>
+              <label for="news-updates-toggle" class="setting-label">News Updates</label>
               <div class="setting-control">
                 <label class="glass-toggle">
-                  <input type="checkbox" checked>
+                  <input id="news-updates-toggle" type="checkbox" checked>
                   <span class="toggle-slider"></span>
                 </label>
               </div>
             </div>
             <div class="setting-item">
-              <label class="setting-label">Email Notifications</label>
+              <label for="email-notifications-toggle" class="setting-label">Email Notifications</label>
               <div class="setting-control">
                 <label class="glass-toggle">
-                  <input type="checkbox">
+                  <input id="email-notifications-toggle" type="checkbox">
                   <span class="toggle-slider"></span>
                 </label>
               </div>
@@ -145,19 +145,19 @@ import { NotificationService } from '../../core/services/notification.service';
           </div>
           <div class="settings-group">
             <div class="setting-item">
-              <label class="setting-label">Share Usage Data</label>
+              <label for="usage-data-toggle" class="setting-label">Share Usage Data</label>
               <div class="setting-control">
                 <label class="glass-toggle">
-                  <input type="checkbox">
+                  <input id="usage-data-toggle" type="checkbox">
                   <span class="toggle-slider"></span>
                 </label>
               </div>
             </div>
             <div class="setting-item">
-              <label class="setting-label">Analytics</label>
+              <label for="analytics-toggle" class="setting-label">Analytics</label>
               <div class="setting-control">
                 <label class="glass-toggle">
-                  <input type="checkbox" checked>
+                  <input id="analytics-toggle" type="checkbox" checked>
                   <span class="toggle-slider"></span>
                 </label>
               </div>
@@ -173,15 +173,15 @@ import { NotificationService } from '../../core/services/notification.service';
           </div>
           <div class="settings-group">
             <div class="setting-item">
-              <label class="setting-label">API Key</label>
+              <label for="api-key-input" class="setting-label">API Key</label>
               <div class="setting-control">
-                <input type="password" class="glass-input" placeholder="Enter your API key">
+                <input id="api-key-input" type="password" class="glass-input" placeholder="Enter your API key">
               </div>
             </div>
             <div class="setting-item">
-              <label class="setting-label">Data Refresh Rate</label>
+              <label for="refresh-rate-select" class="setting-label">Data Refresh Rate</label>
               <div class="setting-control">
-                <select class="glass-select">
+                <select id="refresh-rate-select" class="glass-select">
                   <option value="30">30 seconds</option>
                   <option value="60">1 minute</option>
                   <option value="300">5 minutes</option>

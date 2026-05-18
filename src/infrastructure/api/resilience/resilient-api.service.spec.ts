@@ -32,7 +32,6 @@ describe('ResilientApiService', () => {
         } catch (error) {
           // Expected to fail
         }
-      }
 
         const req = httpMock.expectOne('/test-endpoint');
         req.error(new ErrorEvent('Network error'));
