@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { TransferState, makeStateKey } from '@angular/platform-browser';
+import { TransferState, makeStateKey, OnDestroy } from '@angular/core';
 
 export interface PerformanceMetrics {
   navigationTiming: PerformanceNavigationTiming;
@@ -24,7 +24,7 @@ export interface OptimizationStrategy {
 @Injectable({
   providedIn: 'root'
 })
-export class PerformanceOptimizerService {
+export class PerformanceOptimizerService implements OnDestroy {
   private router = inject(Router);
   private transferState = inject(TransferState);
   
@@ -287,7 +287,7 @@ export class PerformanceOptimizerService {
     this.metrics.push(metrics);
     
     // Store in transfer state for SSR
-    this.transferState.set(this.PERFORMANCE_KEY, this.metrics);
+    this.transferState.set(this.PERFORMANCE_KEY, this.metrics as any);
     
     // Keep only last 100 metrics
     if (this.metrics.length > 100) {

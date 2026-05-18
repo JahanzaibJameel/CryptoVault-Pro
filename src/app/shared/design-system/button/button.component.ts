@@ -1,5 +1,4 @@
 import { Component, Input, HostBinding, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info' | 'ghost' | 'link';
 export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
@@ -7,7 +6,7 @@ export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 @Component({
   selector: 'ui-button',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     <button
       [class]="buttonClasses()"

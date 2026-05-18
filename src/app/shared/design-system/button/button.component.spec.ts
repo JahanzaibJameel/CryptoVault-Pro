@@ -11,7 +11,7 @@ describe('ButtonComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ButtonComponent, TestHostComponent],
+      imports: [ButtonComponent],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ButtonComponent);
@@ -228,6 +228,10 @@ describe('ButtonComponent', () => {
 
   describe('Content Projection', () => {
     it('should render projected content', () => {
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        imports: [TestHostComponent],
+      });
       const testFixture = TestBed.createComponent(TestHostComponent);
       testFixture.detectChanges();
       const buttonElement = testFixture.debugElement.query(By.css('button')).nativeElement;

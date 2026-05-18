@@ -40,6 +40,7 @@ export class PerformanceService {
   private isTracking = signal(false);
   private vitalsObserver: PerformanceObserver | null = null;
   private resourceObserver: PerformanceObserver | null = null;
+  private memoryTrackingInterval: number | null = null;
   
   // Thresholds for Web Vitals
   private readonly thresholds = {
@@ -95,6 +96,18 @@ export class PerformanceService {
     this.sentryService.addBreadcrumb('Performance tracking stopped', 'performance', 'info');
   }
 
+  ngOnDestroy(): void {
+    // Clear memory tracking interval
+    if (this.memoryTrackingInterval) {
+      clearInterval(this.memoryTrackingInterval);
+      this.memoryTrackingInterval = null;
+    }
+    
+    // Disconnect observers
+    this.vitalsObserver?.disconnect();
+    this.resourceObserver?.disconnect();
+  }
+
   private setupVitalsObserver(): void {
     try {
       this.vitalsObserver = new PerformanceObserver((list) => {
@@ -148,7 +161,7 @@ export class PerformanceService {
 
   private setupMemoryTracking(): void {
     // Track memory usage every 30 seconds
-    setInterval(() => {
+    this.memoryTrackingInterval = window.setInterval(() => {
       if (this.isTracking()) {
         this.recordMemoryUsage();
       }

@@ -457,7 +457,7 @@ function calculateDownsideRisk(priceHistory: Record<string, number[]>): number {
   const allPrices = Object.values(priceHistory).flat();
   if (allPrices.length < 2) return 0;
   
-  let downsideReturns: number[] = [];
+  const downsideReturns: number[] = [];
   for (let i = 1; i < allPrices.length; i++) {
     const returnValue = (allPrices[i] - allPrices[i - 1]) / allPrices[i - 1];
     if (returnValue < 0) {

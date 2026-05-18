@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ResilientApiService } from './resilience/resilient-api.service';
 import { Coin } from '../../domain/models/coin.model';
+import { environment } from '../../environments/environment';
 
 export interface CoinGeckoMarketData {
   id: string;
@@ -78,7 +79,7 @@ export interface CoinGeckoDetail {
 })
 export class CoinGeckoService {
   private api = inject(ResilientApiService);
-  private readonly baseUrl = '/api';
+  private readonly baseUrl = environment.apiUrl;
 
   getTopCoins(currency = 'usd', perPage = 50, page = 1): Observable<Coin[]> {
     const url = `${this.baseUrl}/coins/markets?vs_currency=${currency}&order=market_cap_desc&per_page=${perPage}&page=${page}&sparkline=false&price_change_percentage=24h`;

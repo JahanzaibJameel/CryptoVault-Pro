@@ -5,12 +5,13 @@ import { IndexedDbService } from '../../../infrastructure/persistence/indexed-db
 
 describe('PortfolioStore', () => {
   let store: PortfolioStore;
-  let mockIndexedDb: jasmine.SpyObj<IndexedDbService>;
+  let mockIndexedDb: Partial<IndexedDbService>;
 
   beforeEach(() => {
-    mockIndexedDb = jasmine.createSpyObj('IndexedDbService');
-    mockIndexedDb.getTransactions.and.resolveTo([]);
-    mockIndexedDb.saveTransactions.and.resolveTo(Promise.resolve());
+    mockIndexedDb = {
+      getTransactions: jest.fn().mockResolvedValue([]),
+      saveTransactions: jest.fn().mockResolvedValue(undefined) // More explicit for void async functions
+    };
     
     TestBed.configureTestingModule({
       providers: [
@@ -88,7 +89,7 @@ describe('PortfolioStore', () => {
         date: Date.now()
       };
 
-      await expectAsync(store.addTransaction(sellTx)).rejects.toThrow();
+      await expect(store.addTransaction(sellTx)).rejects.toThrow();
     });
   });
 
@@ -149,7 +150,7 @@ describe('PortfolioStore', () => {
       expect(store.pnl()).toBe(10000); // 70000 - 60000
     });
 
-    it('should calculate allocation based on current prices', () => {
+    it('should calculate allocation based on current prices', async () => {
       const prices = { 'bitcoin': 35000, 'ethereum': 2000 };
 
       // Add ethereum holding
