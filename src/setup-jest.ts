@@ -1,5 +1,12 @@
 // Mock IndexedDB for tests
 import { jest } from '@jest/globals';
+import { getTestBed } from '@angular/core/testing';
+import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
+
+declare const jasmine: any;
+
+// Initialize TestBed
+getTestBed().initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting());
 
 // Mock IndexedDB for tests
 const indexedDBMock = {

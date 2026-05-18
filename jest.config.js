@@ -7,8 +7,11 @@ module.exports = {
   collectCoverageFrom: [
     'src/**/*.{ts,html}',
     '!src/**/*.d.ts',
-    '!src/**/*.spec.ts',
-    '!src/**/*.integration.spec.ts'
+    '!src/**/*.spec.ts', // Exclude unit tests
+    '!src/**/*.integration.spec.ts', // Exclude integration tests
+    '!src/main.ts', // Exclude main application entry file
+    '!src/polyfills.ts', // Exclude polyfills
+    '!src/environments/*.ts' // Exclude environment configuration files
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
@@ -20,7 +23,7 @@ module.exports = {
       statements: 80
     }
   },
-  moduleNameMapping: {
+  moduleNameMapper: {
     '^@shared/(.*)$': '<rootDir>/src/app/shared/$1',
     '^@core/(.*)$': '<rootDir>/src/app/core/$1',
     '^@features/(.*)$': '<rootDir>/src/app/features/$1'
@@ -29,6 +32,6 @@ module.exports = {
     '^.+\\.(ts|html)$': 'jest-preset-angular'
   },
   transformIgnorePatterns: [
-    'node_modules/(?!@angular|@storybook)'
+    'node_modules/(?!(@angular|@storybook|@sentry)/)'
   ]
 };
