@@ -48,6 +48,8 @@ export class AdvancedCacheService {
 
   private cache = signal<Map<string, CacheEntry<any>>>(new Map());
   private cleanupIntervalId: number | null = null;
+  // Initialize cache performance tracking
+  private performanceMonitor = signal({ hits: 0, misses: 0 });
   private stats = signal<CacheStats>({
     totalEntries: 0,
     totalSize: 0,
