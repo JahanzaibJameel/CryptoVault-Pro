@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal, EventEmitter, Output } from '@angular/core';
+import { Component, inject, signal, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { PortfolioStore } from '../../../../application/portfolio/store/portfolio.store';
@@ -13,7 +13,7 @@ import { Transaction } from '../../../../domain/models/transaction.model';
     ReactiveFormsModule
   ],
   template: `
-    <div class="transaction-form">
+    <div class="transaction-form" data-test="transaction-modal">
       <div class="form-header">
         <h3>Add Transaction</h3>
       </div>
@@ -45,7 +45,7 @@ import { Transaction } from '../../../../domain/models/transaction.model';
             id="amount" 
             type="number" 
             formControlName="amount" 
-            data-test="amount-input"
+            data-test="amount"
             placeholder="0.00000000"
             step="0.00000001"
             [attr.aria-invalid]="transactionForm.get('amount')?.invalid && transactionForm.get('amount')?.touched"
@@ -69,7 +69,7 @@ import { Transaction } from '../../../../domain/models/transaction.model';
             id="price" 
             type="number" 
             formControlName="price" 
-            data-test="price-input"
+            data-test="price"
             placeholder="Market price will be used"
             step="0.01"
             [attr.aria-invalid]="transactionForm.get('price')?.invalid && transactionForm.get('price')?.touched"
@@ -89,7 +89,7 @@ import { Transaction } from '../../../../domain/models/transaction.model';
           <button 
             type="submit" 
             class="submit-button"
-            data-test="submit-transaction"
+            data-test="submit"
             [disabled]="transactionForm.invalid || isLoading()"
           >  
             Add Transaction
@@ -169,7 +169,7 @@ export class TransactionFormComponent {
     coinId: ['', Validators.required],
     type: ['buy', Validators.required],
     amount: ['', [Validators.required, Validators.min(0.00000001)]],
-    price: ['', [Validators.required, Validators.min(0.01)]]
+    price: ['', [Validators.min(0.01)]]
   });
 
   constructor() {
