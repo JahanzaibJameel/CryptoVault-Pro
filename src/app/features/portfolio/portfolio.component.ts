@@ -6,9 +6,7 @@ import { SettingsStore } from '../../../application/settings/store';
 import { ButtonComponent } from '../../shared/design-system/button/button.component';
 import { CardComponent } from '../../shared/design-system/card/card.component';
 import { SkeletonComponent } from '../../shared/design-system/skeleton/skeleton.component';
-import { Price } from '../../../domain/value-objects/price';
-import { Percentage } from '../../../domain/value-objects/percentage';
-import { AllocationItem } from '../../../domain/models/portfolio-state.model';
+import { TransactionFormComponent } from './transaction-form/transaction-form.component';
 
 @Component({
   selector: 'app-portfolio',
@@ -18,7 +16,8 @@ import { AllocationItem } from '../../../domain/models/portfolio-state.model';
     RouterLink,
     ButtonComponent,
     CardComponent,
-    SkeletonComponent
+    SkeletonComponent,
+    TransactionFormComponent
   ],
   template: `
     <div class="portfolio animate-fade-in">
@@ -31,8 +30,9 @@ import { AllocationItem } from '../../../domain/models/portfolio-state.model';
           <ui-button 
             variant="primary" 
             size="sm"
-            routerLink="/portfolio/transactions"
+            (click)="showTransactionForm()"
             class="glass"
+            data-test="add-transaction"
           >
             <svg class="button-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
               <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
@@ -205,7 +205,7 @@ import { AllocationItem } from '../../../domain/models/portfolio-state.model';
               </div>
             </ui-card>
           } @else {
-            <div class="holdings-container" [class.card-view]="viewMode() === 'cards'" [class.table-view]="viewMode() === 'table'">
+            <div class="holdings-container" data-test="holdings-list" [class.card-view]="viewMode() === 'cards'" [class.table-view]="viewMode() === 'table'">
               @for (holding of holdings(); track holding.coinId) {
                 @if (viewMode() === 'cards') {
                   <ui-card variant="elevated" size="md" class="holding-card">
@@ -332,7 +332,7 @@ import { AllocationItem } from '../../../domain/models/portfolio-state.model';
             <p>No transactions yet. Add your first transaction to get started.</p>
           </ui-card>
         } @else {
-          <div class="transactions-list">
+          <div class="transactions-list" data-test="transactions-list">
             @for (transaction of recentTransactions(); track transaction.id) {
               <ui-card variant="outlined" size="sm" class="transaction-item">
                 <div class="transaction-content">
@@ -354,6 +354,30 @@ import { AllocationItem } from '../../../domain/models/portfolio-state.model';
         }
       </section>
     </div>
+
+    <!-- Transaction Modal Overlay -->
+    @if (showTransactionFormModal()) {
+      <div class="modal-overlay" (click)="closeTransactionForm()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>Add Transaction</h2>
+            <button 
+              class="modal-close" 
+              (click)="closeTransactionForm()"
+              aria-label="Close modal"
+            >
+              ✕
+            </button>
+          </div>
+          <div class="modal-body">
+            <app-transaction-form 
+              (transactionAdded)="onTransactionAdded()"
+              (cancelled)="closeTransactionForm()"
+            ></app-transaction-form>
+          </div>
+        </div>
+      </div>
+    }
 
     <!-- Hidden file input for import -->
     <input 
@@ -1023,14 +1047,81 @@ import { AllocationItem } from '../../../domain/models/portfolio-state.model';
     .glass-card:hover::before {
       opacity: 1;
     }
+
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(2px);
+    }
+
+    .modal-content {
+      background-color: var(--color-background-elevated, #1a1a1a);
+      border-radius: var(--radius-lg, 8px);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      max-width: 600px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      border: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.1));
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--spacing-6, 1.5rem);
+      border-bottom: 1px solid var(--color-border-default, rgba(255, 255, 255, 0.1));
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--color-text-secondary);
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    }
+
+    .modal-close:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: var(--color-text-primary);
+    }
+
+    .modal-body {
+      padding: var(--spacing-6, 1.5rem);
+    }
   `]
 })
-export class PortfolioComponent implements OnInit {
+export class PortfolioComponent {
   portfolioStore: PortfolioStore = inject(PortfolioStore);
   settingsStore: SettingsStore = inject(SettingsStore);
 
   // Signals
   viewMode = signal<'cards' | 'table'>('cards');
+  showTransactionFormModal = signal(false);
 
   // Computed properties
   holdings = this.portfolioStore.holdings;
@@ -1045,12 +1136,20 @@ export class PortfolioComponent implements OnInit {
     this.portfolioStore.transactions().slice(0, 5)
   );
 
-  ngOnInit(): void {
-    // Portfolio data is loaded automatically by the store
-  }
-
   setViewMode(mode: 'cards' | 'table'): void {
     this.viewMode.set(mode);
+  }
+
+  showTransactionForm(): void {
+    this.showTransactionFormModal.set(true);
+  }
+
+  closeTransactionForm(): void {
+    this.showTransactionFormModal.set(false);
+  }
+
+  onTransactionAdded(): void {
+    this.showTransactionFormModal.set(false);
   }
 
   // Portfolio actions
