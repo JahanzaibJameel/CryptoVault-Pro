@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { environment } from '../environments/environment';
@@ -14,14 +14,14 @@ import { ToastComponent } from './shared/design-system/toast/toast.component';
 })
 export class AppComponent {
   isProduction = environment.production;
-  isSidebarCollapsed = false;
+  isSidebarCollapsed = signal(false);
+  currentTheme = signal<'light' | 'dark'>('dark');
 
   toggleSidebar(): void {
-    this.isSidebarCollapsed = !this.isSidebarCollapsed;
+    this.isSidebarCollapsed.update(value => !value);
   }
 
   toggleTheme(): void {
-    // Theme toggle logic would go here
-    console.log('Theme toggled');
+    this.currentTheme.update(theme => theme === 'light' ? 'dark' : 'light');
   }
 }
