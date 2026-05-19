@@ -1,4 +1,4 @@
-import { Injectable, signal, computed, inject } from '@angular/core';
+import { Injectable, signal, computed, inject, DestroyRef } from '@angular/core';
 import { IndexedDbService } from '../../../infrastructure/persistence/indexed-db.service';
 import { LoggerService } from './logger.service';
 
@@ -44,8 +44,10 @@ export interface CacheConfig {
 export class AdvancedCacheService {
   private indexedDb = inject(IndexedDbService);
   private loggerService = inject(LoggerService);
+  private destroyRef = inject(DestroyRef);
 
   private cache = signal<Map<string, CacheEntry<any>>>(new Map());
+  private cleanupIntervalId: number | null = null;
   private stats = signal<CacheStats>({
     totalEntries: 0,
     totalSize: 0,
@@ -97,9 +99,17 @@ export class AdvancedCacheService {
   }
 
   private startCleanupInterval(): void {
-    setInterval(() => {
+    this.cleanupIntervalId = window.setInterval(() => {
       this.cleanup();
     }, this.config.cleanupInterval * 1000);
+    
+    // Clean up interval on service destruction
+    this.destroyRef.onDestroy(() => {
+      if (this.cleanupIntervalId) {
+        clearInterval(this.cleanupIntervalId);
+        this.loggerService.debug('Cache cleanup interval cleared');
+      }
+    });
   }
 
   async set<T>(

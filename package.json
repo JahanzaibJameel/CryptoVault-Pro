@@ -108,7 +108,7 @@
   "browserslist": [
     "Chrome >= 120",
     "Firefox >= 120",
-    "Safari >= 16",
+    "Safari >= 17",
     "Edge >= 120"
   ],
   "engines": {
