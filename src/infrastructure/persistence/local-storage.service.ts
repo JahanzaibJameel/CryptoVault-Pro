@@ -1,16 +1,18 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { LoggerService } from '../../app/core/services/logger.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class LocalStorageService {
   private readonly prefix = 'crypto-vault-';
+  private logger = inject(LoggerService);
 
   get(key: string): string | null {
     try {
       return localStorage.getItem(this.prefix + key);
     } catch (error) {
-      console.error('Error reading from localStorage:', error);
+      this.logger.error('Error reading from localStorage', error, 'LocalStorageService');
       return null;
     }
   }
@@ -19,7 +21,7 @@ export class LocalStorageService {
     try {
       localStorage.setItem(this.prefix + key, value);
     } catch (error) {
-      console.error('Error writing to localStorage:', error);
+      this.logger.error('Error writing to localStorage', error, 'LocalStorageService');
       throw error;
     }
   }
@@ -28,7 +30,7 @@ export class LocalStorageService {
     try {
       localStorage.removeItem(this.prefix + key);
     } catch (error) {
-      console.error('Error removing from localStorage:', error);
+      this.logger.error('Error removing from localStorage', error, 'LocalStorageService');
     }
   }
 
@@ -41,7 +43,7 @@ export class LocalStorageService {
         }
       });
     } catch (error) {
-      console.error('Error clearing localStorage:', error);
+      this.logger.error('Error clearing localStorage', error, 'LocalStorageService');
     }
   }
 
@@ -52,7 +54,7 @@ export class LocalStorageService {
     try {
       return JSON.parse(value) as T;
     } catch (error) {
-      console.error('Error parsing JSON from localStorage:', error);
+      this.logger.error('Error parsing JSON from localStorage', error, 'LocalStorageService');
       return null;
     }
   }
@@ -62,7 +64,7 @@ export class LocalStorageService {
       const jsonString = JSON.stringify(value);
       this.set(key, jsonString);
     } catch (error) {
-      console.error('Error stringifying JSON for localStorage:', error);
+      this.logger.error('Error stringifying JSON for localStorage', error, 'LocalStorageService');
       throw error;
     }
   }
@@ -78,7 +80,7 @@ export class LocalStorageService {
         .filter(key => key.startsWith(this.prefix))
         .map(key => key.substring(this.prefix.length));
     } catch (error) {
-      console.error('Error getting localStorage keys:', error);
+      this.logger.error('Error getting localStorage keys', error, 'LocalStorageService');
       return [];
     }
   }
@@ -109,7 +111,7 @@ export class LocalStorageService {
 
       return { used, available, total, percentage };
     } catch (error) {
-      console.error('Error calculating localStorage usage:', error);
+      this.logger.error('Error calculating localStorage usage', error, 'LocalStorageService');
       return { used: 0, available: 0, total: 0, percentage: 0 };
     }
   }
@@ -156,7 +158,7 @@ export class LocalStorageService {
     try {
       return new Date(value);
     } catch (error) {
-      console.error('Error parsing date from localStorage:', error);
+      this.logger.error('Error parsing date from localStorage', error, 'LocalStorageService');
       return null;
     }
   }
@@ -170,7 +172,7 @@ export class LocalStorageService {
     try {
       return sessionStorage.getItem(this.prefix + key);
     } catch (error) {
-      console.error('Error reading from sessionStorage:', error);
+      this.logger.error('Error reading from sessionStorage', error, 'LocalStorageService');
       return null;
     }
   }
@@ -179,7 +181,7 @@ export class LocalStorageService {
     try {
       sessionStorage.setItem(this.prefix + key, value);
     } catch (error) {
-      console.error('Error writing to sessionStorage:', error);
+      this.logger.error('Error writing to sessionStorage', error, 'LocalStorageService');
       throw error;
     }
   }
@@ -188,7 +190,7 @@ export class LocalStorageService {
     try {
       sessionStorage.removeItem(this.prefix + key);
     } catch (error) {
-      console.error('Error removing from sessionStorage:', error);
+      this.logger.error('Error removing from sessionStorage', error, 'LocalStorageService');
     }
   }
 
@@ -201,7 +203,7 @@ export class LocalStorageService {
         }
       });
     } catch (error) {
-      console.error('Error clearing sessionStorage:', error);
+      this.logger.error('Error clearing sessionStorage', error, 'LocalStorageService');
     }
   }
 
@@ -212,7 +214,7 @@ export class LocalStorageService {
     try {
       return JSON.parse(value) as T;
     } catch (error) {
-      console.error('Error parsing JSON from sessionStorage:', error);
+      this.logger.error('Error parsing JSON from sessionStorage', error, 'LocalStorageService');
       return null;
     }
   }
@@ -222,7 +224,7 @@ export class LocalStorageService {
       const jsonString = JSON.stringify(value);
       this.setSession(key, jsonString);
     } catch (error) {
-      console.error('Error stringifying JSON for sessionStorage:', error);
+      this.logger.error('Error stringifying JSON for sessionStorage', error, 'LocalStorageService');
       throw error;
     }
   }
