@@ -1,4 +1,4 @@
-import { Injectable, signal, inject } from '@angular/core';
+import { Injectable, signal, inject, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { SentryService } from './sentry.service';
 
@@ -31,7 +31,7 @@ export interface ResourceTiming {
 @Injectable({
   providedIn: 'root'
 })
-export class PerformanceService {
+export class PerformanceService implements OnDestroy {
   private router = inject(Router);
   private sentryService = inject(SentryService);
   

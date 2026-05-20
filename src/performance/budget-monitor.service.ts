@@ -1,7 +1,17 @@
-import { Injectable, signal, computed, inject } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { PERFORMANCE_BUDGETS, PERFORMANCE_THRESHOLDS, PerformanceBudget, PerformanceAlert } from './budgets.config';
 import { LoggerService } from '../app/core/services/logger.service';
 import { NotificationService } from '../app/core/services/notification.service';
+
+interface LayoutShiftEntry extends PerformanceEntry {
+  value: number;
+  hadRecentInput: boolean;
+}
+
+interface EventEntry extends PerformanceEntry {
+  processingStart: number;
+  processingEnd: number;
+}
 
 export interface BudgetStatus {
   budget: PerformanceBudget;
@@ -103,19 +113,21 @@ export class BudgetMonitorService {
         case 'first-contentful-paint':
           this.updateMetricThreshold('FCP', entry.startTime, PERFORMANCE_THRESHOLDS.FCP);
           break;
-        case 'layout-shift':
-          const layoutShiftEntry = entry as any;
+        case 'layout-shift': {
+          const layoutShiftEntry = entry as LayoutShiftEntry;
           if (layoutShiftEntry.value && !layoutShiftEntry.hadRecentInput) {
             this.updateMetricThreshold('CLS', layoutShiftEntry.value, PERFORMANCE_THRESHOLDS.CLS);
           }
           break;
-        case 'first-input':
-          const inputEntry = entry as any;
+        }
+        case 'first-input': {
+          const inputEntry = entry as EventEntry;
           if (inputEntry.processingStart && inputEntry.processingEnd) {
             const inp = inputEntry.processingEnd - inputEntry.processingStart;
             this.updateMetricThreshold('INP', inp, PERFORMANCE_THRESHOLDS.INP);
           }
           break;
+        }
       }
     }
   }
@@ -202,7 +214,7 @@ export class BudgetMonitorService {
     entity: string, 
     status: 'warning' | 'error' | 'critical', 
     current: number, 
-    budget: PerformanceBudget | any
+    budget: PerformanceBudget | { critical?: string; warning?: string }
   ): void {
     const alert: PerformanceAlert = {
       id: `${entity}_${Date.now()}`,
@@ -217,7 +229,7 @@ export class BudgetMonitorService {
         unit: 'bytes'
       },
       timestamp: Date.now(),
-      action: this.generateActionSuggestion(entity, status)
+      action: this.generateActionSuggestion(entity)
     };
 
     this.alerts().set(alert.id || `${entity}_${Date.now()}`, alert);
@@ -248,7 +260,7 @@ export class BudgetMonitorService {
     }
   }
 
-  private generateActionSuggestion(entity: string, status: string): { label: string; handler: () => void } {
+  private generateActionSuggestion(entity: string): { label: string; handler: () => void } {
     const suggestions = {
       initial: 'Consider code splitting and tree shaking',
       anyComponentStyle: 'Review and optimize component styles',
