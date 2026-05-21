@@ -89,6 +89,11 @@ export class AccessibilityService {
   }
 
   private detectUserPreferences(): void {
+    // Guard against environments where matchMedia is not available (e.g., Jest tests)
+    if (!window.matchMedia) {
+      return;
+    }
+
     const mediaQueries = {
       reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)'),
       highContrast: window.matchMedia('(prefers-contrast: high)'),
