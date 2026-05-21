@@ -9,7 +9,7 @@ export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   imports: [],
   template: `
     <button
-      [class]="buttonClasses()"
+      [class]="buttonClasses"
       [disabled]="disabled || loading"
       [attr.aria-label]="ariaLabel"
       [attr.aria-describedby]="ariaDescribedBy"
@@ -343,7 +343,7 @@ export class ButtonComponent {
     return 'ui-button-host';
   }
 
-  buttonClasses = computed(() => {
+  get buttonClasses(): string {
     const classes = [
       this.variant,
       this.size,
@@ -351,7 +351,7 @@ export class ButtonComponent {
     ].filter(Boolean);
 
     return classes.join(' ');
-  });
+  }
 
   handleClick(event: Event) {
     if (this.disabled || this.loading) {

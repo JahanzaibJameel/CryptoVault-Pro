@@ -6,7 +6,6 @@ import { ButtonComponent, ButtonVariant, ButtonSize } from './button.component';
 describe('ButtonComponent', () => {
   let component: ButtonComponent;
   let fixture: ComponentFixture<ButtonComponent>;
-  let buttonElement: HTMLButtonElement;
   let debugElement: DebugElement;
 
   beforeEach(async () => {
@@ -16,9 +15,6 @@ describe('ButtonComponent', () => {
 
     fixture = TestBed.createComponent(ButtonComponent);
     component = fixture.componentInstance;
-    debugElement = fixture.debugElement.query(By.css('button'));
-    buttonElement = debugElement.nativeElement;
-    fixture.detectChanges();
   });
 
   it('should create', () => {
@@ -35,15 +31,15 @@ describe('ButtonComponent', () => {
     });
 
     it('should have disabled as false', () => {
-      expect(component.disabled).toBeFalse();
+      expect(component.disabled).toBe(false);
     });
 
     it('should have loading as false', () => {
-      expect(component.loading).toBeFalse();
+      expect(component.loading).toBe(false);
     });
 
     it('should have fullWidth as false', () => {
-      expect(component.fullWidth).toBeFalse();
+      expect(component.fullWidth).toBe(false);
     });
 
     it('should have type as button', () => {
@@ -59,19 +55,22 @@ describe('ButtonComponent', () => {
     it('should apply variant class', () => {
       component.variant = 'secondary';
       fixture.detectChanges();
-      expect(buttonElement.classList).toContain('secondary');
+      const updatedButton = fixture.debugElement.query(By.css('button')).nativeElement;
+      expect(updatedButton.classList).toContain('secondary');
     });
 
     it('should apply size class', () => {
       component.size = 'lg';
       fixture.detectChanges();
-      expect(buttonElement.classList).toContain('lg');
+      const updatedButton = fixture.debugElement.query(By.css('button')).nativeElement;
+      expect(updatedButton.classList).toContain('lg');
     });
 
     it('should apply full-width class when fullWidth is true', () => {
       component.fullWidth = true;
       fixture.detectChanges();
-      expect(buttonElement.classList).toContain('full-width');
+      const updatedButton = fixture.debugElement.query(By.css('button')).nativeElement;
+      expect(updatedButton.classList).toContain('full-width');
     });
 
     it('should apply multiple classes correctly', () => {
@@ -79,16 +78,17 @@ describe('ButtonComponent', () => {
       component.size = 'xl';
       component.fullWidth = true;
       fixture.detectChanges();
-      expect(buttonElement.classList).toContain('danger');
-      expect(buttonElement.classList).toContain('xl');
-      expect(buttonElement.classList).toContain('full-width');
+      const updatedButton = fixture.debugElement.query(By.css('button')).nativeElement;
+      expect(updatedButton.classList).toContain('danger');
+      expect(updatedButton.classList).toContain('xl');
+      expect(updatedButton.classList).toContain('full-width');
     });
 
     it('should have correct computed classes', () => {
       component.variant = 'success';
       component.size = 'sm';
       fixture.detectChanges();
-      const classes = component.buttonClasses();
+      const classes = component.buttonClasses;
       expect(classes).toBe('success sm');
     });
   });
@@ -97,33 +97,36 @@ describe('ButtonComponent', () => {
     it('should be disabled when disabled is true', () => {
       component.disabled = true;
       fixture.detectChanges();
-      expect(buttonElement.disabled).toBeTrue();
+      const updatedButton = fixture.debugElement.query(By.css('button')).nativeElement;
+      expect(updatedButton.disabled).toBe(true);
     });
 
     it('should be disabled when loading is true', () => {
       component.loading = true;
       fixture.detectChanges();
-      expect(buttonElement.disabled).toBeTrue();
+      const updatedButton = fixture.debugElement.query(By.css('button')).nativeElement;
+      expect(updatedButton.disabled).toBe(true);
     });
 
     it('should show spinner when loading is true', () => {
       component.loading = true;
       fixture.detectChanges();
-      const spinner = debugElement.query(By.css('.button-spinner'));
+      const spinner = fixture.debugElement.query(By.css('.button-spinner'));
       expect(spinner).toBeTruthy();
     });
 
     it('should not show spinner when loading is false', () => {
       component.loading = false;
       fixture.detectChanges();
-      const spinner = debugElement.query(By.css('.button-spinner'));
+      const spinner = fixture.debugElement.query(By.css('.button-spinner'));
       expect(spinner).toBeFalsy();
     });
 
     it('should have correct button type', () => {
       component.type = 'submit';
       fixture.detectChanges();
-      expect(buttonElement.type).toBe('submit');
+      const updatedButton = fixture.debugElement.query(By.css('button')).nativeElement;
+      expect(updatedButton.type).toBe('submit');
     });
   });
 
@@ -131,18 +134,22 @@ describe('ButtonComponent', () => {
     it('should have aria-label when provided', () => {
       component.ariaLabel = 'Test button';
       fixture.detectChanges();
-      expect(buttonElement.getAttribute('aria-label')).toBe('Test button');
+      const updatedButton = fixture.debugElement.query(By.css('button')).nativeElement;
+      expect(updatedButton.getAttribute('aria-label')).toBe('Test button');
     });
 
     it('should have aria-describedby when provided', () => {
       component.ariaDescribedBy = 'button-description';
       fixture.detectChanges();
-      expect(buttonElement.getAttribute('aria-describedby')).toBe('button-description');
+      const updatedButton = fixture.debugElement.query(By.css('button')).nativeElement;
+      expect(updatedButton.getAttribute('aria-describedby')).toBe('button-description');
     });
 
     it('should have proper focus styles', () => {
+      fixture.detectChanges();
+      const updatedButton = fixture.debugElement.query(By.css('button')).nativeElement;
       // Test focus-visible styles are applied
-      expect(buttonElement.style.outline).toBe('');
+      expect(updatedButton.style.outline).toBe('');
     });
   });
 
@@ -150,7 +157,7 @@ describe('ButtonComponent', () => {
     it('should display icon on the left by default', () => {
       component.icon = '🔍';
       fixture.detectChanges();
-      const iconElement = debugElement.query(By.css('.button-icon-left'));
+      const iconElement = fixture.debugElement.query(By.css('.button-icon-left'));
       expect(iconElement).toBeTruthy();
       expect(iconElement.nativeElement.textContent).toBe('🔍');
     });
@@ -159,56 +166,58 @@ describe('ButtonComponent', () => {
       component.icon = '→';
       component.iconPosition = 'right';
       fixture.detectChanges();
-      const iconElement = debugElement.query(By.css('.button-icon-right'));
+      const iconElement = fixture.debugElement.query(By.css('.button-icon-right'));
       expect(iconElement).toBeTruthy();
       expect(iconElement.nativeElement.textContent).toBe('→');
     });
 
     it('should not display icon when not provided', () => {
       fixture.detectChanges();
-      const iconElement = debugElement.query(By.css('.button-icon'));
+      const iconElement = fixture.debugElement.query(By.css('.button-icon'));
       expect(iconElement).toBeFalsy();
     });
 
     it('should hide icon from screen readers', () => {
       component.icon = '🔍';
       fixture.detectChanges();
-      const iconElement = debugElement.query(By.css('.button-icon'));
+      const iconElement = fixture.debugElement.query(By.css('.button-icon'));
       expect(iconElement.nativeElement.getAttribute('aria-hidden')).toBe('true');
     });
   });
 
   describe('Click Handling', () => {
     it('should emit click event when clicked', () => {
-      spyOn(buttonElement, 'click');
+      fixture.detectChanges();
+      const buttonElement = fixture.debugElement.query(By.css('button')).nativeElement;
+      const clickSpy = jest.spyOn(buttonElement, 'click');
       buttonElement.click();
-      expect(buttonElement.click).toHaveBeenCalled();
+      expect(clickSpy).toHaveBeenCalled();
     });
 
     it('should prevent click when disabled', () => {
       component.disabled = true;
       fixture.detectChanges();
       const clickEvent = new MouseEvent('click');
-      spyOn(clickEvent, 'preventDefault');
-      spyOn(clickEvent, 'stopPropagation');
-      
+      const preventDefaultSpy = jest.spyOn(clickEvent, 'preventDefault');
+      const stopPropagationSpy = jest.spyOn(clickEvent, 'stopPropagation');
+
       component.handleClick(clickEvent);
-      
-      expect(clickEvent.preventDefault).toHaveBeenCalled();
-      expect(clickEvent.stopPropagation).toHaveBeenCalled();
+
+      expect(preventDefaultSpy).toHaveBeenCalled();
+      expect(stopPropagationSpy).toHaveBeenCalled();
     });
 
     it('should prevent click when loading', () => {
       component.loading = true;
       fixture.detectChanges();
       const clickEvent = new MouseEvent('click');
-      spyOn(clickEvent, 'preventDefault');
-      spyOn(clickEvent, 'stopPropagation');
-      
+      const preventDefaultSpy = jest.spyOn(clickEvent, 'preventDefault');
+      const stopPropagationSpy = jest.spyOn(clickEvent, 'stopPropagation');
+
       component.handleClick(clickEvent);
-      
-      expect(clickEvent.preventDefault).toHaveBeenCalled();
-      expect(clickEvent.stopPropagation).toHaveBeenCalled();
+
+      expect(preventDefaultSpy).toHaveBeenCalled();
+      expect(stopPropagationSpy).toHaveBeenCalled();
     });
 
     it('should allow click when enabled and not loading', () => {
@@ -216,13 +225,13 @@ describe('ButtonComponent', () => {
       component.loading = false;
       fixture.detectChanges();
       const clickEvent = new MouseEvent('click');
-      spyOn(clickEvent, 'preventDefault');
-      spyOn(clickEvent, 'stopPropagation');
-      
+      const preventDefaultSpy = jest.spyOn(clickEvent, 'preventDefault');
+      const stopPropagationSpy = jest.spyOn(clickEvent, 'stopPropagation');
+
       component.handleClick(clickEvent);
-      
-      expect(clickEvent.preventDefault).not.toHaveBeenCalled();
-      expect(clickEvent.stopPropagation).not.toHaveBeenCalled();
+
+      expect(preventDefaultSpy).not.toHaveBeenCalled();
+      expect(stopPropagationSpy).not.toHaveBeenCalled();
     });
   });
 
@@ -246,7 +255,8 @@ describe('ButtonComponent', () => {
       it(`should apply ${variant} variant correctly`, () => {
         component.variant = variant;
         fixture.detectChanges();
-        expect(buttonElement.classList).toContain(variant);
+        const updatedButton = fixture.debugElement.query(By.css('button')).nativeElement;
+        expect(updatedButton.classList).toContain(variant);
       });
     });
   });
@@ -258,13 +268,15 @@ describe('ButtonComponent', () => {
       it(`should apply ${size} size correctly`, () => {
         component.size = size;
         fixture.detectChanges();
-        expect(buttonElement.classList).toContain(size);
+        const updatedButton = fixture.debugElement.query(By.css('button')).nativeElement;
+        expect(updatedButton.classList).toContain(size);
       });
     });
   });
 
   describe('Host Binding', () => {
     it('should apply host class', () => {
+      fixture.detectChanges();
       const hostElement = fixture.debugElement.nativeElement;
       expect(hostElement.classList).toContain('ui-button-host');
     });
