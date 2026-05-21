@@ -46,8 +46,21 @@ describe('AccessibilityService', () => {
       ]
     });
 
-    service = TestBed.inject(AccessibilityService);
-    mockLoggerService = TestBed.inject(LoggerService) as jest.Mocked<LoggerService>;
+    // Mock window.matchMedia before service initialization
+    const mockMatchMedia = jest.fn().mockImplementation((query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn()
+    }));
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: mockMatchMedia
+    });
 
     // Mock DOM methods
     Object.defineProperty(document, 'addEventListener', { value: jest.fn() });
@@ -56,6 +69,9 @@ describe('AccessibilityService', () => {
     Object.defineProperty(document.body, 'insertBefore', { value: jest.fn() });
     Object.defineProperty(document, 'querySelector', { value: jest.fn() });
     Object.defineProperty(document, 'querySelectorAll', { value: jest.fn() });
+
+    service = TestBed.inject(AccessibilityService);
+    mockLoggerService = TestBed.inject(LoggerService) as jest.Mocked<LoggerService>;
   });
 
   it('should be created', () => {
