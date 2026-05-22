@@ -411,6 +411,20 @@ export class AccessibilityService {
     });
   }
 
+  private normalizeNodeList<T extends Node>(nodes: NodeListOf<T> | T[] | null | undefined): T[] {
+    if (!nodes) {
+      return [];
+    }
+    return Array.isArray(nodes) ? nodes : Array.from(nodes);
+  }
+
+  private getStyles(element: Element | { style?: any }): CSSStyleDeclaration | any {
+    if (element && typeof (element as any).style !== 'undefined') {
+      return (element as any).style;
+    }
+    return window.getComputedStyle(element as Element);
+  }
+
   // Skip links
   createSkipLinks(): void {
     if (!this.settings().skipLinks) return;
@@ -469,10 +483,10 @@ export class AccessibilityService {
 
   private async checkColorContrast(): Promise<AccessibilityViolation[]> {
     const violations: AccessibilityViolation[] = [];
-    const elements = document.querySelectorAll('*');
+    const elements = this.normalizeNodeList(document.querySelectorAll('*'));
 
     for (const element of elements) {
-      const styles = window.getComputedStyle(element);
+      const styles = this.getStyles(element as any);
       const color = styles.color;
       const backgroundColor = styles.backgroundColor;
 
@@ -545,7 +559,7 @@ export class AccessibilityService {
     const violations: AccessibilityViolation[] = [];
     
     // Check for elements that should be keyboard accessible
-    const clickableElements = document.querySelectorAll('button, a, input, select, textarea, [onclick]');
+    const clickableElements = this.normalizeNodeList(document.querySelectorAll('button, a, input, select, textarea, [onclick]'));
     
     clickableElements.forEach(element => {
       const htmlElement = element as HTMLElement;
@@ -569,7 +583,7 @@ export class AccessibilityService {
     const violations: AccessibilityViolation[] = [];
     
     // Check for missing ARIA labels on interactive elements
-    const interactiveElements = document.querySelectorAll('button, a[href], input, select, textarea');
+    const interactiveElements = this.normalizeNodeList(document.querySelectorAll('button, a[href], input, select, textarea'));
     
     interactiveElements.forEach(element => {
       const htmlElement = element as HTMLElement;
@@ -597,13 +611,13 @@ export class AccessibilityService {
     const violations: AccessibilityViolation[] = [];
     
     // Check for focus management in modals and dialogs
-    const modals = document.querySelectorAll('[role="dialog"], .modal');
+    const modals = this.normalizeNodeList(document.querySelectorAll('[role="dialog"], .modal'));
     
     modals.forEach(element => {
       const htmlElement = element as HTMLElement;
-      const focusableElements = htmlElement.querySelectorAll(
+      const focusableElements = this.normalizeNodeList(htmlElement.querySelectorAll(
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
+      ));
       
       if (focusableElements.length === 0) {
         violations.push({
@@ -624,7 +638,7 @@ export class AccessibilityService {
     const violations: AccessibilityViolation[] = [];
     
     // Check for proper heading structure
-    const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+    const headings = this.normalizeNodeList(document.querySelectorAll('h1, h2, h3, h4, h5, h6'));
     let lastLevel = 0;
     
     headings.forEach(heading => {
