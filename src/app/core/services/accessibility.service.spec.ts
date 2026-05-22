@@ -63,12 +63,14 @@ describe('AccessibilityService', () => {
     });
 
     // Mock DOM methods
-    Object.defineProperty(document, 'addEventListener', { value: jest.fn() });
-    Object.defineProperty(document.body, 'classList', { value: { toggle: jest.fn(), add: jest.fn(), remove: jest.fn() } });
-    Object.defineProperty(document.body, 'appendChild', { value: jest.fn() });
-    Object.defineProperty(document.body, 'insertBefore', { value: jest.fn() });
-    Object.defineProperty(document, 'querySelector', { value: jest.fn() });
-    Object.defineProperty(document, 'querySelectorAll', { value: jest.fn() });
+    jest.spyOn(document, 'addEventListener').mockImplementation(jest.fn());
+    jest.spyOn(document.body.classList, 'toggle').mockImplementation(jest.fn());
+    jest.spyOn(document.body.classList, 'add').mockImplementation(jest.fn());
+    jest.spyOn(document.body.classList, 'remove').mockImplementation(jest.fn());
+    jest.spyOn(document.body, 'appendChild').mockImplementation(jest.fn());
+    jest.spyOn(document.body, 'insertBefore').mockImplementation(jest.fn());
+    jest.spyOn(document, 'querySelector').mockReturnValue(null);
+    jest.spyOn(document, 'querySelectorAll').mockReturnValue([]);
 
     service = TestBed.inject(AccessibilityService);
     mockLoggerService = TestBed.inject(LoggerService) as jest.Mocked<LoggerService>;

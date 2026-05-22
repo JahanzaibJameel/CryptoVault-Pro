@@ -3,9 +3,33 @@ import { jest } from '@jest/globals';
 import { getTestBed } from '@angular/core/testing';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
 
-
 // Initialize TestBed
 getTestBed().initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting());
+
+const jestExtended = require('jest-extended');
+expect.extend(jestExtended);
+
+// Provide a minimal Jasmine global shim for Jest environments that use Jasmine-style spies in existing specs.
+if (!(globalThis as any).jasmine) {
+  Object.defineProperty(globalThis, 'jasmine', {
+    value: {
+      createSpy: (name: string) => jest.fn(),
+      createSpyObj: (baseName: string, methodNames: string[]) => {
+        const obj: Record<string, jest.Mock> = {};
+        methodNames.forEach(method => {
+          obj[method] = jest.fn();
+        });
+        return obj;
+      },
+      any: (expected: any) => expect.any(expected),
+      objectContaining: (obj: object) => expect.objectContaining(obj),
+      stringMatching: (pattern: string | RegExp) => expect.stringMatching(pattern),
+      arrayContaining: (arr: any[]) => expect.arrayContaining(arr),
+      anything: () => expect.anything()
+    },
+    writable: false
+  });
+}
 
 // Mock IndexedDB for tests
 const indexedDBMock = {
