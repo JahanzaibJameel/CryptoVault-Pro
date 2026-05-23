@@ -1,65 +1,14 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-# Pre-commit hooks for CryptoVault Pro
-# Ensures code quality, security, and formatting before commits
-
 echo "🔍 Running pre-commit checks..."
 
-# Run ESLint
-echo "📋 Running ESLint..."
-npm run lint
+echo "📦 Running lint-staged for staged files..."
+npx lint-staged
 if [ $? -ne 0 ]; then
-  echo "❌ ESLint failed. Please fix linting errors before committing."
+  echo "❌ lint-staged failed. Please fix the issues before committing."
   exit 1
 fi
 
-# Run Prettier formatting check
-echo "✨ Checking code formatting..."
-npm run format:check
-if [ $? -ne 0 ]; then
-  echo "❌ Code formatting check failed. Please run 'npm run format' to fix formatting issues."
-  exit 1
-fi
-
-# Run TypeScript type checking
-echo "🔷 Running TypeScript type checking..."
-npm run type-check
-if [ $? -ne 0 ]; then
-  echo "❌ TypeScript type checking failed. Please fix type errors before committing."
-  exit 1
-fi
-
-# Run unit tests (quick)
-echo "🧪 Running quick unit tests..."
-npm run test:unit -- --watchAll=false --bail --passWithNoTests
-if [ $? -ne 0 ]; then
-  echo "❌ Unit tests failed. Please fix failing tests before committing."
-  exit 1
-fi
-
-# Check for potential security issues
-echo "🔒 Running security audit..."
-npm audit --audit-level=high --production
-if [ $? -ne 0 ]; then
-  echo "⚠️  Security audit found high-severity vulnerabilities. Please review before committing."
-  # Don't fail the commit, just warn
-fi
-
-# Check bundle size (if build exists)
-if [ -d "dist" ]; then
-  echo "📦 Checking bundle size..."
-  npm run analyze:bundle
-  if [ $? -ne 0 ]; then
-    echo "⚠️  Bundle size analysis failed. Please review bundle size changes."
-  fi
-fi
-
-# Check for TODO/FIXME comments (optional)
-echo "📝 Checking for TODO/FIXME comments..."
-if git diff --cached --name-only --diff-filter=ACM | xargs grep -l "TODO\|FIXME" > /dev/null; then
-  echo "⚠️  Found TODO or FIXME comments in staged files. Please review before committing."
-fi
-
-echo "✅ All pre-commit checks passed!"
+echo "✅ Pre-commit checks passed."
 exit 0
