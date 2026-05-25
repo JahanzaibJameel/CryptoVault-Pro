@@ -28,20 +28,32 @@ export interface ResourceTiming {
   cached: boolean;
 }
 
+interface WindowWithEnv extends Window {
+  __ENV?: Record<string, string>;
+}
+
+interface PerformanceWithMemory extends Performance {
+  memory?: {
+    usedJSHeapSize: number;
+    totalJSHeapSize: number;
+    jsHeapSizeLimit: number;
+  };
+}
+
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class PerformanceService implements OnDestroy {
   private router = inject(Router);
   private sentryService = inject(SentryService);
-  
+
   private metrics = signal<PerformanceMetrics>({});
   private resourceTimings = signal<ResourceTiming[]>([]);
   private isTracking = signal(false);
   private vitalsObserver: PerformanceObserver | null = null;
   private resourceObserver: PerformanceObserver | null = null;
   private memoryTrackingInterval: number | null = null;
-  
+
   // Thresholds for Web Vitals
   private readonly thresholds = {
     LCP: { good: 2500, poor: 4000 },
@@ -49,7 +61,7 @@ export class PerformanceService implements OnDestroy {
     INP: { good: 200, poor: 500 },
     FCP: { good: 1800, poor: 3000 },
     TTFB: { good: 800, poor: 1800 },
-    TTI: { good: 3800, poor: 7300 }
+    TTI: { good: 3800, poor: 7300 },
   };
 
   constructor() {
@@ -58,40 +70,43 @@ export class PerformanceService implements OnDestroy {
 
   private initializePerformanceTracking(): void {
     // Only track in production or when explicitly enabled
-    const shouldTrack = (typeof window !== 'undefined' && (window as any).__ENV?.NODE_ENV === 'production') || 
-                       (typeof window !== 'undefined' && (window as any).__ENV?.ENABLE_PERFORMANCE_MONITORING === 'true');
-    
+    const windowWithEnv = window as unknown as WindowWithEnv;
+    const shouldTrack =
+      (typeof window !== 'undefined' && windowWithEnv.__ENV?.NODE_ENV === 'production') ||
+      (typeof window !== 'undefined' &&
+        windowWithEnv.__ENV?.ENABLE_PERFORMANCE_MONITORING === 'true');
+
     if (shouldTrack && this.isPerformanceAPIAvailable()) {
       this.startTracking();
     }
   }
 
   private isPerformanceAPIAvailable(): boolean {
-    return 'PerformanceObserver' in window && 
-           'performance' in window && 
-           'navigation' in performance;
+    return (
+      'PerformanceObserver' in window && 'performance' in window && 'navigation' in performance
+    );
   }
 
   startTracking(): void {
     if (this.isTracking()) return;
-    
+
     this.isTracking.set(true);
     this.setupVitalsObserver();
     this.setupResourceObserver();
     this.setupNavigationTracking();
     this.setupMemoryTracking();
-    
+
     this.sentryService.addBreadcrumb('Performance tracking started', 'performance', 'info');
   }
 
   stopTracking(): void {
     if (!this.isTracking()) return;
-    
+
     this.vitalsObserver?.disconnect();
     this.resourceObserver?.disconnect();
     this.vitalsObserver = null;
     this.resourceObserver = null;
-    
+
     this.isTracking.set(false);
     this.sentryService.addBreadcrumb('Performance tracking stopped', 'performance', 'info');
   }
@@ -102,7 +117,7 @@ export class PerformanceService implements OnDestroy {
       clearInterval(this.memoryTrackingInterval);
       this.memoryTrackingInterval = null;
     }
-    
+
     // Disconnect observers
     this.vitalsObserver?.disconnect();
     this.resourceObserver?.disconnect();
@@ -111,7 +126,7 @@ export class PerformanceService implements OnDestroy {
   private setupVitalsObserver(): void {
     try {
       this.vitalsObserver = new PerformanceObserver((list) => {
-        list.getEntries().forEach(entry => {
+        list.getEntries().forEach((entry) => {
           this.processVitalEntry(entry as PerformanceEntry);
         });
       });
@@ -122,10 +137,10 @@ export class PerformanceService implements OnDestroy {
         'layout-shift',
         'first-input',
         'paint',
-        'navigation'
+        'navigation',
       ];
 
-      entryTypes.forEach(type => {
+      entryTypes.forEach((type) => {
         try {
           this.vitalsObserver!.observe({ type, buffered: true });
         } catch (error) {
@@ -140,7 +155,7 @@ export class PerformanceService implements OnDestroy {
   private setupResourceObserver(): void {
     try {
       this.resourceObserver = new PerformanceObserver((list) => {
-        list.getEntries().forEach(entry => {
+        list.getEntries().forEach((entry) => {
           this.processResourceEntry(entry as PerformanceResourceTiming);
         });
       });
@@ -152,7 +167,7 @@ export class PerformanceService implements OnDestroy {
   }
 
   private setupNavigationTracking(): void {
-    this.router.events.subscribe(event => {
+    this.router.events.subscribe((event) => {
       if (event.constructor.name === 'NavigationEnd') {
         this.recordNavigation();
       }
@@ -195,30 +210,30 @@ export class PerformanceService implements OnDestroy {
       rating: this.getRating('LCP', entry.startTime),
       delta: 0, // LCP doesn't have delta
       id: this.generateId(),
-      navigationType: this.getNavigationType()
+      navigationType: this.getNavigationType(),
     };
 
-    this.metrics.update(current => ({ ...current, LCP: vital }));
+    this.metrics.update((current) => ({ ...current, LCP: vital }));
     this.sendMetricToSentry(vital);
   }
 
   private recordCLS(entry: PerformanceEntry): void {
     // CLS needs to be accumulated
-    const clsEntry = entry as any; // LayoutShiftEntry
+    const clsEntry = entry as LayoutShiftEntry;
     if (!clsEntry.hadRecentInput) {
       const currentCLS = this.metrics().CLS?.value || 0;
       const newCLS = currentCLS + clsEntry.value;
-      
+
       const vital: WebVital = {
         name: 'CLS',
         value: newCLS,
         rating: this.getRating('CLS', newCLS),
         delta: clsEntry.value,
         id: this.generateId(),
-        navigationType: this.getNavigationType()
+        navigationType: this.getNavigationType(),
       };
 
-      this.metrics.update(current => ({ ...current, CLS: vital }));
+      this.metrics.update((current) => ({ ...current, CLS: vital }));
       this.sendMetricToSentry(vital);
     }
   }
@@ -230,10 +245,10 @@ export class PerformanceService implements OnDestroy {
       rating: this.getRating('INP', entry.duration),
       delta: entry.duration,
       id: this.generateId(),
-      navigationType: this.getNavigationType()
+      navigationType: this.getNavigationType(),
     };
 
-    this.metrics.update(current => ({ ...current, INP: vital }));
+    this.metrics.update((current) => ({ ...current, INP: vital }));
     this.sendMetricToSentry(vital);
   }
 
@@ -245,10 +260,10 @@ export class PerformanceService implements OnDestroy {
         rating: this.getRating('FCP', entry.startTime),
         delta: 0,
         id: this.generateId(),
-        navigationType: this.getNavigationType()
+        navigationType: this.getNavigationType(),
       };
 
-      this.metrics.update(current => ({ ...current, FCP: vital }));
+      this.metrics.update((current) => ({ ...current, FCP: vital }));
       this.sendMetricToSentry(vital);
     }
   }
@@ -261,10 +276,10 @@ export class PerformanceService implements OnDestroy {
       rating: this.getRating('TTFB', entry.responseStart - entry.fetchStart),
       delta: 0,
       id: this.generateId(),
-      navigationType: this.getNavigationType()
+      navigationType: this.getNavigationType(),
     };
 
-    this.metrics.update(current => ({ ...current, TTFB: ttfbVital }));
+    this.metrics.update((current) => ({ ...current, TTFB: ttfbVital }));
     this.sendMetricToSentry(ttfbVital);
 
     // TTI (simplified calculation)
@@ -276,10 +291,10 @@ export class PerformanceService implements OnDestroy {
         rating: this.getRating('TTI', tti),
         delta: 0,
         id: this.generateId(),
-        navigationType: this.getNavigationType()
+        navigationType: this.getNavigationType(),
       };
 
-      this.metrics.update(current => ({ ...current, TTI: ttiVital }));
+      this.metrics.update((current) => ({ ...current, TTI: ttiVital }));
       this.sendMetricToSentry(ttiVital);
     }
   }
@@ -290,14 +305,14 @@ export class PerformanceService implements OnDestroy {
       type: this.getResourceType(entry.name),
       duration: entry.responseEnd - entry.requestStart,
       size: entry.transferSize || 0,
-      cached: entry.transferSize === 0 && entry.decodedBodySize > 0
+      cached: entry.transferSize === 0 && entry.decodedBodySize > 0,
     };
 
-    this.resourceTimings.update(current => [...current, resource]);
+    this.resourceTimings.update((current) => [...current, resource]);
 
     // Keep only last 100 resources
     if (this.resourceTimings().length > 100) {
-      this.resourceTimings.update(current => current.slice(-100));
+      this.resourceTimings.update((current) => current.slice(-100));
     }
 
     // Track slow resources
@@ -305,7 +320,7 @@ export class PerformanceService implements OnDestroy {
       this.sentryService.captureMessage(
         `Slow resource: ${resource.name} took ${resource.duration}ms`,
         'warning',
-        { resource }
+        { resource },
       );
     }
   }
@@ -314,7 +329,7 @@ export class PerformanceService implements OnDestroy {
     // Simplified TTI calculation - in production you'd use a more sophisticated method
     const domContentLoaded = navEntry.domContentLoadedEventEnd - navEntry.fetchStart;
     const loadComplete = navEntry.loadEventEnd - navEntry.fetchStart;
-    
+
     // Estimate TTI as the point when main thread is likely free
     return Math.max(domContentLoaded, loadComplete);
   }
@@ -327,20 +342,20 @@ export class PerformanceService implements OnDestroy {
   }
 
   private recordMemoryUsage(): void {
-    const memory = (performance as any).memory;
+    const memory = (performance as PerformanceWithMemory).memory;
     if (memory) {
       const usage = {
         used: memory.usedJSHeapSize,
         total: memory.totalJSHeapSize,
         limit: memory.jsHeapSizeLimit,
-        percentage: (memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100
+        percentage: (memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100,
       };
 
       this.sentryService.addBreadcrumb(
         `Memory usage: ${usage.percentage.toFixed(1)}%`,
         'memory',
         usage.percentage > 80 ? 'warning' : 'info',
-        usage
+        usage,
       );
 
       // Alert on high memory usage
@@ -348,7 +363,7 @@ export class PerformanceService implements OnDestroy {
         this.sentryService.captureMessage(
           `High memory usage: ${usage.percentage.toFixed(1)}%`,
           'warning',
-          usage
+          usage,
         );
       }
     }
@@ -356,17 +371,20 @@ export class PerformanceService implements OnDestroy {
 
   private sendMetricToSentry(vital: WebVital): void {
     this.sentryService.trackPerformance(vital.name, vital.value);
-    
+
     if (vital.rating === 'poor') {
       this.sentryService.captureMessage(
         `Poor Web Vital: ${vital.name} = ${vital.value}`,
         'warning',
-        { vital }
+        { vital },
       );
     }
   }
 
-  private getRating(metric: keyof typeof this.thresholds, value: number): 'good' | 'needs-improvement' | 'poor' {
+  private getRating(
+    metric: keyof typeof this.thresholds,
+    value: number,
+  ): 'good' | 'needs-improvement' | 'poor' {
     const threshold = this.thresholds[metric];
     if (value <= threshold.good) return 'good';
     if (value <= threshold.poor) return 'needs-improvement';
@@ -376,13 +394,18 @@ export class PerformanceService implements OnDestroy {
   private getNavigationType(): string {
     const navEntry = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
     if (!navEntry) return 'unknown';
-    
+
     switch (navEntry.type) {
-      case 'navigate': return 'navigation';
-      case 'reload': return 'reload';
-      case 'back_forward': return 'back_forward';
-      case 'prerender': return 'prerender';
-      default: return 'unknown';
+      case 'navigate':
+        return 'navigation';
+      case 'reload':
+        return 'reload';
+      case 'back_forward':
+        return 'back_forward';
+      case 'prerender':
+        return 'prerender';
+      default:
+        return 'unknown';
     }
   }
 
@@ -409,17 +432,22 @@ export class PerformanceService implements OnDestroy {
   }
 
   getPerformanceScore(): number {
-    const metrics = this.metrics();
+    const metrics = this.getMetrics();
     let score = 100;
     let count = 0;
 
-    Object.entries(metrics).forEach(([name, vital]) => {
+    Object.entries(metrics).forEach(([, vital]) => {
       if (vital) {
         count++;
         switch (vital.rating) {
-          case 'good': break; // No penalty
-          case 'needs-improvement': score -= 10; break;
-          case 'poor': score -= 25; break;
+          case 'good':
+            break; // No penalty
+          case 'needs-improvement':
+            score -= 10;
+            break;
+          case 'poor':
+            score -= 25;
+            break;
         }
       }
     });
@@ -428,11 +456,11 @@ export class PerformanceService implements OnDestroy {
   }
 
   getSlowResources(thresholdMs: number = 3000): ResourceTiming[] {
-    return this.resourceTimings().filter(resource => resource.duration > thresholdMs);
+    return this.getResourceTimings().filter((resource) => resource.duration > thresholdMs);
   }
 
   getLargestResources(limit: number = 10): ResourceTiming[] {
-    return this.resourceTimings()
+    return this.getResourceTimings()
       .sort((a, b) => b.size - a.size)
       .slice(0, limit);
   }
@@ -440,15 +468,13 @@ export class PerformanceService implements OnDestroy {
   // Manual timing methods
   startTimer(name: string): () => number {
     const startTime = performance.now();
-    
+
     return () => {
       const duration = performance.now() - startTime;
-      this.sentryService.addBreadcrumb(
-        `Timer: ${name} completed`,
-        'timer',
-        'info',
-        { name, duration }
-      );
+      this.sentryService.addBreadcrumb(`Timer: ${name} completed`, 'timer', 'info', {
+        name,
+        duration,
+      });
       return duration;
     };
   }
@@ -483,23 +509,27 @@ export class PerformanceService implements OnDestroy {
       tracking_enabled: this.isTracking(),
       vitals_observer: !!this.vitalsObserver,
       resource_observer: !!this.resourceObserver,
-      performance_api_available: this.isPerformanceAPIAvailable()
+      performance_api_available: this.isPerformanceAPIAvailable(),
     };
 
     return {
-      healthy: Object.values(checks).every(check => check),
-      checks
+      healthy: Object.values(checks).every((check) => check),
+      checks,
     };
   }
 
   // Debug methods
   exportMetrics(): string {
-    return JSON.stringify({
-      metrics: this.metrics(),
-      resourceTimings: this.resourceTimings(),
-      score: this.getPerformanceScore(),
-      timestamp: Date.now()
-    }, null, 2);
+    return JSON.stringify(
+      {
+        metrics: this.getMetrics(),
+        resourceTimings: this.getResourceTimings(),
+        score: this.getPerformanceScore(),
+        timestamp: Date.now(),
+      },
+      null,
+      2,
+    );
   }
 
   clearMetrics(): void {
