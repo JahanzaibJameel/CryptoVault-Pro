@@ -1,33 +1,37 @@
 // Mock IndexedDB for tests
-import { jest } from '@jest/globals';
+import { jest, expect } from '@jest/globals';
 import { getTestBed } from '@angular/core/testing';
-import { BrowserDynamicTestingModule, platformBrowserDynamicTesting } from '@angular/platform-browser-dynamic/testing';
+import {
+  BrowserDynamicTestingModule,
+  platformBrowserDynamicTesting,
+} from '@angular/platform-browser-dynamic/testing';
+import * as jestExtended from 'jest-extended';
 
 // Initialize TestBed
 getTestBed().initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting());
 
-const jestExtended = require('jest-extended');
 expect.extend(jestExtended);
 
 // Provide a minimal Jasmine global shim for Jest environments that use Jasmine-style spies in existing specs.
-if (!(globalThis as any).jasmine) {
+const globalWithJasmine = globalThis as unknown as { jasmine?: unknown };
+if (!globalWithJasmine.jasmine) {
   Object.defineProperty(globalThis, 'jasmine', {
     value: {
-      createSpy: (name: string) => jest.fn(),
+      createSpy: () => jest.fn(),
       createSpyObj: (baseName: string, methodNames: string[]) => {
         const obj: Record<string, jest.Mock> = {};
-        methodNames.forEach(method => {
+        methodNames.forEach((method) => {
           obj[method] = jest.fn();
         });
         return obj;
       },
-      any: (expected: any) => expect.any(expected),
+      any: (expected: new (...args: unknown[]) => unknown) => expect.any(expected),
       objectContaining: (obj: object) => expect.objectContaining(obj),
       stringMatching: (pattern: string | RegExp) => expect.stringMatching(pattern),
-      arrayContaining: (arr: any[]) => expect.arrayContaining(arr),
-      anything: () => expect.anything()
+      arrayContaining: (arr: unknown[]) => expect.arrayContaining(arr),
+      anything: () => expect.anything(),
     },
-    writable: false
+    writable: false,
   });
 }
 
@@ -45,32 +49,32 @@ const indexedDBMock = {
           delete: jest.fn(),
           clear: jest.fn(),
           index: jest.fn(() => ({
-            openCursor: jest.fn()
-          }))
-        }))
-      }))
-    }
-  }))
+            openCursor: jest.fn(),
+          })),
+        })),
+      })),
+    },
+  })),
 };
 
 Object.defineProperty(window, 'indexedDB', {
-  value: indexedDBMock
+  value: indexedDBMock,
 });
 
 // Mock Notification API
 Object.defineProperty(window, 'Notification', {
   value: jest.fn(() => ({
-    close: jest.fn()
+    close: jest.fn(),
   })),
-  writable: true
+  writable: true,
 });
 
 Object.defineProperty(Notification, 'requestPermission', {
   value: jest.fn(() => Promise.resolve('granted')),
-  writable: true
+  writable: true,
 });
 
 Object.defineProperty(Notification, 'permission', {
   value: 'granted',
-  writable: true
+  writable: true,
 });
