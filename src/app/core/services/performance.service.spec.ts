@@ -1,34 +1,66 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { of, throwError } from 'rxjs';
-import { PerformanceService, WebVital, PerformanceMetrics, ResourceTiming } from './performance.service';
+import { of } from 'rxjs';
+import { PerformanceService, PerformanceMetrics, ResourceTiming } from './performance.service';
 import { SentryService } from './sentry.service';
 
 describe('PerformanceService', () => {
   let service: PerformanceService;
-  let mockRouter: jasmine.SpyObj<Router>;
-  let mockSentryService: jasmine.SpyObj<SentryService>;
-  let mockPerformanceObserver: jasmine.SpyObj<PerformanceObserver>;
+  let mockSentryService: jest.Mocked<SentryService>;
+  let mockPerformanceObserver: jest.Mocked<PerformanceObserver>;
 
   beforeEach(() => {
-    const routerSpy = jasmine.createSpyObj('Router', ['events']);
-    const sentrySpy = jasmine.createSpyObj('SentryService', ['addBreadcrumb', 'captureMessage', 'trackPerformance']);
-    
+    const routerSpy = {
+      events: of(),
+    } as unknown as jest.Mocked<Router>;
+
+    const sentrySpy = {
+      addBreadcrumb: jest.fn(),
+      captureMessage: jest.fn(),
+      trackPerformance: jest.fn(),
+    } as unknown as jest.Mocked<SentryService>;
+
     TestBed.configureTestingModule({
       providers: [
         PerformanceService,
         { provide: Router, useValue: routerSpy },
-        { provide: SentryService, useValue: sentrySpy }
-      ]
+        { provide: SentryService, useValue: sentrySpy },
+      ],
     });
 
     service = TestBed.inject(PerformanceService);
-    mockRouter = TestBed.inject(Router) as jasmine.SpyObj<Router>;
-    mockSentryService = TestBed.inject(SentryService) as jasmine.SpyObj<SentryService>;
+    mockRouter = TestBed.inject(Router) as jest.Mocked<Router>;
+    mockSentryService = TestBed.inject(SentryService) as jest.Mocked<SentryService>;
 
     // Mock PerformanceObserver
-    mockPerformanceObserver = jasmine.createSpyObj('PerformanceObserver', ['observe', 'disconnect']);
-    spyOn(window, 'PerformanceObserver').and.returnValue(mockPerformanceObserver);
+    mockPerformanceObserver = {
+      observe: jest.fn(),
+      disconnect: jest.fn(),
+    } as unknown as jest.Mocked<PerformanceObserver>;
+
+    const globalAny = global as any;
+    const perfObserverConstructor = jest.fn().mockImplementation(() => mockPerformanceObserver);
+    const performanceMock = {
+      navigation: {},
+      getEntriesByType: jest.fn(() => []),
+      now: jest.fn(),
+    } as Performance;
+
+    Object.defineProperty(window as any, 'PerformanceObserver', {
+      configurable: true,
+      writable: true,
+      value: perfObserverConstructor,
+    });
+
+    Object.defineProperty(window as any, 'performance', {
+      configurable: true,
+      writable: true,
+      value: performanceMock,
+    });
+
+    globalAny.PerformanceObserver = perfObserverConstructor;
+    globalAny.performance = performanceMock;
   });
 
   it('should be created', () => {
@@ -51,11 +83,22 @@ describe('PerformanceService', () => {
 
   describe('Performance API Availability', () => {
     it('should detect when Performance API is available', () => {
-      spyOnProperty(window, 'PerformanceObserver').and.returnValue(jasmine.createSpyObj('PerformanceObserver', ['observe']));
-      spyOnProperty(window, 'performance').and.returnValue({
-        navigation: {}
+      Object.defineProperty(window as any, 'PerformanceObserver', {
+        configurable: true,
+        writable: true,
+        value: jest.fn().mockImplementation(() => ({
+          observe: jest.fn(),
+        })),
       });
-      
+
+      Object.defineProperty(window as any, 'performance', {
+        configurable: true,
+        writable: true,
+        value: {
+          navigation: {},
+        } as Performance,
+      });
+
       const result = (service as any).isPerformanceAPIAvailable();
       expect(result).toBeTrue();
     });
@@ -75,7 +118,7 @@ describe('PerformanceService', () => {
     it('should start tracking when called', () => {
       service.startTracking();
       expect((service as any).isTracking()).toBeTrue();
-      expect(mockPerformanceObserver.observe).toHaveBeenCalledTimes(3); // vitals, resources, navigation
+      expect(mockPerformanceObserver.observe).toHaveBeenCalledTimes(6); // 5 vitals + 1 resource
     });
 
     it('should stop tracking when called', () => {
@@ -86,10 +129,10 @@ describe('PerformanceService', () => {
     });
 
     it('should not start tracking if already tracking', () => {
+      const setupVitalsSpy = spyOn(service as any, 'setupVitalsObserver');
       service.startTracking();
-      spyOn(service as any, 'setupVitalsObserver');
       service.startTracking();
-      expect((service as any).setupVitalsObserver).toHaveBeenCalledTimes(1);
+      expect(setupVitalsSpy).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -102,12 +145,12 @@ describe('PerformanceService', () => {
       const mockEntry = {
         entryType: 'largest-contentful-paint',
         startTime: 2500,
-        renderTime: 2500
+        renderTime: 2500,
       };
 
       (service as any).processVitalEntry(mockEntry);
       const metrics = service.getMetrics();
-      
+
       expect(metrics.LCP).toBeDefined();
       expect(metrics.LCP!.value).toBe(2500);
       expect(metrics.LCP!.name).toBe('LCP');
@@ -118,12 +161,12 @@ describe('PerformanceService', () => {
       const mockEntry = {
         entryType: 'layout-shift',
         value: 0.1,
-        hadRecentInput: false
+        hadRecentInput: false,
       };
 
       (service as any).processVitalEntry(mockEntry);
       const metrics = service.getMetrics();
-      
+
       expect(metrics.CLS).toBeDefined();
       expect(metrics.CLS!.value).toBe(0.1);
       expect(metrics.CLS!.delta).toBe(0.1);
@@ -133,19 +176,19 @@ describe('PerformanceService', () => {
       const mockEntry1 = {
         entryType: 'layout-shift',
         value: 0.05,
-        hadRecentInput: false
+        hadRecentInput: false,
       };
 
       const mockEntry2 = {
         entryType: 'layout-shift',
         value: 0.03,
-        hadRecentInput: false
+        hadRecentInput: false,
       };
 
       (service as any).processVitalEntry(mockEntry1);
       (service as any).processVitalEntry(mockEntry2);
       const metrics = service.getMetrics();
-      
+
       expect(metrics.CLS!.value).toBe(0.08);
     });
 
@@ -153,12 +196,12 @@ describe('PerformanceService', () => {
       const mockEntry = {
         entryType: 'layout-shift',
         value: 0.1,
-        hadRecentInput: true
+        hadRecentInput: true,
       };
 
       (service as any).processVitalEntry(mockEntry);
       const metrics = service.getMetrics();
-      
+
       expect(metrics.CLS).toBeUndefined();
     });
 
@@ -167,12 +210,12 @@ describe('PerformanceService', () => {
         entryType: 'first-input',
         duration: 150,
         processingStart: 100,
-        processingEnd: 250
+        processingEnd: 250,
       };
 
       (service as any).processVitalEntry(mockEntry);
       const metrics = service.getMetrics();
-      
+
       expect(metrics.INP).toBeDefined();
       expect(metrics.INP!.value).toBe(150);
       expect(mockSentryService.trackPerformance).toHaveBeenCalledWith('INP', 150);
@@ -182,12 +225,12 @@ describe('PerformanceService', () => {
       const mockEntry = {
         entryType: 'paint',
         name: 'first-contentful-paint',
-        startTime: 1800
+        startTime: 1800,
       };
 
       (service as any).processVitalEntry(mockEntry);
       const metrics = service.getMetrics();
-      
+
       expect(metrics.FCP).toBeDefined();
       expect(metrics.FCP!.value).toBe(1800);
       expect(mockSentryService.trackPerformance).toHaveBeenCalledWith('FCP', 1800);
@@ -206,12 +249,12 @@ describe('PerformanceService', () => {
         transferSize: 1024,
         decodedBodySize: 1024,
         requestStart: 100,
-        responseEnd: 200
+        responseEnd: 200,
       };
 
       (service as any).processResourceEntry(mockEntry);
       const timings = service.getResourceTimings();
-      
+
       expect(timings).toHaveLength(1);
       expect(timings[0].name).toBe('https://example.com/script.js');
       expect(timings[0].type).toBe('script');
@@ -227,21 +270,25 @@ describe('PerformanceService', () => {
         transferSize: 0,
         decodedBodySize: 1024,
         requestStart: 100,
-        responseEnd: 200
+        responseEnd: 200,
       };
 
       (service as any).processResourceEntry(mockEntry);
       const timings = service.getResourceTimings();
-      
+
       expect(timings[0].cached).toBeTrue();
     });
 
     it('should limit resource timings to 100 entries', () => {
-      spyOn(service as any, 'resourceTimings').and.returnValue({
-        length: 100,
-        slice: jasmine.createSpy('slice').and.returnValue([]),
-        update: jasmine.createSpy('update')
-      });
+      const initialEntries = Array.from({ length: 100 }, (_, index) => ({
+        name: `https://example.com/script-${index}.js`,
+        type: 'script',
+        duration: 100,
+        size: 1024,
+        cached: false,
+      }));
+
+      (service as any).resourceTimings.set(initialEntries);
 
       const mockEntry = {
         name: 'https://example.com/script.js',
@@ -249,11 +296,11 @@ describe('PerformanceService', () => {
         transferSize: 1024,
         decodedBodySize: 1024,
         requestStart: 100,
-        responseEnd: 200
+        responseEnd: 200,
       };
 
       (service as any).processResourceEntry(mockEntry);
-      expect((service as any).resourceTimings().slice).toHaveBeenCalledWith(-100);
+      expect(service.getResourceTimings()).toHaveLength(100);
     });
 
     it('should report slow resources to Sentry', () => {
@@ -263,15 +310,15 @@ describe('PerformanceService', () => {
         transferSize: 1024,
         decodedBodySize: 1024,
         requestStart: 100,
-        responseEnd: 4000 // 3.9 seconds
+        responseEnd: 4000, // 3.9 seconds
       };
 
       (service as any).processResourceEntry(mockEntry);
-      
+
       expect(mockSentryService.captureMessage).toHaveBeenCalledWith(
         'Slow resource: https://example.com/slow.js took 3900ms',
         'warning',
-        jasmine.any(Object)
+        expect.any(Object),
       );
     });
   });
@@ -279,9 +326,30 @@ describe('PerformanceService', () => {
   describe('Performance Score', () => {
     it('should calculate perfect score for good metrics', () => {
       const mockMetrics: PerformanceMetrics = {
-        LCP: { name: 'LCP', value: 2000, rating: 'good', delta: 0, id: '1', navigationType: 'navigate' },
-        CLS: { name: 'CLS', value: 0.05, rating: 'good', delta: 0, id: '2', navigationType: 'navigate' },
-        INP: { name: 'INP', value: 150, rating: 'good', delta: 0, id: '3', navigationType: 'navigate' }
+        LCP: {
+          name: 'LCP',
+          value: 2000,
+          rating: 'good',
+          delta: 0,
+          id: '1',
+          navigationType: 'navigate',
+        },
+        CLS: {
+          name: 'CLS',
+          value: 0.05,
+          rating: 'good',
+          delta: 0,
+          id: '2',
+          navigationType: 'navigate',
+        },
+        INP: {
+          name: 'INP',
+          value: 150,
+          rating: 'good',
+          delta: 0,
+          id: '3',
+          navigationType: 'navigate',
+        },
       };
 
       spyOn(service, 'getMetrics').and.returnValue(mockMetrics);
@@ -291,8 +359,22 @@ describe('PerformanceService', () => {
 
     it('should penalize needs-improvement metrics', () => {
       const mockMetrics: PerformanceMetrics = {
-        LCP: { name: 'LCP', value: 3000, rating: 'needs-improvement', delta: 0, id: '1', navigationType: 'navigate' },
-        CLS: { name: 'CLS', value: 0.05, rating: 'good', delta: 0, id: '2', navigationType: 'navigate' }
+        LCP: {
+          name: 'LCP',
+          value: 3000,
+          rating: 'needs-improvement',
+          delta: 0,
+          id: '1',
+          navigationType: 'navigate',
+        },
+        CLS: {
+          name: 'CLS',
+          value: 0.05,
+          rating: 'good',
+          delta: 0,
+          id: '2',
+          navigationType: 'navigate',
+        },
       };
 
       spyOn(service, 'getMetrics').and.returnValue(mockMetrics);
@@ -302,8 +384,22 @@ describe('PerformanceService', () => {
 
     it('should penalize poor metrics heavily', () => {
       const mockMetrics: PerformanceMetrics = {
-        LCP: { name: 'LCP', value: 5000, rating: 'poor', delta: 0, id: '1', navigationType: 'navigate' },
-        CLS: { name: 'CLS', value: 0.05, rating: 'good', delta: 0, id: '2', navigationType: 'navigate' }
+        LCP: {
+          name: 'LCP',
+          value: 5000,
+          rating: 'poor',
+          delta: 0,
+          id: '1',
+          navigationType: 'navigate',
+        },
+        CLS: {
+          name: 'CLS',
+          value: 0.05,
+          rating: 'good',
+          delta: 0,
+          id: '2',
+          navigationType: 'navigate',
+        },
       };
 
       spyOn(service, 'getMetrics').and.returnValue(mockMetrics);
@@ -323,12 +419,12 @@ describe('PerformanceService', () => {
       const mockTimings: ResourceTiming[] = [
         { name: 'fast.js', type: 'script', duration: 1000, size: 1024, cached: false },
         { name: 'slow.js', type: 'script', duration: 4000, size: 1024, cached: false },
-        { name: 'medium.js', type: 'script', duration: 2000, size: 1024, cached: false }
+        { name: 'medium.js', type: 'script', duration: 2000, size: 1024, cached: false },
       ];
 
       spyOn(service, 'getResourceTimings').and.returnValue(mockTimings);
       const slowResources = service.getSlowResources(3000);
-      
+
       expect(slowResources).toHaveLength(1);
       expect(slowResources[0].name).toBe('slow.js');
     });
@@ -337,12 +433,12 @@ describe('PerformanceService', () => {
       const mockTimings: ResourceTiming[] = [
         { name: 'small.js', type: 'script', duration: 1000, size: 1024, cached: false },
         { name: 'large.js', type: 'script', duration: 2000, size: 5120, cached: false },
-        { name: 'medium.js', type: 'script', duration: 1500, size: 2048, cached: false }
+        { name: 'medium.js', type: 'script', duration: 1500, size: 2048, cached: false },
       ];
 
       spyOn(service, 'getResourceTimings').and.returnValue(mockTimings);
       const largestResources = service.getLargestResources(2);
-      
+
       expect(largestResources).toHaveLength(2);
       expect(largestResources[0].name).toBe('large.js');
       expect(largestResources[1].name).toBe('medium.js');
@@ -353,46 +449,46 @@ describe('PerformanceService', () => {
     it('should create and end timer correctly', () => {
       spyOn(performance, 'now').and.returnValues(0, 100);
       const endTimer = service.startTimer('test-operation');
-      
+
       expect(typeof endTimer).toBe('function');
-      
+
       const duration = endTimer();
       expect(duration).toBe(100);
       expect(mockSentryService.addBreadcrumb).toHaveBeenCalledWith(
         'Timer: test-operation completed',
         'timer',
         'info',
-        { name: 'test-operation', duration: 100 }
+        { name: 'test-operation', duration: 100 },
       );
     });
 
     it('should measure function execution time', () => {
       spyOn(performance, 'now').and.returnValues(0, 150);
       const testFunction = () => 'test-result';
-      
+
       const result = service.measureFunction('test-function', testFunction);
-      
+
       expect(result).toBe('test-result');
       expect(mockSentryService.addBreadcrumb).toHaveBeenCalledWith(
         'Timer: test-function completed',
         'timer',
         'info',
-        { name: 'test-function', duration: 150 }
+        { name: 'test-function', duration: 150 },
       );
     });
 
     it('should measure async function execution time', async () => {
       spyOn(performance, 'now').and.returnValues(0, 200);
       const testFunction = async () => 'async-result';
-      
+
       const result = await service.measureAsyncFunction('async-function', testFunction);
-      
+
       expect(result).toBe('async-result');
       expect(mockSentryService.addBreadcrumb).toHaveBeenCalledWith(
         'Timer: async-function completed',
         'timer',
         'info',
-        { name: 'async-function', duration: 200 }
+        { name: 'async-function', duration: 200 },
       );
     });
 
@@ -401,13 +497,13 @@ describe('PerformanceService', () => {
       const testFunction = () => {
         throw new Error('Test error');
       };
-      
+
       expect(() => service.measureFunction('error-function', testFunction)).toThrow('Test error');
       expect(mockSentryService.addBreadcrumb).toHaveBeenCalledWith(
         'Timer: error-function completed',
         'timer',
         'info',
-        { name: 'error-function', duration: 100 }
+        { name: 'error-function', duration: 100 },
       );
     });
   });
@@ -416,7 +512,7 @@ describe('PerformanceService', () => {
     it('should return healthy status when all checks pass', () => {
       service.startTracking();
       const health = service.checkHealth();
-      
+
       expect(health.healthy).toBeTrue();
       expect(health.checks.tracking_enabled).toBeTrue();
       expect(health.checks.vitals_observer).toBeTrue();
@@ -426,7 +522,7 @@ describe('PerformanceService', () => {
 
     it('should return unhealthy status when tracking is disabled', () => {
       const health = service.checkHealth();
-      
+
       expect(health.healthy).toBeFalse();
       expect(health.checks.tracking_enabled).toBeFalse();
     });
@@ -435,7 +531,14 @@ describe('PerformanceService', () => {
   describe('Metrics Export', () => {
     it('should export metrics as JSON string', () => {
       const mockMetrics: PerformanceMetrics = {
-        LCP: { name: 'LCP', value: 2000, rating: 'good', delta: 0, id: '1', navigationType: 'navigate' }
+        LCP: {
+          name: 'LCP',
+          value: 2000,
+          rating: 'good',
+          delta: 0,
+          id: '1',
+          navigationType: 'navigate',
+        },
       };
 
       spyOn(service, 'getMetrics').and.returnValue(mockMetrics);
@@ -457,16 +560,16 @@ describe('PerformanceService', () => {
     it('should clear all metrics', () => {
       service.startTracking();
       service.clearMetrics();
-      
+
       const metrics = service.getMetrics();
       const timings = service.getResourceTimings();
-      
+
       expect(metrics).toEqual({});
       expect(timings).toEqual([]);
       expect(mockSentryService.addBreadcrumb).toHaveBeenCalledWith(
         'Performance metrics cleared',
         'performance',
-        'info'
+        'info',
       );
     });
   });
