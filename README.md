@@ -1,323 +1,129 @@
 # CryptoVault Pro
 
-> **Enterprise-grade cryptocurrency portfolio management system** | Advanced Angular 21 | Clean Architecture | Production-Ready Patterns
+> Enterprise-grade cryptocurrency portfolio management with modern Angular architecture, strict type safety, and production-grade resilience.
 
 ---
 
-## System Overview
+## Overview
 
-A production-grade frontend application demonstrating **advanced engineering architecture** and enterprise development practices. This system implements clean architecture principles, signal-based state management, real-time performance monitoring, and resilience patterns at the level expected from senior engineers.
+CryptoVault Pro is a professional frontend application built as a reference implementation for modern web engineering. It demonstrates how to design and ship a secure, performant, and maintainable Angular product at scale.
 
-### Engineering Principles
+This repository is designed for senior engineering teams who require:
 
-| Principle | Implementation |
-|-----------|-----------------|
-| **Domain-Driven Design** | Framework-agnostic business logic with zero framework coupling |
-| **Signal-Based Reactivity** | Angular 21 signals with immutable, traceable state patterns |
-| **Performance Excellence** | Real-time Core Web Vitals tracking and automated optimization |
-| **System Resilience** | Circuit breaker, exponential backoff, and offline-first persistence |
-| **Security-First** | AES-256 encryption, security headers, comprehensive audit logging |
+- clean architecture boundaries
+- strong type safety and predictable state
+- resilient offline and network behavior
+- stringent performance and security discipline
 
+## What Makes It Professional
 
----
+- **Angular 21** with standalone components and signal-driven state
+- **Clean architecture** with distinct presentation, application, domain, and infrastructure layers
+- **Modern testing** using Jest, Playwright, and Lighthouse
+- **Resilience-first** network handling with circuit breaker, retry, and offline persistence
+- **Security-first** design with CSP, encryption, and audit-ready controls
+- **Performance observability** with Core Web Vitals tracking and runtime optimization
 
-## Technical Architecture
+## Architecture
 
-### Layered Architecture Pattern
+The application is structured around a layered architecture pattern:
 
-The application implements a strict four-layer clean architecture with domain-centric business logic:
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│        Presentation Layer (UI Components)                   │
-│  Angular 21 Standalone Components • OnPush Detection        │
-│  Lazy-Loaded Routes • Type-Safe Templates                  │
-└─────────────────────────────────────────────────────────────┘
-                         ↓
-┌─────────────────────────────────────────────────────────────┐
-│      Application Layer (Feature Orchestration)               │
-│  Signal Stores • Command Handlers • Business Logic State    │
-│  Feature Modules • Service Composition                       │
-└─────────────────────────────────────────────────────────────┘
-                         ↓
-┌─────────────────────────────────────────────────────────────┐
-│      Domain Layer (Business Rules - Framework Agnostic)     │
-│  Value Objects • Aggregates • Business Calculations        │
-│  Validation Rules • Domain Events • Zero Framework Code    │
-└─────────────────────────────────────────────────────────────┘
-                         ↓
-┌─────────────────────────────────────────────────────────────┐
-│    Infrastructure Layer (External Dependencies)             │
-│  API Integration • Data Persistence • Resilience Patterns   │
-│  IndexedDB • Service Worker • Error Recovery               │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### State Management Pattern
-
-Signal-based reactive state with command/query separation:
-
-- **Commands**: Mutate state with strict transaction semantics
-- **Queries**: Computed signals with memoization
-- **Events**: Domain events for cross-feature communication
-- **Undo/Redo**: Complete transaction history and reversibility
-
-### 📊 Technical Excellence
-
-**Performance Engineering**
-- Real-time Core Web Vitals (LCP, FID, CLS) monitoring with threshold-based alerts
-- Advanced HTTP performance interceptor with request deduplication
-- Intelligent route preloading and dynamic code splitting strategies
-- Memory profiling with automatic garbage collection hints at thresholds
-
-**Architectural Patterns**
-- Clean architecture with framework-agnostic domain logic
-- CQRS-style separation of commands and queries
-- Factory and dependency injection patterns for configuration
-- Server-side rendering transfer state integration
-
-**Resilience & Availability**
-- Circuit breaker pattern with configurable failure thresholds
-- Exponential backoff retry mechanism with jitter
-- Offline-first functionality with IndexedDB persistence layer
-- Graceful degradation with intelligent fallback UI
+- **Presentation**: UI components, routing, and responsiveness
+- **Application**: feature orchestration, command handling, and state management
+- **Domain**: business rules, value objects, and validation logic
+- **Infrastructure**: external APIs, persistence adapters, and browser integrations
 
 ## Technology Stack
 
-### Core Framework & Language
-- **Angular 21**: Standalone components, signals API, new control flow syntax
-- **TypeScript 5.9**: Strict mode with comprehensive type safety and inference
-- **RxJS 7.8**: Reactive programming with optimized subscription management
+- Angular 21
+- TypeScript 5.9 (strict mode)
+- Angular Signals
+- Jest
+- Playwright
+- Lighthouse CI
+- ESLint + Prettier
+- Husky pre-commit hooks
 
-### State Management & Reactivity
-- **Angular Signals**: Type-safe reactive values with computed derivatives
-- **Signal Stores**: Framework-agnostic state management implementation
-- **Command Pattern**: Strict mutation semantics with transaction support
-- **Effect Tracking**: Automatic dependency tracking and memoization
+## Key Capabilities
 
-### Performance & Monitoring Infrastructure
-- **Core Web Vitals API**: Real-time LCP, FID, CLS measurement and analysis
-- **Performance Observer**: Resource timing and navigation timing metrics
-- **Bundle Analysis**: Tree shaking, code splitting, and compression strategies
-- **Memory Monitoring**: Garbage collection metrics with predictive optimization
-
-### Security & Encryption
-- **AES-256**: Client-side encryption for sensitive data persistence
-- **Content Security Policy**: Strict CSP with controlled external resources
-- **Security Headers**: HSTS, X-Frame-Options, X-Content-Type-Options enforcement
-- **Input Validation**: Comprehensive sanitization with schema validation
-
-### Resilience & Availability
-- **Circuit Breaker**: Automatic failure detection with configurable thresholds
-- **Retry Mechanism**: Exponential backoff with jitter for transient failures
-- **Offline Support**: Progressive Web App with service worker caching
-- **Graceful Degradation**: Fallback UI for feature unavailability
-
-### Testing Infrastructure
-- **Jest**: Unit testing with snapshot testing and coverage reporting
-- **Playwright**: Cross-browser E2E testing with trace recording
-- **Coverage Threshold**: 80% minimum with automated gates
-- **Performance Testing**: Lighthouse CI integration with score tracking
-
-### Development Tooling
-- **ESLint**: Code quality enforcement with custom performance rules
-- **Prettier**: Consistent code formatting across the codebase
-- **Husky**: Pre-commit hooks for quality and security gates
-- **TypeScript Compiler**: Strict type checking with zero implicit any
-
-## Performance Characteristics
-
-### Core Web Vitals Targets
-- **LCP (Largest Contentful Paint)**: ≤ 2.5 seconds
-- **FID (First Input Delay)**: ≤ 100 milliseconds
-- **CLS (Cumulative Layout Shift)**: ≤ 0.1 score
-
-### Bundle & Loading Strategy
-| Metric | Target | Strategy |
-|--------|--------|----------|
-| Initial Bundle | < 200KB gzipped | Tree shaking, code splitting |
-| First Paint | < 1.8s | Critical CSS inlining |
-| Interactive | < 3.5s | Route-based lazy loading |
-| Cache Hit Rate | > 85% | Service worker caching |
-
-### Runtime Performance Optimization
-- **Request Deduplication**: Automatic HTTP request merging
-- **Response Caching**: Smart cache invalidation strategies
-- **Memory Threshold**: Automatic GC hints at 80% utilization
-- **Route Preloading**: Predictive prefetching based on user patterns
-
-### Compression & Optimization
-- **Brotli Compression**: 85%+ compression efficiency
-- **WebP Images**: Fallback to JPEG for older browsers
-- **CSS Minification**: Removal of unused styles via PurgeCSS
-- **JavaScript Minification**: Source map generation for debugging
-
-## Security Architecture
-
-### Authentication & Authorization
-- **Secure Token Storage**: HttpOnly cookies for authentication tokens
-- **Session Management**: Automatic timeout with refresh mechanisms
-- **Role-Based Access**: Fine-grained permission system with caching
-- **API Token Rotation**: Automatic token refresh before expiration
-
-### Data Protection
-- **Encryption at Rest**: AES-256-GCM for sensitive local storage
-- **Encryption in Transit**: TLS 1.3 with certificate pinning
-- **Input Validation**: Schema-based validation on all user inputs
-- **Output Encoding**: Automatic HTML/JavaScript encoding
-
-### Application Security
-- **Content Security Policy**: Strict CSP with nonce-based script execution
-- **Security Headers**: HSTS (max-age: 31536000), X-Frame-Options: DENY
-- **XSS Protection**: Automatic sanitization via Angular's DOM sanitizer
-- **CSRF Protection**: Automatic token inclusion in state-modifying requests
-
-### Audit & Compliance
-- **Error Logging**: Secure error reporting without PII exposure
-- **Security Events**: Comprehensive audit trail for sensitive operations
-- **Metrics Privacy**: Anonymized analytics collection
-- **Dependency Scanning**: Automated vulnerability detection and alerts
-
-## Development Workflow
-
-### Code Quality Standards
-
-**Type Safety**
-- TypeScript strict mode with no implicit any
-- Exhaustive type checking for union types
-- Strict null checks with proper null handling
-- Generic constraints with semantic bounds
-
-**Code Organization**
-- ESLint with custom performance and security rules
-- Prettier for consistent formatting across the codebase
-- Import sorting and barrel file organization
-- Cyclomatic complexity limits per function
-
-**Testing Requirements**
-- Minimum 80% code coverage enforced by CI
-- Unit test coverage for all business logic
-- Integration tests for feature workflows
-- E2E tests for critical user journeys
-
-### CI/CD Pipeline
-
-| Stage | Quality Gates | Tools |
-|-------|---------------|-------|
-| **Lint** | ESLint rules pass | ESLint + Prettier |
-| **Type Check** | Zero type errors | TypeScript compiler |
-| **Unit Tests** | 80% coverage minimum | Jest |
-| **Build** | Production bundle | Angular CLI |
-| **Performance** | Lighthouse score ≥ 95 | Lighthouse CI |
-| **Security** | No high severity CVEs | npm audit + Snyk |
-
-### Husky Pre-commit Hooks
-- TypeScript compilation check
-- ESLint and Prettier formatting
-- Commit message linting
-- Package.json version consistency
+- Signal-based reactive state with command/query separation
+- Offline-enabled PWA with IndexedDB persistence
+- Real-time performance tracking and observability
+- Encrypted local storage and secure runtime guards
+- Automated linting, formatting, and commit-quality checks
+- Production-ready build optimization and code-splitting
 
 ## Getting Started
 
-### System Requirements
-- Node.js 18.0.0 or higher
-- npm 9.0.0 or higher (or yarn 3.0.0+)
-- 2GB available disk space
-- Git for version control
+### Prerequisites
 
-### Installation & Setup
+- Node.js 18+ 
+- npm 9+ (or Yarn 3+)
+- Git
 
-**1. Clone and Install**
+### Install
+
 ```bash
 git clone <repository-url>
 cd crypto-vault-pro
 npm install
 ```
 
-**2. Environment Configuration**
-```bash
-# Copy environment template
-cp src/environments/environment.template.ts src/environments/environment.ts
+### Local Development
 
-# Configure API endpoints and feature flags
+```bash
+npm run start
 ```
 
-**3. Verify Installation**
+### Validation
+
 ```bash
-npm run type-check
 npm run lint
+npm run type-check
 npm test -- --coverage
 ```
 
-### Development Commands
+## Recommended Commands
 
-**Core Development**
 ```bash
-npm run start              # Start development server (port 4200)
-npm run build              # Production build with optimization
-npm run build:prod         # Build with production flags
+npm run start              # start local dev server
+npm run build              # production build
+npm run lint               # static analysis
+npm run format             # formatting
+npm run type-check         # type validation
+npm test                   # unit tests
+npm run test:e2e           # end-to-end tests
+npm run lighthouse         # performance audit
 ```
 
-**Testing**
-```bash
-npm test                   # Run unit tests in watch mode
-npm test -- --coverage     # Generate coverage report
-npm run test:e2e          # Execute E2E test suite
-npm run test:e2e:headed   # E2E tests with browser UI
-```
+## Quality & Reliability
 
-**Code Quality**
-```bash
-npm run lint              # ESLint analysis
-npm run format            # Prettier code formatting
-npm run type-check        # TypeScript compilation check
-npm run analyze           # Bundle size analysis
-```
+This repository is aligned with senior-level engineering standards:
 
-**Performance Analysis**
-```bash
-npm run lighthouse        # Run Lighthouse audit
-npm run profile           # Generate performance profile
-npm run bundle-report     # Interactive bundle visualization
-```
+- 100% typed source code
+- strict lint gating with CI enforcement
+- automated security and dependency scanning
+- performance budgets and Lighthouse validation
+- architecture documentation and operational runbooks
 
-## Architecture Documentation
+## Documentation
 
-### Key Reference Materials
-- **[Architecture Decision Records](docs/adr/)**: Rationale for major technical decisions
-- **[API Reference](docs/api/openapi.yaml)**: OpenAPI specification and endpoint documentation
-- **[Performance Guidelines](docs/performance.md)**: Optimization strategies and profiling techniques
-- **[Runbook](docs/runbook.md)**: Troubleshooting and operational procedures
+- `docs/adr/` — architecture decision records
+- `docs/runbook.md` — operational procedures
+- `docs/performance.md` — performance guidance
+- `docs/api/` — API and integration references
 
-### Design System & Components
-- Accessible component library with WCAG 2.2 AA compliance
-- Theme system supporting light/dark modes with CSS variables
-- Responsive grid system with mobile-first methodology
-- Internationalization support for 10+ languages
+## Contribution Expectations
 
-## Project Metrics
+- follow the layered architecture model
+- write code with clear intent and minimal complexity
+- keep business logic framework-agnostic where possible
+- add tests for any new behavior
+- update documentation for architectural changes
 
-### Codebase Statistics
-| Metric | Value | Notes |
-|--------|-------|-------|
-| TypeScript Lines | 15,000+ | Domain and feature logic |
-| Test Coverage | 80%+ | Unit + integration tests |
-| Number of Components | 40+ | Lazy-loaded feature modules |
-| Modules | 8 | Core, routing, features |
-| Bundle Size (gzipped) | ~150KB | Initial chunk, optimized |
-| Number of Routes | 25+ | Lazy-loaded with preloading |
+## Project Vision
 
-### Dependency Management
-- **Production Dependencies**: 15 core packages with minimal transitive dependencies
-- **Development Dependencies**: 25 development and testing tools
-- **Automated Updates**: Dependabot with automated security patches
-- **License Compliance**: MIT/Apache 2.0 compatible stack
-- **Security Scanning**: Weekly vulnerability audits with remediation
-
-### Quality Metrics
-- **TypeScript Coverage**: 100% of source code typed
-- **ESLint Violations**: Zero (enforced via CI)
-- **Lighthouse Score**: 95+ (monitored continuously)
+CryptoVault Pro is meant to be a high-confidence blueprint for modern Angular applications in professional environments. It is built to support production delivery, team collaboration, and long-term maintainability.
 - **Test Execution**: < 30 seconds for full suite
 - **Build Time**: < 45 seconds for production bundle
 
