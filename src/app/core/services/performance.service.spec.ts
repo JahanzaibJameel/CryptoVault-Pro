@@ -7,6 +7,7 @@ import { SentryService } from './sentry.service';
 
 describe('PerformanceService', () => {
   let service: PerformanceService;
+  let mockRouter: jest.Mocked<Router>; // eslint-disable-line @typescript-eslint/no-unused-vars
   let mockSentryService: jest.Mocked<SentryService>;
   let mockPerformanceObserver: jest.Mocked<PerformanceObserver>;
 
