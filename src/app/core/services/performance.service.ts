@@ -40,6 +40,11 @@ interface PerformanceWithMemory extends Performance {
   };
 }
 
+interface LayoutShiftEntry {
+  value: number;
+  hadRecentInput: boolean;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -219,7 +224,7 @@ export class PerformanceService implements OnDestroy {
 
   private recordCLS(entry: PerformanceEntry): void {
     // CLS needs to be accumulated
-    const clsEntry = entry as LayoutShiftEntry;
+    const clsEntry = entry as unknown as LayoutShiftEntry;
     if (!clsEntry.hadRecentInput) {
       const currentCLS = this.metrics().CLS?.value || 0;
       const newCLS = currentCLS + clsEntry.value;

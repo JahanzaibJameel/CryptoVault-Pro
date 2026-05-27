@@ -218,7 +218,7 @@ export class PerformanceInterceptor implements HttpInterceptor {
     
     if (body instanceof FormData) {
       let size = 0;
-      for (const [key, value] of body.entries()) {
+      for (const [key, value] of (body as any).entries()) {
         if (typeof value === 'string') {
           size += new Blob([value]).size;
         } else if (value instanceof Blob) {

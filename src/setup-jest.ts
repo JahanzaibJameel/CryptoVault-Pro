@@ -26,7 +26,7 @@ if (!globalWithJasmine.jasmine) {
         return obj;
       },
       any: (expected: new (...args: unknown[]) => unknown) => expect.any(expected),
-      objectContaining: (obj: object) => expect.objectContaining(obj),
+      objectContaining: (obj: Record<string, unknown>) => expect.objectContaining(obj),
       stringMatching: (pattern: string | RegExp) => expect.stringMatching(pattern),
       arrayContaining: (arr: unknown[]) => expect.arrayContaining(arr),
       anything: () => expect.anything(),

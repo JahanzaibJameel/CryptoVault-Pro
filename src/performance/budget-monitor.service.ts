@@ -225,7 +225,9 @@ export class BudgetMonitorService {
       metric: {
         name: entity,
         value: current,
-        threshold: status === 'critical' ? budget.critical : budget.warning,
+        threshold: this.parseBytes(
+          status === 'critical' ? budget.critical || budget.warning : budget.warning
+        ),
         unit: 'bytes'
       },
       timestamp: Date.now(),
@@ -388,7 +390,8 @@ export class BudgetMonitorService {
     return { status, score, issues };
   }
 
-  private parseBytes(bytes: string): number {
+  private parseBytes(bytes: string | undefined): number {
+    if (!bytes) return 0;
     if (bytes.includes('MB')) {
       return parseFloat(bytes) * 1024 * 1024;
     }
