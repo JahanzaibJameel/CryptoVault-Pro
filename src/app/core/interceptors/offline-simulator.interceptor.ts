@@ -1,4 +1,10 @@
-import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpEvent, HttpResponse, HttpErrorResponse } from '@angular/common/http';
+import {
+  HttpInterceptorFn,
+  HttpRequest,
+  HttpHandlerFn,
+  HttpEvent,
+  HttpErrorResponse,
+} from '@angular/common/http';
 import { Observable, throwError, timer } from 'rxjs';
 import { mergeMap, materialize, dematerialize, delay } from 'rxjs/operators';
 
@@ -8,7 +14,10 @@ let latency = 0;
 let failureRate = 0;
 const offlineUrls: Set<string> = new Set();
 
-export const offlineSimulatorInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, next: HttpHandlerFn): Observable<HttpEvent<unknown>> => {
+export const offlineSimulatorInterceptor: HttpInterceptorFn = (
+  req: HttpRequest<unknown>,
+  next: HttpHandlerFn,
+): Observable<HttpEvent<unknown>> => {
   // Check if this URL should be forced offline
   if (offlineUrls.has(req.url)) {
     return createOfflineResponse(req);
@@ -21,9 +30,7 @@ export const offlineSimulatorInterceptor: HttpInterceptorFn = (req: HttpRequest<
 
   // Simulate latency if configured
   if (latency > 0) {
-    return timer(latency).pipe(
-      mergeMap(() => handleRequestWithFailureRate(req, next))
-    );
+    return timer(latency).pipe(mergeMap(() => handleRequestWithFailureRate(req, next)));
   }
 
   // Handle with failure rate simulation
@@ -31,8 +38,8 @@ export const offlineSimulatorInterceptor: HttpInterceptorFn = (req: HttpRequest<
 };
 
 function handleRequestWithFailureRate(
-  req: HttpRequest<unknown>, 
-  next: HttpHandlerFn
+  req: HttpRequest<unknown>,
+  next: HttpHandlerFn,
 ): Observable<HttpEvent<unknown>> {
   // Simulate random failures based on failure rate
   if (failureRate > 0 && Math.random() < failureRate) {
@@ -43,19 +50,22 @@ function handleRequestWithFailureRate(
 }
 
 function createOfflineResponse(req: HttpRequest<unknown>): Observable<HttpEvent<unknown>> {
-  return throwError(() => new HttpErrorResponse({
-    status: 0,
-    statusText: 'Offline',
-    url: req.url,
-    error: {
-      message: 'Simulated offline mode',
-      simulated: true,
-      type: 'offline'
-    }
-  })).pipe(
+  return throwError(
+    () =>
+      new HttpErrorResponse({
+        status: 0,
+        statusText: 'Offline',
+        url: req.url,
+        error: {
+          message: 'Simulated offline mode',
+          simulated: true,
+          type: 'offline',
+        },
+      }),
+  ).pipe(
     materialize(),
     delay(100), // Small delay to simulate network latency
-    dematerialize()
+    dematerialize(),
   );
 }
 
@@ -64,21 +74,24 @@ function createFailureResponse(req: HttpRequest<unknown>): Observable<HttpEvent<
     { status: 500, statusText: 'Internal Server Error', message: 'Simulated server error' },
     { status: 503, statusText: 'Service Unavailable', message: 'Simulated service unavailable' },
     { status: 504, statusText: 'Gateway Timeout', message: 'Simulated gateway timeout' },
-    { status: 429, statusText: 'Too Many Requests', message: 'Simulated rate limit exceeded' }
+    { status: 429, statusText: 'Too Many Requests', message: 'Simulated rate limit exceeded' },
   ];
 
   const randomError = errors[Math.floor(Math.random() * errors.length)];
 
-  return throwError(() => new HttpErrorResponse({
-    status: randomError.status,
-    statusText: randomError.statusText,
-    url: req.url,
-    error: {
-      message: randomError.message,
-      simulated: true,
-      type: 'failure'
-    }
-  }));
+  return throwError(
+    () =>
+      new HttpErrorResponse({
+        status: randomError.status,
+        statusText: randomError.statusText,
+        url: req.url,
+        error: {
+          message: randomError.message,
+          simulated: true,
+          type: 'failure',
+        },
+      }),
+  );
 }
 
 // Public API for controlling the simulator
@@ -124,7 +137,7 @@ export const OfflineSimulatorControls = {
       offline,
       latency,
       failureRate,
-      offlineUrls: Array.from(offlineUrls)
+      offlineUrls: Array.from(offlineUrls),
     };
   },
 
@@ -159,5 +172,5 @@ export const OfflineSimulatorControls = {
   disable(): void {
     this.reset();
     console.log('Disabled all connection simulations');
-  }
+  },
 };
