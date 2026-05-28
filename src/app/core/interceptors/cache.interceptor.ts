@@ -1,11 +1,21 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Injectable } from '@angular/core';
-import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpResponse } from '@angular/common/http';
+import {
+  HttpInterceptor,
+  HttpRequest,
+  HttpHandler,
+  HttpEvent,
+  HttpResponse,
+} from '@angular/common/http';
 import { Observable, of, throwError } from 'rxjs';
-import { tap, catchError, map } from 'rxjs/operators';
+import { tap, catchError } from 'rxjs/operators';
 
 @Injectable()
 export class CacheInterceptor implements HttpInterceptor {
-  private cache = new Map<string, { response: HttpResponse<any>; timestamp: number; etag?: string }>();
+  private cache = new Map<
+    string,
+    { response: HttpResponse<any>; timestamp: number; etag?: string }
+  >();
   private readonly DEFAULT_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
   private readonly CACHEABLE_METHODS = ['GET', 'HEAD'];
   private readonly CACHEABLE_STATUS_CODES = [200, 203, 300, 301, 302, 304, 307];
@@ -24,12 +34,12 @@ export class CacheInterceptor implements HttpInterceptor {
 
     // Make the request and cache the response
     return next.handle(req).pipe(
-      tap(event => {
+      tap((event) => {
         if (event instanceof HttpResponse && this.isCacheableResponse(event)) {
           this.putInCache(req, event);
         }
       }),
-      catchError(error => {
+      catchError((error) => {
         // On error, try to serve stale cache if available
         const staleResponse = this.getStaleFromCache(req);
         if (staleResponse) {
@@ -37,7 +47,7 @@ export class CacheInterceptor implements HttpInterceptor {
           return of(staleResponse);
         }
         return throwError(() => error);
-      })
+      }),
     );
   }
 
@@ -62,12 +72,12 @@ export class CacheInterceptor implements HttpInterceptor {
   private getCacheKey(req: HttpRequest<any>): string {
     // Include method and URL in cache key
     const key = `${req.method}:${req.url}`;
-    
+
     // Include body for POST requests if needed (rare case)
     if (req.body && req.method !== 'GET' && req.method !== 'HEAD') {
       return `${key}:${JSON.stringify(req.body)}`;
     }
-    
+
     return key;
   }
 
@@ -84,7 +94,7 @@ export class CacheInterceptor implements HttpInterceptor {
     if (Date.now() - cached.timestamp < ttl) {
       // Add cache header for debugging
       const response = cached.response.clone({
-        headers: cached.response.headers.set('X-Cache', 'HIT')
+        headers: cached.response.headers.set('X-Cache', 'HIT'),
       });
       return response;
     }
@@ -104,7 +114,7 @@ export class CacheInterceptor implements HttpInterceptor {
     const response = cached.response.clone({
       headers: cached.response.headers
         .set('X-Cache', 'STALE')
-        .set('X-Cache-Age', `${Date.now() - cached.timestamp}`)
+        .set('X-Cache-Age', `${Date.now() - cached.timestamp}`),
     });
 
     return response;
@@ -112,20 +122,20 @@ export class CacheInterceptor implements HttpInterceptor {
 
   private putInCache(req: HttpRequest<any>, response: HttpResponse<any>): void {
     const key = this.getCacheKey(req);
-    
+
     // Don't cache if response has Cache-Control: no-store
     if (response.headers.get('Cache-Control')?.includes('no-store')) {
       return;
     }
 
     const etag = response.headers.get('ETag');
-    
+
     this.cache.set(key, {
       response: response.clone({
-        headers: response.headers.set('X-Cache', 'MISS')
+        headers: response.headers.set('X-Cache', 'MISS'),
       }),
       timestamp: Date.now(),
-      etag: etag || undefined
+      etag: etag || undefined,
     });
 
     // Clean up old entries periodically
@@ -146,7 +156,7 @@ export class CacheInterceptor implements HttpInterceptor {
     if (req.url.includes('/api/v3/coins/markets')) {
       return 30 * 1000; // 30 seconds for market data
     }
-    
+
     if (req.url.includes('/api/v3/simple/price')) {
       return 10 * 1000; // 10 seconds for price data
     }
@@ -165,14 +175,15 @@ export class CacheInterceptor implements HttpInterceptor {
 
     for (const [key, cached] of this.cache.entries()) {
       const ttl = this.DEFAULT_CACHE_TTL; // Use default TTL for cleanup
-      
-      if (now - cached.timestamp > ttl * 2) { // Keep stale entries for 2x TTL
+
+      if (now - cached.timestamp > ttl * 2) {
+        // Keep stale entries for 2x TTL
         keysToDelete.push(key);
       }
     }
 
-    keysToDelete.forEach(key => this.cache.delete(key));
-    
+    keysToDelete.forEach((key) => this.cache.delete(key));
+
     if (keysToDelete.length > 0) {
       console.debug(`Cache cleanup: removed ${keysToDelete.length} stale entries`);
     }
@@ -186,27 +197,27 @@ export class CacheInterceptor implements HttpInterceptor {
 
   clearCacheForUrl(url: string): void {
     const keysToDelete: string[] = [];
-    
+
     for (const key of this.cache.keys()) {
       if (key.includes(url)) {
         keysToDelete.push(key);
       }
     }
-    
-    keysToDelete.forEach(key => this.cache.delete(key));
+
+    keysToDelete.forEach((key) => this.cache.delete(key));
     console.log(`Cleared cache entries for URL: ${url}`);
   }
 
   clearCacheForPattern(pattern: RegExp): void {
     const keysToDelete: string[] = [];
-    
+
     for (const key of this.cache.keys()) {
       if (pattern.test(key)) {
         keysToDelete.push(key);
       }
     }
-    
-    keysToDelete.forEach(key => this.cache.delete(key));
+
+    keysToDelete.forEach((key) => this.cache.delete(key));
     console.log(`Cleared cache entries matching pattern: ${pattern}`);
   }
 
@@ -219,12 +230,12 @@ export class CacheInterceptor implements HttpInterceptor {
       key,
       timestamp: cached.timestamp,
       age: now - cached.timestamp,
-      etag: cached.etag
+      etag: cached.etag,
     }));
 
     return {
       size: this.cache.size,
-      entries
+      entries,
     };
   }
 
@@ -253,33 +264,33 @@ export class CacheInterceptor implements HttpInterceptor {
         totalSize: 0,
         oldestEntry: 0,
         newestEntry: 0,
-        averageAge: 0
+        averageAge: 0,
       };
     }
 
     const now = Date.now();
-    const timestamps = Array.from(this.cache.values()).map(cached => cached.timestamp);
-    const ages = timestamps.map(timestamp => now - timestamp);
-    
+    const timestamps = Array.from(this.cache.values()).map((cached) => cached.timestamp);
+    const ages = timestamps.map((timestamp) => now - timestamp);
+
     return {
       totalEntries: this.cache.size,
       totalSize: this.estimateCacheSize(),
       oldestEntry: Math.min(...timestamps),
       newestEntry: Math.max(...timestamps),
-      averageAge: ages.reduce((sum, age) => sum + age, 0) / ages.length
+      averageAge: ages.reduce((sum, age) => sum + age, 0) / ages.length,
     };
   }
 
   private estimateCacheSize(): number {
     // Rough estimation of cache size in bytes
     let totalSize = 0;
-    
+
     for (const [key, cached] of this.cache.entries()) {
       totalSize += key.length * 2; // UTF-16 characters
       totalSize += JSON.stringify(cached.response.body || {}).length * 2;
       totalSize += 100; // Estimated overhead
     }
-    
+
     return totalSize;
   }
 }
