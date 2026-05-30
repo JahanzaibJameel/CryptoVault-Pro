@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Injectable, signal, inject } from '@angular/core';
 import { LoggerService } from './logger.service';
 
@@ -41,11 +42,11 @@ export interface AccessibilityViolation {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AccessibilityService {
   private loggerService = inject(LoggerService);
-  
+
   private settings = signal<AccessibilitySettings>({
     highContrast: false,
     largeText: false,
@@ -56,7 +57,7 @@ export class AccessibilityService {
     announcements: true,
     skipLinks: true,
     focusTrap: true,
-    colorBlindFriendly: false
+    colorBlindFriendly: false,
   });
 
   private currentFocusTrap = signal<FocusTrapConfig | null>(null);
@@ -72,20 +73,24 @@ export class AccessibilityService {
   private initializeAccessibility(): void {
     // Detect user preferences
     this.detectUserPreferences();
-    
+
     // Set up event listeners
     this.setupEventListeners();
-    
+
     // Create live regions for screen readers
     this.createLiveRegions();
-    
+
     // Perform initial accessibility check
     this.checkAccessibility();
-    
-    this.loggerService.info('Accessibility service initialized', {
-      settings: this.settings(),
-      navigationMode: this.navigationMode()
-    }, 'accessibility');
+
+    this.loggerService.info(
+      'Accessibility service initialized',
+      {
+        settings: this.settings(),
+        navigationMode: this.navigationMode(),
+      },
+      'accessibility',
+    );
   }
 
   private detectUserPreferences(): void {
@@ -97,7 +102,6 @@ export class AccessibilityService {
     const mediaQueries = {
       reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)'),
       highContrast: window.matchMedia('(prefers-contrast: high)'),
-      darkMode: window.matchMedia('(prefers-color-scheme: dark)')
     };
 
     // Apply detected preferences
@@ -111,10 +115,20 @@ export class AccessibilityService {
 
     // Listen for changes
     Object.entries(mediaQueries).forEach(([setting, mq]) => {
-      mq.addEventListener('change', (e) => {
-        this.updateSetting(setting as keyof AccessibilitySettings, e.matches);
-      });
+      if (mq && typeof mq.addEventListener === 'function') {
+        mq.addEventListener('change', (e: MediaQueryListEvent) => {
+          this.updateSetting(setting as keyof AccessibilitySettings, e.matches);
+        });
+      } else if (mq && typeof (mq as any).addListener === 'function') {
+        (mq as any).addListener((e: MediaQueryListEvent) => {
+          this.updateSetting(setting as keyof AccessibilitySettings, e.matches);
+        });
+      }
     });
+  }
+
+  refreshUserPreferences(): void {
+    this.detectUserPreferences();
   }
 
   private setupEventListeners(): void {
@@ -172,9 +186,13 @@ export class AccessibilityService {
     document.body.appendChild(assertiveRegion);
   }
 
+  private getDocumentRoot(): HTMLElement {
+    return document.documentElement;
+  }
+
   private handleFocusIn(event: FocusEvent): void {
     const target = event.target as HTMLElement;
-    
+
     if (this.settings().focusVisible && this.navigationMode() === 'keyboard') {
       target.classList.add('focus-visible');
     }
@@ -207,18 +225,18 @@ export class AccessibilityService {
       return `Button, ${element.textContent?.trim() || 'unnamed'}`;
     } else if (element.tagName === 'INPUT') {
       const type = element.getAttribute('type') || 'text';
-      const label = element.getAttribute('aria-label') || 
-                   element.getAttribute('placeholder') || 
-                   element.getAttribute('title') ||
-                   `input field`;
+      const label =
+        element.getAttribute('aria-label') ||
+        element.getAttribute('placeholder') ||
+        element.getAttribute('title') ||
+        `input field`;
       return `${label}, ${type} input`;
     } else if (element.tagName === 'A') {
       return `Link, ${element.textContent?.trim() || 'unnamed'}`;
     } else if (element.getAttribute('role')) {
       const role = element.getAttribute('role')!;
-      const label = element.getAttribute('aria-label') || 
-                   element.textContent?.trim() || 
-                   `${role} element`;
+      const label =
+        element.getAttribute('aria-label') || element.textContent?.trim() || `${role} element`;
       return `${label}, ${role}`;
     }
 
@@ -227,14 +245,18 @@ export class AccessibilityService {
 
   // Public API methods
   updateSetting(setting: keyof AccessibilitySettings, value: boolean): void {
-    this.settings.update(current => ({ ...current, [setting]: value }));
+    this.settings.update((current) => ({ ...current, [setting]: value }));
     this.applyAccessibilityClasses();
-    
-    this.loggerService.info('Accessibility setting updated', {
-      setting,
-      value,
-      allSettings: this.settings()
-    }, 'accessibility');
+
+    this.loggerService.info(
+      'Accessibility setting updated',
+      {
+        setting,
+        value,
+        allSettings: this.settings(),
+      },
+      'accessibility',
+    );
   }
 
   private applyAccessibilityClasses(): void {
@@ -257,7 +279,7 @@ export class AccessibilityService {
   }
 
   private updateCSSProperties(): void {
-    const root = document.documentElement;
+    const root = this.getDocumentRoot();
     const settings = this.settings();
 
     if (settings.largeText) {
@@ -291,19 +313,13 @@ export class AccessibilityService {
     // Remove existing focus trap
     this.removeFocusTrap();
 
-    // Set up new focus trap
+    // Set up new focus trap config so cleanup still works even when there are no focusable descendants
     this.currentFocusTrap.set(config);
 
     // Find all focusable elements
     const focusableElements = config.container.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
     ) as NodeListOf<HTMLElement>;
-
-    if (focusableElements.length === 0) return;
-
-    // Set initial focus
-    const initialElement = config.initialFocus || focusableElements[0];
-    initialElement.focus();
 
     // Handle tab navigation within trap
     const handleTabKey = (e: KeyboardEvent) => {
@@ -315,20 +331,26 @@ export class AccessibilityService {
       if (e.shiftKey) {
         if (document.activeElement === firstElement) {
           e.preventDefault();
-          lastElement.focus();
+          lastElement?.focus();
         }
       } else {
         if (document.activeElement === lastElement) {
           e.preventDefault();
-          firstElement.focus();
+          firstElement?.focus();
         }
       }
     };
 
     config.container.addEventListener('keydown', handleTabKey);
-    
-    // Store event listener for cleanup
     (config.container as any)._focusTrapHandler = handleTabKey;
+
+    if (focusableElements.length === 0) {
+      return;
+    }
+
+    // Set initial focus
+    const initialElement = config.initialFocus || focusableElements[0];
+    initialElement.focus();
   }
 
   removeFocusTrap(): void {
@@ -336,7 +358,10 @@ export class AccessibilityService {
     if (currentTrap) {
       // Remove event listener
       if ((currentTrap.container as any)._focusTrapHandler) {
-        currentTrap.container.removeEventListener('keydown', (currentTrap.container as any)._focusTrapHandler);
+        currentTrap.container.removeEventListener(
+          'keydown',
+          (currentTrap.container as any)._focusTrapHandler,
+        );
         delete (currentTrap.container as any)._focusTrapHandler;
       }
 
@@ -356,7 +381,7 @@ export class AccessibilityService {
     const announcement: ScreenReaderAnnouncement = {
       message,
       priority,
-      timeout
+      timeout,
     };
 
     this.announcementQueue.push(announcement);
@@ -378,9 +403,7 @@ export class AccessibilityService {
 
   private makeAnnouncement(announcement: ScreenReaderAnnouncement): Promise<void> {
     return new Promise((resolve) => {
-      const region = document.querySelector(
-        `.live-region-${announcement.priority}`
-      ) as HTMLElement;
+      const region = document.querySelector(`.live-region-${announcement.priority}`) as HTMLElement;
 
       if (!region) {
         resolve();
@@ -393,7 +416,7 @@ export class AccessibilityService {
       // Set new content
       setTimeout(() => {
         region.textContent = announcement.message;
-        
+
         // Clear after timeout
         if (announcement.timeout) {
           setTimeout(() => {
@@ -437,10 +460,10 @@ export class AccessibilityService {
     const skipLinks = [
       { href: '#main-content', text: 'Skip to main content' },
       { href: '#navigation', text: 'Skip to navigation' },
-      { href: '#search', text: 'Skip to search' }
+      { href: '#search', text: 'Skip to search' },
     ];
 
-    skipLinks.forEach(link => {
+    skipLinks.forEach((link) => {
       const anchor = document.createElement('a');
       anchor.href = link.href;
       anchor.textContent = link.text;
@@ -457,7 +480,7 @@ export class AccessibilityService {
     const violations: AccessibilityViolation[] = [];
 
     // Check color contrast
-    violations.push(...await this.checkColorContrast());
+    violations.push(...(await this.checkColorContrast()));
 
     // Check keyboard accessibility
     violations.push(...this.checkKeyboardAccessibility());
@@ -472,11 +495,15 @@ export class AccessibilityService {
     violations.push(...this.checkSemanticHTML());
 
     this.violations.set(violations);
-    
-    this.loggerService.info('Accessibility check completed', {
-      violationsFound: violations.length,
-      violations: violations.map(v => ({ type: v.type, severity: v.severity }))
-    }, 'accessibility');
+
+    this.loggerService.info(
+      'Accessibility check completed',
+      {
+        violationsFound: violations.length,
+        violations: violations.map((v) => ({ type: v.type, severity: v.severity })),
+      },
+      'accessibility',
+    );
 
     return violations;
   }
@@ -492,15 +519,16 @@ export class AccessibilityService {
 
       if (color && backgroundColor && backgroundColor !== 'rgba(0, 0, 0, 0)') {
         const ratio = this.calculateContrastRatio(color, backgroundColor);
-        
+
         if (ratio < 4.5) {
           violations.push({
             type: 'contrast',
             severity: 'error',
             element: element as HTMLElement,
             message: `Low contrast ratio: ${ratio.toFixed(2)}:1`,
-            suggestion: 'Increase contrast between text and background to meet WCAG AA standards (4.5:1)',
-            wcagCriterion: '1.4.3 Contrast (Minimum)'
+            suggestion:
+              'Increase contrast between text and background to meet WCAG AA standards (4.5:1)',
+            wcagCriterion: '1.4.3 Contrast (Minimum)',
           });
         }
       }
@@ -514,13 +542,13 @@ export class AccessibilityService {
     // In a real implementation, this would use proper color parsing
     const rgb1 = this.parseColor(color1);
     const rgb2 = this.parseColor(color2);
-    
+
     const l1 = this.getLuminance(rgb1);
     const l2 = this.getLuminance(rgb2);
-    
+
     const lighter = Math.max(l1, l2);
     const darker = Math.min(l1, l2);
-    
+
     return (lighter + 0.05) / (darker + 0.05);
   }
 
@@ -531,39 +559,41 @@ export class AccessibilityService {
       return {
         r: parseInt(match[1]),
         g: parseInt(match[2]),
-        b: parseInt(match[3])
+        b: parseInt(match[3]),
       };
     }
-    
+
     // Default to black for invalid colors
     return { r: 0, g: 0, b: 0 };
   }
 
   private getLuminance(rgb: { r: number; g: number; b: number }): number {
     const { r, g, b } = rgb;
-    
+
     // Convert to 0-1 range
     const rNorm = r / 255;
     const gNorm = g / 255;
     const bNorm = b / 255;
-    
+
     // Apply gamma correction
     const rCorrected = rNorm <= 0.03928 ? rNorm / 12.92 : Math.pow((rNorm + 0.055) / 1.055, 2.4);
     const gCorrected = gNorm <= 0.03928 ? gNorm / 12.92 : Math.pow((gNorm + 0.055) / 1.055, 2.4);
     const bCorrected = bNorm <= 0.03928 ? bNorm / 12.92 : Math.pow((bNorm + 0.055) / 1.055, 2.4);
-    
+
     return 0.2126 * rCorrected + 0.7152 * gCorrected + 0.0722 * bCorrected;
   }
 
   private checkKeyboardAccessibility(): AccessibilityViolation[] {
     const violations: AccessibilityViolation[] = [];
-    
+
     // Check for elements that should be keyboard accessible
-    const clickableElements = this.normalizeNodeList(document.querySelectorAll('button, a, input, select, textarea, [onclick]'));
-    
-    clickableElements.forEach(element => {
+    const clickableElements = this.normalizeNodeList(
+      document.querySelectorAll('button, a, input, select, textarea, [onclick]'),
+    );
+
+    clickableElements.forEach((element) => {
       const htmlElement = element as HTMLElement;
-      
+
       if (htmlElement.tabIndex < 0 && !htmlElement.getAttribute('aria-hidden')) {
         violations.push({
           type: 'keyboard',
@@ -571,7 +601,7 @@ export class AccessibilityService {
           element: htmlElement,
           message: 'Element is not keyboard accessible',
           suggestion: 'Add tabindex="0" or ensure element is naturally focusable',
-          wcagCriterion: '2.1.1 Keyboard'
+          wcagCriterion: '2.1.1 Keyboard',
         });
       }
     });
@@ -581,25 +611,30 @@ export class AccessibilityService {
 
   private checkARIAAttributes(): AccessibilityViolation[] {
     const violations: AccessibilityViolation[] = [];
-    
+
     // Check for missing ARIA labels on interactive elements
-    const interactiveElements = this.normalizeNodeList(document.querySelectorAll('button, a[href], input, select, textarea'));
-    
-    interactiveElements.forEach(element => {
+    const interactiveElements = this.normalizeNodeList(
+      document.querySelectorAll('button, a[href], input, select, textarea'),
+    );
+
+    interactiveElements.forEach((element) => {
       const htmlElement = element as HTMLElement;
-      const hasLabel = htmlElement.getAttribute('aria-label') ||
-                       htmlElement.getAttribute('aria-labelledby') ||
-                       htmlElement.getAttribute('title') ||
-                       htmlElement.textContent?.trim();
-      
-      if (!hasLabel && htmlElement.tagName !== 'INPUT' || htmlElement.getAttribute('type') === 'submit') {
+      const hasLabel =
+        htmlElement.getAttribute('aria-label') ||
+        htmlElement.getAttribute('aria-labelledby') ||
+        htmlElement.getAttribute('title') ||
+        htmlElement.textContent?.trim();
+      const isSubmitInput =
+        htmlElement.tagName === 'INPUT' && htmlElement.getAttribute('type') === 'submit';
+
+      if (!hasLabel && !isSubmitInput) {
         violations.push({
           type: 'aria',
           severity: 'warning',
           element: htmlElement,
           message: 'Interactive element missing accessible label',
           suggestion: 'Add aria-label, aria-labelledby, or visible text content',
-          wcagCriterion: '1.3.1 Info and Relationships'
+          wcagCriterion: '1.3.1 Info and Relationships',
         });
       }
     });
@@ -609,16 +644,18 @@ export class AccessibilityService {
 
   private checkFocusManagement(): AccessibilityViolation[] {
     const violations: AccessibilityViolation[] = [];
-    
+
     // Check for focus management in modals and dialogs
     const modals = this.normalizeNodeList(document.querySelectorAll('[role="dialog"], .modal'));
-    
-    modals.forEach(element => {
+
+    modals.forEach((element) => {
       const htmlElement = element as HTMLElement;
-      const focusableElements = this.normalizeNodeList(htmlElement.querySelectorAll(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      ));
-      
+      const focusableElements = this.normalizeNodeList(
+        htmlElement.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+        ),
+      );
+
       if (focusableElements.length === 0) {
         violations.push({
           type: 'focus',
@@ -626,7 +663,7 @@ export class AccessibilityService {
           element: htmlElement,
           message: 'Modal has no focusable elements',
           suggestion: 'Ensure modal has at least one focusable element for focus management',
-          wcagCriterion: '2.1.2 No Keyboard Trap'
+          wcagCriterion: '2.1.2 No Keyboard Trap',
         });
       }
     });
@@ -636,14 +673,14 @@ export class AccessibilityService {
 
   private checkSemanticHTML(): AccessibilityViolation[] {
     const violations: AccessibilityViolation[] = [];
-    
+
     // Check for proper heading structure
     const headings = this.normalizeNodeList(document.querySelectorAll('h1, h2, h3, h4, h5, h6'));
     let lastLevel = 0;
-    
-    headings.forEach(heading => {
+
+    headings.forEach((heading) => {
       const level = parseInt(heading.tagName.substring(1));
-      
+
       if (level > lastLevel + 1) {
         violations.push({
           type: 'semantic',
@@ -651,10 +688,10 @@ export class AccessibilityService {
           element: heading as HTMLElement,
           message: `Heading level skipped (h${lastLevel} to h${level})`,
           suggestion: 'Use proper heading hierarchy without skipping levels',
-          wcagCriterion: '1.3.1 Info and Relationships'
+          wcagCriterion: '1.3.1 Info and Relationships',
         });
       }
-      
+
       lastLevel = level;
     });
 
@@ -664,16 +701,16 @@ export class AccessibilityService {
   // Color blindness support
   generateColorBlindPalette(): Record<string, string> {
     return {
-      'primary': '#0066cc',
-      'secondary': '#00cc66',
-      'success': '#008844',
-      'warning': '#cc8800',
-      'error': '#cc0044',
-      'info': '#0066cc',
+      primary: '#0066cc',
+      secondary: '#00cc66',
+      success: '#008844',
+      warning: '#cc8800',
+      error: '#cc0044',
+      info: '#0066cc',
       'text-primary': '#000000',
       'text-secondary': '#333333',
       'background-primary': '#ffffff',
-      'background-secondary': '#f5f5f5'
+      'background-secondary': '#f5f5f5',
     };
   }
 
@@ -693,25 +730,25 @@ export class AccessibilityService {
   getViolationCount(severity?: 'error' | 'warning' | 'info'): number {
     const violations = this.violations();
     if (!severity) return violations.length;
-    return violations.filter(v => v.severity === severity).length;
+    return violations.filter((v) => v.severity === severity).length;
   }
 
   // Health check
   checkHealth(): { healthy: boolean; checks: Record<string, boolean> } {
     const violations = this.violations();
-    const errorCount = violations.filter(v => v.severity === 'error').length;
-    
+    const errorCount = violations.filter((v) => v.severity === 'error').length;
+
     const checks = {
       settings_loaded: !!this.settings(),
       violations_checked: violations.length >= 0,
       no_critical_errors: errorCount === 0,
       live_regions_created: !!document.querySelector('.live-region-polite'),
-      focus_management_enabled: this.settings().focusTrap
+      focus_management_enabled: this.settings().focusTrap,
     };
 
     return {
-      healthy: Object.values(checks).every(check => check) && errorCount === 0,
-      checks
+      healthy: Object.values(checks).every((check) => check) && errorCount === 0,
+      checks,
     };
   }
 }
