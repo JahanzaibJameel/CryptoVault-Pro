@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-namespace */
 import { TestBed } from '@angular/core/testing';
-import { AccessibilityService, AccessibilitySettings, AccessibilityViolation } from './accessibility.service';
+import { AccessibilityService } from './accessibility.service';
 import { LoggerService } from './logger.service';
 
 // Mock global test functions
@@ -36,14 +37,11 @@ describe('AccessibilityService', () => {
     const loggerSpy = {
       info: jest.fn(),
       warn: jest.fn(),
-      error: jest.fn()
+      error: jest.fn(),
     };
-    
+
     TestBed.configureTestingModule({
-      providers: [
-        AccessibilityService,
-        { provide: LoggerService, useValue: loggerSpy }
-      ]
+      providers: [AccessibilityService, { provide: LoggerService, useValue: loggerSpy }],
     });
 
     // Mock window.matchMedia before service initialization
@@ -55,11 +53,11 @@ describe('AccessibilityService', () => {
       removeListener: jest.fn(),
       addEventListener: jest.fn(),
       removeEventListener: jest.fn(),
-      dispatchEvent: jest.fn()
+      dispatchEvent: jest.fn(),
     }));
     Object.defineProperty(window, 'matchMedia', {
       writable: true,
-      value: mockMatchMedia
+      value: mockMatchMedia,
     });
 
     // Mock DOM methods
@@ -119,7 +117,7 @@ describe('AccessibilityService', () => {
       expect(mockLoggerService.info).toHaveBeenCalledWith(
         'Accessibility setting updated',
         jasmine.any(Object),
-        'accessibility'
+        'accessibility',
       );
     });
   });
@@ -132,11 +130,11 @@ describe('AccessibilityService', () => {
     it('should detect reduced motion preference', () => {
       const mockMediaQuery = {
         matches: true,
-        addEventListener: jasmine.createSpy('addEventListener')
+        addEventListener: jasmine.createSpy('addEventListener'),
       };
       (window.matchMedia as jasmine.Spy).and.returnValue(mockMediaQuery);
 
-      service = TestBed.inject(AccessibilityService);
+      service.refreshUserPreferences();
       const settings = service.getSettings();
       expect(settings.reducedMotion).toBeTrue();
     });
@@ -144,11 +142,11 @@ describe('AccessibilityService', () => {
     it('should detect high contrast preference', () => {
       const mockMediaQuery = {
         matches: true,
-        addEventListener: jasmine.createSpy('addEventListener')
+        addEventListener: jasmine.createSpy('addEventListener'),
       };
       (window.matchMedia as jasmine.Spy).and.returnValue(mockMediaQuery);
 
-      service = TestBed.inject(AccessibilityService);
+      service.refreshUserPreferences();
       const settings = service.getSettings();
       expect(settings.highContrast).toBeTrue();
     });
@@ -156,11 +154,11 @@ describe('AccessibilityService', () => {
     it('should listen for preference changes', () => {
       const mockMediaQuery = {
         matches: false,
-        addEventListener: jasmine.createSpy('addEventListener')
+        addEventListener: jasmine.createSpy('addEventListener'),
       };
       (window.matchMedia as jasmine.Spy).and.returnValue(mockMediaQuery);
 
-      service = TestBed.inject(AccessibilityService);
+      service.refreshUserPreferences();
       expect(mockMediaQuery.addEventListener).toHaveBeenCalledWith('change', jasmine.any(Function));
     });
   });
@@ -169,10 +167,10 @@ describe('AccessibilityService', () => {
     it('should update font size for large text', () => {
       const mockRoot = {
         style: {
-          setProperty: jasmine.createSpy('setProperty')
-        }
+          setProperty: jasmine.createSpy('setProperty'),
+        },
       };
-      spyOn(document, 'documentElement').and.returnValue(mockRoot);
+      spyOn(service as any, 'getDocumentRoot').and.returnValue(mockRoot);
 
       service.updateSetting('largeText', true);
       expect(mockRoot.style.setProperty).toHaveBeenCalledWith('--font-size-base', '18px');
@@ -183,10 +181,10 @@ describe('AccessibilityService', () => {
     it('should update contrast properties for high contrast', () => {
       const mockRoot = {
         style: {
-          setProperty: jasmine.createSpy('setProperty')
-        }
+          setProperty: jasmine.createSpy('setProperty'),
+        },
       };
-      spyOn(document, 'documentElement').and.returnValue(mockRoot);
+      spyOn(service as any, 'getDocumentRoot').and.returnValue(mockRoot);
 
       service.updateSetting('highContrast', true);
       expect(mockRoot.style.setProperty).toHaveBeenCalledWith('--contrast-ratio', '7');
@@ -197,10 +195,10 @@ describe('AccessibilityService', () => {
     it('should update transition properties for reduced motion', () => {
       const mockRoot = {
         style: {
-          setProperty: jasmine.createSpy('setProperty')
-        }
+          setProperty: jasmine.createSpy('setProperty'),
+        },
       };
-      spyOn(document, 'documentElement').and.returnValue(mockRoot);
+      spyOn(service as any, 'getDocumentRoot').and.returnValue(mockRoot);
 
       service.updateSetting('reducedMotion', true);
       expect(mockRoot.style.setProperty).toHaveBeenCalledWith('--transition-duration', '0s');
@@ -212,19 +210,19 @@ describe('AccessibilityService', () => {
     it('should create focus trap', () => {
       const mockContainer = {
         querySelectorAll: jasmine.createSpy('querySelectorAll').and.returnValue([]),
-        addEventListener: jasmine.createSpy('addEventListener')
+        addEventListener: jasmine.createSpy('addEventListener'),
       };
       const mockInitialFocus = {
-        focus: jasmine.createSpy('focus')
+        focus: jasmine.createSpy('focus'),
       };
 
       service.trapFocus({
         container: mockContainer as any,
-        initialFocus: mockInitialFocus as any
+        initialFocus: mockInitialFocus as any,
       });
 
       expect(mockContainer.querySelectorAll).toHaveBeenCalledWith(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
       );
     });
 
@@ -232,15 +230,15 @@ describe('AccessibilityService', () => {
       const mockContainer = {
         querySelectorAll: jasmine.createSpy('querySelectorAll').and.returnValue([]),
         addEventListener: jasmine.createSpy('addEventListener'),
-        removeEventListener: jasmine.createSpy('removeEventListener')
+        removeEventListener: jasmine.createSpy('removeEventListener'),
       };
       const mockRestoreFocus = {
-        focus: jasmine.createSpy('focus')
+        focus: jasmine.createSpy('focus'),
       };
 
       service.trapFocus({
         container: mockContainer as any,
-        restoreFocus: mockRestoreFocus as any
+        restoreFocus: mockRestoreFocus as any,
       });
 
       service.removeFocusTrap();
@@ -252,19 +250,21 @@ describe('AccessibilityService', () => {
       const mockFirstElement = { focus: jasmine.createSpy('focus') };
       const mockLastElement = { focus: jasmine.createSpy('focus') };
       const mockContainer = {
-        querySelectorAll: jasmine.createSpy('querySelectorAll').and.returnValue([mockFirstElement, mockLastElement]),
+        querySelectorAll: jasmine
+          .createSpy('querySelectorAll')
+          .and.returnValue([mockFirstElement, mockLastElement]),
         addEventListener: jasmine.createSpy('addEventListener').and.callFake((event, handler) => {
           if (event === 'keydown') {
             // Simulate tab key on last element
             const mockEvent = {
               key: 'Tab',
               shiftKey: false,
-              preventDefault: jasmine.createSpy('preventDefault')
+              preventDefault: jasmine.createSpy('preventDefault'),
             };
             spyOn(document, 'activeElement').and.returnValue(mockLastElement);
             handler(mockEvent);
           }
-        })
+        }),
       };
 
       service.trapFocus({ container: mockContainer as any });
@@ -276,7 +276,7 @@ describe('AccessibilityService', () => {
     beforeEach(() => {
       const mockRegion = {
         textContent: '',
-        style: {}
+        style: {},
       };
       spyOn(document, 'querySelector').and.returnValue(mockRegion);
     });
@@ -303,18 +303,21 @@ describe('AccessibilityService', () => {
       const mockContainer = {
         setAttribute: jasmine.createSpy('setAttribute'),
         className: '',
-        appendChild: jasmine.createSpy('appendChild')
+        appendChild: jasmine.createSpy('appendChild'),
       };
       const mockAnchor = {
         href: '',
         textContent: '',
-        className: ''
+        className: '',
       };
       spyOn(document, 'createElement').and.returnValues(mockContainer as any, mockAnchor as any);
 
       service.createSkipLinks();
       expect(mockContainer.setAttribute).toHaveBeenCalledWith('role', 'navigation');
-      expect(mockContainer.setAttribute).toHaveBeenCalledWith('aria-label', 'Skip navigation links');
+      expect(mockContainer.setAttribute).toHaveBeenCalledWith(
+        'aria-label',
+        'Skip navigation links',
+      );
     });
 
     it('should not create skip links when disabled', () => {
@@ -336,7 +339,7 @@ describe('AccessibilityService', () => {
 
     it('should run all accessibility checks', async () => {
       const violations = await service.checkAccessibility();
-      
+
       expect((service as any).checkColorContrast).toHaveBeenCalled();
       expect((service as any).checkKeyboardAccessibility).toHaveBeenCalled();
       expect((service as any).checkARIAAttributes).toHaveBeenCalled();
@@ -350,7 +353,7 @@ describe('AccessibilityService', () => {
       expect(mockLoggerService.info).toHaveBeenCalledWith(
         'Accessibility check completed',
         jasmine.any(Object),
-        'accessibility'
+        'accessibility',
       );
     });
   });
@@ -360,8 +363,8 @@ describe('AccessibilityService', () => {
       const mockElement = {
         style: {
           color: 'rgb(200, 200, 200)',
-          backgroundColor: 'rgb(240, 240, 240)'
-        }
+          backgroundColor: 'rgb(240, 240, 240)',
+        },
       };
       spyOn(document, 'querySelectorAll').and.returnValue([mockElement]);
 
@@ -375,8 +378,8 @@ describe('AccessibilityService', () => {
       const mockElement = {
         style: {
           color: 'rgb(0, 0, 0)',
-          backgroundColor: 'rgba(0, 0, 0, 0)'
-        }
+          backgroundColor: 'rgba(0, 0, 0, 0)',
+        },
       };
       spyOn(document, 'querySelectorAll').and.returnValue([mockElement]);
 
@@ -389,7 +392,7 @@ describe('AccessibilityService', () => {
     it('should detect elements without keyboard access', () => {
       const mockElement = {
         tabIndex: -1,
-        getAttribute: jasmine.createSpy('getAttribute').and.returnValue(null)
+        getAttribute: jasmine.createSpy('getAttribute').and.returnValue(null),
       };
       spyOn(document, 'querySelectorAll').and.returnValue([mockElement]);
 
@@ -402,7 +405,7 @@ describe('AccessibilityService', () => {
     it('should ignore elements with aria-hidden', () => {
       const mockElement = {
         tabIndex: -1,
-        getAttribute: jasmine.createSpy('getAttribute').and.returnValue('true')
+        getAttribute: jasmine.createSpy('getAttribute').and.returnValue('true'),
       };
       spyOn(document, 'querySelectorAll').and.returnValue([mockElement]);
 
@@ -416,7 +419,7 @@ describe('AccessibilityService', () => {
       const mockElement = {
         tagName: 'BUTTON',
         getAttribute: jasmine.createSpy('getAttribute').and.returnValue(null),
-        textContent: ''
+        textContent: '',
       };
       spyOn(document, 'querySelectorAll').and.returnValue([mockElement]);
 
@@ -429,19 +432,23 @@ describe('AccessibilityService', () => {
     it('should ignore submit inputs without labels', () => {
       const mockElement = {
         tagName: 'INPUT',
-        getAttribute: jasmine.createSpy('getAttribute').and.returnValue('submit')
+        getAttribute: jasmine.createSpy('getAttribute').and.returnValue('submit'),
       };
-      spyOn(document, 'querySelectorAll').and.returnValue([mockElement]);
+      const querySelectorSpy = spyOn(document, 'querySelectorAll').and.returnValue([
+        mockElement,
+      ] as any);
 
       const violations = (service as any).checkARIAAttributes();
       expect(violations).toEqual([]);
+
+      querySelectorSpy.and.callThrough();
     });
   });
 
   describe('Focus Management Checking', () => {
     it('should detect modals without focusable elements', () => {
       const mockModal = {
-        querySelectorAll: jasmine.createSpy('querySelectorAll').and.returnValue([])
+        querySelectorAll: jasmine.createSpy('querySelectorAll').and.returnValue([]),
       };
       spyOn(document, 'querySelectorAll').and.returnValue([mockModal]);
 
@@ -469,7 +476,7 @@ describe('AccessibilityService', () => {
   describe('Color Blind Support', () => {
     it('should generate color blind friendly palette', () => {
       const palette = service.generateColorBlindPalette();
-      
+
       expect(palette.primary).toBe('#0066cc');
       expect(palette.success).toBe('#008844');
       expect(palette.warning).toBe('#cc8800');
@@ -487,7 +494,7 @@ describe('AccessibilityService', () => {
         element: document.createElement('div'),
         message: 'Low contrast',
         suggestion: 'Increase contrast',
-        wcagCriterion: '1.4.3'
+        wcagCriterion: '1.4.3',
       };
 
       spyOn(service as any, 'checkColorContrast').and.returnValue([mockViolation]);
@@ -498,20 +505,41 @@ describe('AccessibilityService', () => {
 
       await service.checkAccessibility();
       const violations = service.getViolations();
-      
+
       expect(violations).toHaveLength(1);
       expect(violations[0]).toEqual(mockViolation);
     });
 
     it('should count violations by severity', async () => {
       const mockViolations = [
-        { type: 'contrast', severity: 'error' as const, element: null, message: '', suggestion: '', wcagCriterion: '' },
-        { type: 'keyboard', severity: 'warning' as const, element: null, message: '', suggestion: '', wcagCriterion: '' },
-        { type: 'aria', severity: 'info' as const, element: null, message: '', suggestion: '', wcagCriterion: '' }
+        {
+          type: 'contrast',
+          severity: 'error' as const,
+          element: null,
+          message: '',
+          suggestion: '',
+          wcagCriterion: '',
+        },
+        {
+          type: 'keyboard',
+          severity: 'warning' as const,
+          element: null,
+          message: '',
+          suggestion: '',
+          wcagCriterion: '',
+        },
+        {
+          type: 'aria',
+          severity: 'info' as const,
+          element: null,
+          message: '',
+          suggestion: '',
+          wcagCriterion: '',
+        },
       ];
 
       spyOn(service, 'getViolations').and.returnValue(mockViolations);
-      
+
       expect(service.getViolationCount('error')).toBe(1);
       expect(service.getViolationCount('warning')).toBe(1);
       expect(service.getViolationCount('info')).toBe(1);
@@ -525,7 +553,7 @@ describe('AccessibilityService', () => {
       spyOn(document, 'querySelector').and.returnValue(document.createElement('div'));
 
       const health = service.checkHealth();
-      
+
       expect(health.healthy).toBeTrue();
       expect(health.checks.settings_loaded).toBeTrue();
       expect(health.checks.violations_checked).toBeTrue();
@@ -536,14 +564,21 @@ describe('AccessibilityService', () => {
 
     it('should return unhealthy status with errors', () => {
       const mockViolations = [
-        { type: 'contrast', severity: 'error', element: null, message: '', suggestion: '', wcagCriterion: '' }
+        {
+          type: 'contrast',
+          severity: 'error',
+          element: null,
+          message: '',
+          suggestion: '',
+          wcagCriterion: '',
+        },
       ];
 
       spyOn(service, 'getViolations').and.returnValue(mockViolations);
       spyOn(document, 'querySelector').and.returnValue(document.createElement('div'));
 
       const health = service.checkHealth();
-      
+
       expect(health.healthy).toBeFalse();
       expect(health.checks.no_critical_errors).toBeFalse();
     });
@@ -557,7 +592,8 @@ describe('AccessibilityService', () => {
 
     it('should detect keyboard navigation on tab key', () => {
       const mockEvent = { key: 'Tab' };
-      const keydownHandler = (document.addEventListener as jasmine.Spy).calls.allArgs()
+      const keydownHandler = (document.addEventListener as jasmine.Spy).calls
+        .allArgs()
         .find(([event]) => event === 'keydown')?.[1];
 
       if (keydownHandler) {
@@ -568,7 +604,8 @@ describe('AccessibilityService', () => {
 
     it('should detect mouse navigation on mouse down', () => {
       const mockEvent = { type: 'mousedown' };
-      const mousedownHandler = (document.addEventListener as jasmine.Spy).calls.allArgs()
+      const mousedownHandler = (document.addEventListener as jasmine.Spy).calls
+        .allArgs()
         .find(([event]) => event === 'mousedown')?.[1];
 
       if (mousedownHandler) {
@@ -579,7 +616,8 @@ describe('AccessibilityService', () => {
 
     it('should detect touch navigation on touch start', () => {
       const mockEvent = { type: 'touchstart' };
-      const touchstartHandler = (document.addEventListener as jasmine.Spy).calls.allArgs()
+      const touchstartHandler = (document.addEventListener as jasmine.Spy).calls
+        .allArgs()
         .find(([event]) => event === 'touchstart')?.[1];
 
       if (touchstartHandler) {
@@ -598,36 +636,38 @@ describe('AccessibilityService', () => {
     it('should announce button focus', () => {
       const mockElement = {
         tagName: 'BUTTON',
-        textContent: 'Submit Form'
+        textContent: 'Submit Form',
       };
       spyOn(document, 'activeElement').and.returnValue(mockElement);
 
       (service as any).handleFocusIn({ target: mockElement });
-      
+
       expect(service.announce).toHaveBeenCalledWith('Button, Submit Form', 'polite');
     });
 
     it('should announce input focus', () => {
       const mockElement = {
         tagName: 'INPUT',
-        getAttribute: jasmine.createSpy('getAttribute').and.returnValues('Email', 'Enter your email')
+        getAttribute: jasmine
+          .createSpy('getAttribute')
+          .and.returnValues('Email', 'Enter your email'),
       };
       spyOn(document, 'activeElement').and.returnValue(mockElement);
 
       (service as any).handleFocusIn({ target: mockElement });
-      
+
       expect(service.announce).toHaveBeenCalledWith('Email, email input', 'polite');
     });
 
     it('should announce link focus', () => {
       const mockElement = {
         tagName: 'A',
-        textContent: 'Home'
+        textContent: 'Home',
       };
       spyOn(document, 'activeElement').and.returnValue(mockElement);
 
       (service as any).handleFocusIn({ target: mockElement });
-      
+
       expect(service.announce).toHaveBeenCalledWith('Link, Home', 'polite');
     });
   });
@@ -635,8 +675,8 @@ describe('AccessibilityService', () => {
   describe('Contrast Ratio Calculation', () => {
     it('should calculate contrast ratio correctly', () => {
       const rgb1 = { r: 255, g: 255, b: 255 }; // White
-      const rgb2 = { r: 0, g: 0, b: 0 };     // Black
-      
+      const rgb2 = { r: 0, g: 0, b: 0 }; // Black
+
       const ratio = (service as any).calculateContrastRatio(rgb1, rgb2);
       expect(ratio).toBe(21); // Maximum contrast ratio
     });
