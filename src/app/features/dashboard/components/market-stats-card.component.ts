@@ -24,87 +24,89 @@ import { CardComponent } from '../../../shared/design-system/card/card.component
       </div>
     </ui-card>
   `,
-  styles: [`
-    .stat-card {
-      transition: all var(--transition-normal);
-    }
+  styles: [
+    `
+      .stat-card {
+        transition: all var(--transition-normal);
+      }
 
-    .stat-card:hover {
-      transform: translateY(-4px);
-    }
+      .stat-card:hover {
+        transform: translateY(-4px);
+      }
 
-    .stat-content {
-      padding: 0;
-    }
+      .stat-content {
+        padding: 0;
+      }
 
-    .stat-header {
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-4);
-    }
+      .stat-header {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-4);
+      }
 
-    .stat-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: var(--radius-lg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
+      .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
 
-    .stat-icon.success {
-      background: rgba(0, 227, 150, 0.1);
-      color: var(--color-success);
-      box-shadow: 0 0 20px rgba(0, 227, 150, 0.2);
-    }
+      .stat-icon.success {
+        background: rgba(0, 227, 150, 0.1);
+        color: var(--color-success);
+        box-shadow: 0 0 20px rgba(0, 227, 150, 0.2);
+      }
 
-    .stat-icon.primary {
-      background: rgba(0, 194, 255, 0.1);
-      color: var(--color-primary);
-      box-shadow: 0 0 20px rgba(0, 194, 255, 0.2);
-    }
+      .stat-icon.primary {
+        background: rgba(0, 194, 255, 0.1);
+        color: var(--color-primary);
+        box-shadow: 0 0 20px rgba(0, 194, 255, 0.2);
+      }
 
-    .stat-icon.warning {
-      background: rgba(255, 189, 0, 0.1);
-      color: var(--color-warning);
-      box-shadow: 0 0 20px rgba(255, 189, 0, 0.2);
-    }
+      .stat-icon.warning {
+        background: rgba(255, 189, 0, 0.1);
+        color: var(--color-warning);
+        box-shadow: 0 0 20px rgba(255, 189, 0, 0.2);
+      }
 
-    .stat-icon.info {
-      background: rgba(0, 194, 255, 0.1);
-      color: var(--color-primary);
-      box-shadow: 0 0 20px rgba(0, 194, 255, 0.2);
-    }
+      .stat-icon.info {
+        background: rgba(0, 194, 255, 0.1);
+        color: var(--color-primary);
+        box-shadow: 0 0 20px rgba(0, 194, 255, 0.2);
+      }
 
-    .stat-info {
-      flex: 1;
-    }
+      .stat-info {
+        flex: 1;
+      }
 
-    .stat-label {
-      font-size: 0.875rem;
-      font-weight: 500;
-      margin-bottom: var(--spacing-1);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
+      .stat-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-bottom: var(--spacing-1);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
 
-    .stat-value {
-      font-size: 1.5rem;
-      font-weight: 600;
-      line-height: 1.2;
-    }
+      .stat-value {
+        font-size: 1.5rem;
+        font-weight: 600;
+        line-height: 1.2;
+      }
 
-    .stat-value.positive {
-      color: var(--color-success);
-    }
+      .stat-value.positive {
+        color: var(--color-success);
+      }
 
-    .stat-value.negative {
-      color: var(--color-danger);
-    }
-  `]
+      .stat-value.negative {
+        color: var(--color-danger);
+      }
+    `,
+  ],
 })
 export class MarketStatsCardComponent {
   label = input.required<string>();
@@ -133,9 +135,13 @@ export class MarketStatsCardComponent {
 
   iconClass = computed(() => {
     const type = this.type();
-    return type === 'change' ? 'warning' : 
-           type === 'volume' ? 'primary' : 
-           type === 'index' ? 'info' : 'success';
+    return type === 'change'
+      ? 'warning'
+      : type === 'volume'
+        ? 'primary'
+        : type === 'index'
+          ? 'info'
+          : 'success';
   });
 
   iconPath = computed(() => {
@@ -148,7 +154,7 @@ export class MarketStatsCardComponent {
       case 'change':
         return 'M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z';
       case 'index':
-        return 'M11 17h2v-6h-2v6zm1-15C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM0 0h24v24H0z" fill="none"/><path d="M11 9h2V7h-2v2zm0 4h2v-2h-2v2z"';
+        return 'M11 17h2v-6h-2v6zm1-15C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM11 9h2V7h-2v2zm0 4h2v-2h-2v2z';
       default:
         return '';
     }
@@ -163,7 +169,7 @@ export class MarketStatsCardComponent {
       style: 'currency',
       currency: currency,
       minimumFractionDigits: 0,
-      maximumFractionDigits: value < 1 ? 6 : 2
+      maximumFractionDigits: value < 1 ? 6 : 2,
     }).format(value);
   }
 
