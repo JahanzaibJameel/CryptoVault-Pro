@@ -125,7 +125,7 @@ The project is configured for Netlify deployment in `netlify.toml`:
 
 - `docs/adr/` — architecture decision records
 - `docs/runbook.md` — operational procedures and incident management
-- `docs/performance.md` — performance guidance and budgets
+- `docs/lighthouse-instructions.md` — performance and Lighthouse guidance
 - `docs/api/` — API integration references
 
 ## Testing and Quality
