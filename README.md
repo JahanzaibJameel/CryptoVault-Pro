@@ -1,205 +1,155 @@
 # CryptoVault Pro
 
-> Enterprise-grade cryptocurrency portfolio management with modern Angular architecture, strict type safety, and production-grade resilience.
+> A production-grade Angular 21 application demonstrating resilient, offline-first cryptocurrency portfolio management with clean architecture and enterprise engineering practices.
 
 ---
 
-## Overview
+## Project Overview
 
-CryptoVault Pro is a professional frontend application built as a reference implementation for modern web engineering. It demonstrates how to design and ship a secure, performant, and maintainable Angular product at scale.
+CryptoVault Pro is a frontend reference implementation for building a secure, maintainable, and high-performance Angular application.
 
-This repository is designed for senior engineering teams who require:
+It is built around:
 
-- clean architecture boundaries
-- strong type safety and predictable state
-- resilient offline and network behavior
-- stringent performance and security discipline
+- modern Angular architecture with standalone components and signals
+- a layered clean architecture separating presentation, application, domain, and infrastructure
+- PWA capabilities, offline persistence, and secure runtime controls
+- automated validation across linting, type checking, unit tests, end-to-end tests, and Lighthouse audits
 
-## What Makes It Professional
+## Repository Structure
 
-- **Angular 21** with standalone components and signal-driven state
-- **Clean architecture** with distinct presentation, application, domain, and infrastructure layers
-- **Modern testing** using Jest, Playwright, and Lighthouse
-- **Resilience-first** network handling with circuit breaker, retry, and offline persistence
-- **Security-first** design with CSP, encryption, and audit-ready controls
-- **Performance observability** with Core Web Vitals tracking and runtime optimization
-
-## Architecture
-
-The application is structured around a layered architecture pattern:
-
-- **Presentation**: UI components, routing, and responsiveness
-- **Application**: feature orchestration, command handling, and state management
-- **Domain**: business rules, value objects, and validation logic
-- **Infrastructure**: external APIs, persistence adapters, and browser integrations
-
-## Technology Stack
-
-- Angular 21
-- TypeScript 5.9 (strict mode)
-- Angular Signals
-- Jest
-- Playwright
-- Lighthouse CI
-- ESLint + Prettier
-- Husky pre-commit hooks
+- `src/` — Angular application source code, features, and shell
+- `public/` — static assets and PWA manifest
+- `ngsw-config.json` — service worker configuration for offline caching
+- `angular.json` — build & serve configuration, including production budgets
+- `package.json` — build scripts, dependencies, and validation tooling
+- `netlify.toml` — security headers, cache control, and deployment settings
+- `docs/` — architecture decision records, runbooks, and operational guidance
+- `tests/e2e/` — Playwright end-to-end test suites
 
 ## Key Capabilities
 
-- Signal-based reactive state with command/query separation
-- Offline-enabled PWA with IndexedDB persistence
-- Real-time performance tracking and observability
-- Encrypted local storage and secure runtime guards
-- Automated linting, formatting, and commit-quality checks
-- Production-ready build optimization and code-splitting
+- Angular 21 with TypeScript 5.9 and strict mode
+- Signal-driven UI state and reactive application design
+- Offline-first persistence using service worker and IndexedDB
+- Production performance budgets and optimized bundles
+- Security-focused deployment headers and CSP enforcement
+- Error and performance monitoring via Sentry integration
+- Quality workflows with Jest, Playwright, ESLint, Prettier, and Lighthouse CI
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 18+ 
-- npm 9+ (or Yarn 3+)
+- Node.js 18+
+- npm 9+
 - Git
 
-### Install
+### Setup
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/JahanzaibJameel/CryptoVault-Pro.git
 cd crypto-vault-pro
 npm install
+npm run prepare
 ```
 
-### Local Development
+### Run Locally
 
 ```bash
 npm run start
 ```
 
-### Validation
+Open `http://localhost:4200` in your browser.
+
+### Run with HTTPS
 
 ```bash
-npm run lint
+npm run start:ssl
+```
+
+## Build and Validation
+
+### Production Build
+
+```bash
+npm run build
+```
+
+### Build Analysis
+
+```bash
+npm run build:analyze
+```
+
+### Validation Suite
+
+```bash
 npm run type-check
-npm test -- --coverage
+npm run lint
+npm run test:ci
+npm run lighthouse
 ```
 
-## Recommended Commands
+### Recommended Scripts
 
-```bash
-npm run start              # start local dev server
-npm run build              # production build
-npm run lint               # static analysis
-npm run format             # formatting
-npm run type-check         # type validation
-npm test                   # unit tests
-npm run test:e2e           # end-to-end tests
-npm run lighthouse         # performance audit
-```
+- `npm run start` — development server
+- `npm run build` — production bundle
+- `npm run lint` — static analysis
+- `npm run type-check` — TypeScript validation
+- `npm test` — unit tests
+- `npm run test:e2e` — end-to-end tests
+- `npm run format` — format source files
+- `npm run validate` — run type-check, lint, and CI tests
 
-## Quality & Reliability
+## Architecture
 
-This repository is aligned with senior-level engineering standards:
+The app follows a layered architecture pattern:
 
-- 100% typed source code
-- strict lint gating with CI enforcement
-- automated security and dependency scanning
-- performance budgets and Lighthouse validation
-- architecture documentation and operational runbooks
+- `src/app/` — UI composition and routing
+- `src/application/` — feature orchestration and use case logic
+- `src/domain/` — business rules, validation, and value objects
+- `src/infrastructure/` — external APIs, persistence adapters, and browser integrations
 
-### Linting Configuration
+This structure maintains clear separation of concerns and keeps business logic framework-agnostic.
 
-The project uses ESLint with Angular-specific rules. Some strict rules have been disabled to accommodate the existing codebase structure while maintaining code quality standards. See `.eslintrc.json` for the complete configuration.
+## Deployment Notes
+
+The project is configured for Netlify deployment in `netlify.toml`:
+
+- production build served from `dist/crypto-vault-pro/browser`
+- CSP and security headers for JS, CSS, manifest, and service worker
+- SPA fallback routing via redirect to `index.html`
+- long-term caching for immutable assets
 
 ## Documentation
 
 - `docs/adr/` — architecture decision records
-- `docs/runbook.md` — operational procedures
-- `docs/performance.md` — performance guidance
-- `docs/api/` — API and integration references
+- `docs/runbook.md` — operational procedures and incident management
+- `docs/performance.md` — performance guidance and budgets
+- `docs/api/` — API integration references
 
-## Contribution Expectations
+## Testing and Quality
 
-- follow the layered architecture model
-- write code with clear intent and minimal complexity
-- keep business logic framework-agnostic where possible
-- add tests for any new behavior
-- update documentation for architectural changes
+- Jest for unit tests
+- Playwright for end-to-end tests
+- Lighthouse CI for performance audits
+- ESLint and Prettier with lint-staged precommit automation
 
-## Project Vision
+## Contribution Guidelines
 
-CryptoVault Pro is meant to be a high-confidence blueprint for modern Angular applications in professional environments. It is built to support production delivery, team collaboration, and long-term maintainability.
-- **Test Execution**: < 30 seconds for full suite
-- **Build Time**: < 45 seconds for production bundle
+- Follow the layered architecture model
+- Keep business rules separate from UI concerns
+- Add tests for new behavior and edge cases
+- Run `npm run validate` before pushing changes
+- Update documentation and ADRs for architecture decisions
 
-## Architectural Principles & Patterns
+## Maintainer Notes
 
-### Clean Architecture Tenets
-- **Independence**: Business logic independent of frameworks
-- **Testability**: All business rules testable without UI or database
-- **Flexibility**: Database, UI, or framework changes don't affect core logic
-- **Scalability**: Easy to extend with new features without modifying existing code
-
-### Design Patterns Implemented
-- **Factory Pattern**: Configurable service and component creation
-- **Observer Pattern**: RxJS and signal-based reactive updates
-- **Strategy Pattern**: Pluggable encryption and caching strategies
-- **Command Pattern**: Undo/redo with transaction semantics
-- **Circuit Breaker**: Failure recovery with configurable thresholds
-- **Adapter Pattern**: Framework-agnostic external service integration
-
-### SOLID Principles
-- **Single Responsibility**: Each service/component has one reason to change
-- **Open/Closed**: Open for extension, closed for modification
-- **Liskov Substitution**: Proper interface contracts
-- **Interface Segregation**: Minimal, focused interfaces
-- **Dependency Inversion**: Depend on abstractions, not concretions
-
-## Monitoring & Observability
-
-### Performance Monitoring
-- Real-time Core Web Vitals tracking and anomaly detection
-- HTTP request performance metrics and latency analysis
-- Memory usage profiling with leak detection
-- Custom business metrics for feature usage
-
-### Error Tracking
-- Comprehensive error categorization and severity levels
-- Stack trace collection and source map integration
-- User context and session information for debugging
-- Automatic error aggregation and alerting
-
-### Analytics
-- User journey tracking with privacy-first approach
-- Feature adoption metrics and usage patterns
-- Performance correlation analysis
-- Anonymized telemetry collection
-
-## Contributing
-
-This project demonstrates **senior-level software engineering** with emphasis on clean architecture, performance optimization, and enterprise development practices.
-
-### Contribution Standards
-- Follow the established architecture patterns and code organization
-- Maintain test coverage at 80% or higher
-- Ensure all code passes ESLint and type checking
-- Document architectural decisions via ADRs
-- Include performance impact analysis for changes
-
-### Code Review Criteria
-- Architecture alignment with clean architecture principles
-- Performance impact and bundle size analysis
-- Security implications and data protection measures
-- Test coverage and edge case handling
-- Documentation completeness and clarity
+- `package.json` is configured as `private: true`
+- Service worker settings are managed in `ngsw-config.json`
+- The repository is intended as a production-quality example rather than a minimal demo
+- Security, performance, and resilience are first-class concerns across the stack
 
 ## License
 
-MIT License - This project is provided as-is for educational and commercial use.
-
----
-
-## Project Summary
-
-**CryptoVault Pro** is a comprehensive demonstration of enterprise-grade software engineering applied to a complex domain. It showcases the architectural patterns, performance optimization techniques, and development practices expected at the senior engineer level, with particular emphasis on clean architecture, real-time performance monitoring, security-first design, and production-ready resilience patterns.
-
-The system demonstrates not just functional completeness, but the engineering discipline and technical depth required for building scalable, maintainable, and performant systems in a modern web environment.
+MIT License
