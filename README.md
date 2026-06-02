@@ -106,6 +106,10 @@ This repository is aligned with senior-level engineering standards:
 - performance budgets and Lighthouse validation
 - architecture documentation and operational runbooks
 
+### Linting Configuration
+
+The project uses ESLint with Angular-specific rules. Some strict rules have been disabled to accommodate the existing codebase structure while maintaining code quality standards. See `.eslintrc.json` for the complete configuration.
+
 ## Documentation
 
 - `docs/adr/` — architecture decision records
