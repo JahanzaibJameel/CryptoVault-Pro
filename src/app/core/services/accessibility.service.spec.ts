@@ -261,7 +261,10 @@ describe('AccessibilityService', () => {
               shiftKey: false,
               preventDefault: jasmine.createSpy('preventDefault'),
             };
-            spyOn(document, 'activeElement').and.returnValue(mockLastElement);
+            Object.defineProperty(document, 'activeElement', {
+              get: () => mockLastElement as any,
+              configurable: true,
+            });
             handler(mockEvent);
           }
         }),
@@ -638,7 +641,10 @@ describe('AccessibilityService', () => {
         tagName: 'BUTTON',
         textContent: 'Submit Form',
       };
-      spyOn(document, 'activeElement').and.returnValue(mockElement);
+      Object.defineProperty(document, 'activeElement', {
+        get: () => mockElement as any,
+        configurable: true,
+      });
 
       (service as any).handleFocusIn({ target: mockElement });
 
@@ -652,7 +658,10 @@ describe('AccessibilityService', () => {
           .createSpy('getAttribute')
           .and.returnValues('Email', 'Enter your email'),
       };
-      spyOn(document, 'activeElement').and.returnValue(mockElement);
+      Object.defineProperty(document, 'activeElement', {
+        get: () => mockElement as any,
+        configurable: true,
+      });
 
       (service as any).handleFocusIn({ target: mockElement });
 
