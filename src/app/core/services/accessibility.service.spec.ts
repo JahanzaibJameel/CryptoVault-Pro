@@ -303,24 +303,21 @@ describe('AccessibilityService', () => {
 
   describe('Skip Links', () => {
     it('should create skip links when enabled', () => {
-      const mockContainer = {
-        setAttribute: jasmine.createSpy('setAttribute'),
-        className: '',
-        appendChild: jasmine.createSpy('appendChild'),
-      };
-      const mockAnchor = {
-        href: '',
-        textContent: '',
-        className: '',
-      };
-      spyOn(document, 'createElement').and.returnValues(mockContainer as any, mockAnchor as any);
-
+      service.updateSetting('skipLinks', true);
       service.createSkipLinks();
-      expect(mockContainer.setAttribute).toHaveBeenCalledWith('role', 'navigation');
-      expect(mockContainer.setAttribute).toHaveBeenCalledWith(
-        'aria-label',
-        'Skip navigation links',
-      );
+
+      expect(document.body.insertBefore).toHaveBeenCalled();
+      const insertedNode = (document.body.insertBefore as jest.SpyInstance).mock.calls[0][0];
+      expect(insertedNode).toBeDefined();
+      expect(insertedNode.className).toBe('skip-links');
+      expect(insertedNode.getAttribute('role')).toBe('navigation');
+      expect(insertedNode.getAttribute('aria-label')).toBe('Skip navigation links');
+
+      const anchors = insertedNode.querySelectorAll('.skip-link');
+      expect(anchors.length).toBe(3);
+      expect((anchors[0] as HTMLAnchorElement).href).toContain('#main-content');
+      expect((anchors[1] as HTMLAnchorElement).href).toContain('#navigation');
+      expect((anchors[2] as HTMLAnchorElement).href).toContain('#search');
     });
 
     it('should not create skip links when disabled', () => {
