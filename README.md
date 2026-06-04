@@ -491,6 +491,10 @@ MIT License - see [LICENSE](LICENSE) file for details
 - **Issues**: [https://github.com/JahanzaibJameel/CryptoVault-Pro/issues](https://github.com/JahanzaibJameel/CryptoVault-Pro/issues)
 - **Live Demo**: [https://crypto-vault-pro.netlify.app](https://crypto-vault-pro.netlify.app)
 
+## Star History
+
+If you find this project useful, please consider giving it a ⭐ star on GitHub!
+
 ---
 
 Built with ❤️ using Angular 21
