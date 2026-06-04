@@ -8,10 +8,7 @@ import { Transaction } from '../../../../domain/models/transaction.model';
 @Component({
   selector: 'app-transaction-form',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule
-  ],
+  imports: [CommonModule, ReactiveFormsModule],
   template: `
     <div class="transaction-form" data-test="transaction-modal">
       <div class="form-header">
@@ -41,14 +38,16 @@ import { Transaction } from '../../../../domain/models/transaction.model';
 
         <div class="form-group">
           <label for="amount">Amount</label>
-          <input 
-            id="amount" 
-            type="number" 
-            formControlName="amount" 
-            data-test="amount"
+          <input
+            id="amount"
+            type="number"
+            formControlName="amount"
+            data-test="amount-input"
             placeholder="0.00000000"
             step="0.00000001"
-            [attr.aria-invalid]="transactionForm.get('amount')?.invalid && transactionForm.get('amount')?.touched"
+            [attr.aria-invalid]="
+              transactionForm.get('amount')?.invalid && transactionForm.get('amount')?.touched
+            "
           />
           @if (transactionForm.get('amount')?.invalid && transactionForm.get('amount')?.touched) {
             <span class="error" data-test="amount-error">
@@ -65,14 +64,16 @@ import { Transaction } from '../../../../domain/models/transaction.model';
 
         <div class="form-group">
           <label for="price">Price (optional)</label>
-          <input 
-            id="price" 
-            type="number" 
-            formControlName="price" 
-            data-test="price"
+          <input
+            id="price"
+            type="number"
+            formControlName="price"
+            data-test="price-input"
             placeholder="Market price will be used"
             step="0.01"
-            [attr.aria-invalid]="transactionForm.get('price')?.invalid && transactionForm.get('price')?.touched"
+            [attr.aria-invalid]="
+              transactionForm.get('price')?.invalid && transactionForm.get('price')?.touched
+            "
           />
           @if (transactionForm.get('price')?.invalid && transactionForm.get('price')?.touched) {
             <span class="error" data-test="price-error">
@@ -86,16 +87,16 @@ import { Transaction } from '../../../../domain/models/transaction.model';
         </div>
 
         <div class="form-actions">
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             class="submit-button"
-            data-test="submit"
+            data-test="submit-transaction"
             [disabled]="transactionForm.invalid || isLoading()"
-          >  
+          >
             Add Transaction
           </button>
-          <button 
-            type="button" 
+          <button
+            type="button"
             class="cancel-button"
             (click)="onCancel()"
             data-test="cancel-transaction"
@@ -106,53 +107,57 @@ import { Transaction } from '../../../../domain/models/transaction.model';
       </form>
     </div>
   `,
-  styles: [`
-    .form-group {
-      margin-bottom: var(--spacing-md);
-    }
+  styles: [
+    `
+      .form-group {
+        margin-bottom: var(--spacing-md);
+      }
 
-    label {
-      display: block;
-      margin-bottom: var(--spacing-xs);
-      font-weight: var(--font-weight-medium);
-      color: var(--color-text-primary);
-    }
+      label {
+        display: block;
+        margin-bottom: var(--spacing-xs);
+        font-weight: var(--font-weight-medium);
+        color: var(--color-text-primary);
+      }
 
-    select, input {
-      width: 100%;
-      padding: var(--spacing-sm);
-      border: 1px solid var(--color-border-default);
-      border-radius: var(--radius-md);
-      font-size: var(--font-size-base);
-      background-color: var(--color-background-default);
-      color: var(--color-text-primary);
-    }
+      select,
+      input {
+        width: 100%;
+        padding: var(--spacing-sm);
+        border: 1px solid var(--color-border-default);
+        border-radius: var(--radius-md);
+        font-size: var(--font-size-base);
+        background-color: var(--color-background-default);
+        color: var(--color-text-primary);
+      }
 
-    select:focus, input:focus {
-      outline: 2px solid var(--color-primary-500);
-      outline-offset: 2px;
-      border-color: var(--color-primary-500);
-    }
+      select:focus,
+      input:focus {
+        outline: 2px solid var(--color-primary-500);
+        outline-offset: 2px;
+        border-color: var(--color-primary-500);
+      }
 
-    .error {
-      display: block;
-      margin-top: var(--spacing-xs);
-      color: var(--color-danger-500);
-      font-size: var(--font-size-sm);
-    }
+      .error {
+        display: block;
+        margin-top: var(--spacing-xs);
+        color: var(--color-danger-500);
+        font-size: var(--font-size-sm);
+      }
 
-    .form-actions {
-      display: flex;
-      gap: var(--spacing-sm);
-      margin-top: var(--spacing-lg);
-    }
+      .form-actions {
+        display: flex;
+        gap: var(--spacing-sm);
+        margin-top: var(--spacing-lg);
+      }
 
-    [data-theme="dark"] select,
-    [data-theme="dark"] input {
-      background-color: var(--color-background-elevated);
-      border-color: var(--color-border-dark);
-    }
-  `]
+      [data-theme='dark'] select,
+      [data-theme='dark'] input {
+        background-color: var(--color-background-elevated);
+        border-color: var(--color-border-dark);
+      }
+    `,
+  ],
 })
 export class TransactionFormComponent {
   private portfolioStore = inject(PortfolioStore);
@@ -169,7 +174,7 @@ export class TransactionFormComponent {
     coinId: ['', Validators.required],
     type: ['buy', Validators.required],
     amount: ['', [Validators.required, Validators.min(0.00000001)]],
-    price: ['', [Validators.min(0.01)]]
+    price: ['', [Validators.min(0.01)]],
   });
 
   constructor() {
@@ -195,7 +200,7 @@ export class TransactionFormComponent {
         type: formValue.type,
         amount: formValue.amount,
         price: formValue.price,
-        date: Date.now()
+        date: Date.now(),
       };
 
       await this.portfolioStore.addTransaction(transaction);
@@ -220,8 +225,8 @@ export class TransactionFormComponent {
 
     if (typeControl?.value === 'sell' && coinIdControl?.value) {
       const holdings = this.portfolioStore.holdings();
-      const holding = holdings.find(h => h.coinId === coinIdControl.value);
-      
+      const holding = holdings.find((h) => h.coinId === coinIdControl.value);
+
       if (holding && amountControl?.value > holding.amount) {
         amountControl?.setErrors({ insufficient: true });
       } else {
@@ -231,7 +236,7 @@ export class TransactionFormComponent {
   }
 
   private markAllAsTouched(): void {
-    Object.values(this.transactionForm.controls).forEach(control => {
+    Object.values(this.transactionForm.controls).forEach((control) => {
       control.markAsTouched();
     });
   }
