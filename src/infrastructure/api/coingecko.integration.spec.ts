@@ -4,6 +4,8 @@ import { provideHttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { CoinGeckoService } from './coingecko.service';
 
+// Note: Tests adjusted to use Jest-style async assertions and proper subscription ordering
+
 describe('CoinGeckoService Integration', () => {
   let service: CoinGeckoService;
   let httpMock: HttpTestingController;
