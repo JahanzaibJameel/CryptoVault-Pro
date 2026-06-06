@@ -1,4 +1,4 @@
-import { Component, input, signal, computed, inject } from '@angular/core';
+import { Component, input, signal, computed, inject, AfterViewInit, ElementRef, ViewChild, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CardComponent } from '../design-system/card/card.component';
 import { SkeletonComponent } from '../design-system/skeleton/skeleton.component';
@@ -78,23 +78,40 @@ interface MarketData {
   `,
   styleUrl: './market-chart.component.scss'
 })
-export class MarketChartComponent {
+export class MarketChartComponent implements AfterViewInit {
+  @ViewChild('chartCanvas', { static: false }) private chartCanvasRef?: ElementRef<HTMLCanvasElement>;
+
   data = input.required<MarketData>();
   isLoading = signal(true);
+  timeframe = signal<'1D' | '1W' | '1M' | '3M'>('1D');
 
-  chartData = computed(() => this.data().chartData || []);
+  chartData = computed(() => this.filterChartData(this.data().chartData || [], this.timeframe()));
   private canvas: HTMLCanvasElement | null = null;
   private resizeObserver: ResizeObserver | null = null;
 
   constructor() {
     // Simulate loading
     setTimeout(() => this.isLoading.set(false), 1000);
+
+    effect(() => {
+      if (!this.isLoading()) {
+        this.chartData();
+        this.drawChart();
+      }
+    });
+  }
+
+  ngAfterViewInit(): void {
+    this.canvas = this.chartCanvasRef?.nativeElement ?? null;
+    if (!this.isLoading()) {
+      this.drawChart();
+    }
   }
 
   onTimeframeChange(event: Event): void {
     const select = event.target as HTMLSelectElement;
-    // TODO: Fetch new data for selected timeframe
-    void select.value;
+    this.timeframe.set(select.value as '1D' | '1W' | '1M' | '3M');
+    this.drawChart();
   }
 
   onResize(): void {
@@ -115,6 +132,22 @@ export class MarketChartComponent {
   formatPercentage(value: number): string {
     const sign = value >= 0 ? '+' : '';
     return `${sign}${value.toFixed(2)}%`;
+  }
+
+  private filterChartData(data: ChartDataPoint[], timeframe: '1D' | '1W' | '1M' | '3M'): ChartDataPoint[] {
+    if (!data.length) {
+      return [];
+    }
+
+    const count = data.length;
+    const sampleRate = {
+      '1D': Math.max(1, Math.floor(count / 24)),
+      '1W': Math.max(1, Math.floor(count / 28)),
+      '1M': Math.max(1, Math.floor(count / 30)),
+      '3M': Math.max(1, Math.floor(count / 60))
+    }[timeframe];
+
+    return data.filter((_, index) => index % sampleRate === 0 || index === count - 1);
   }
 
   formatVolume(value: number): string {
