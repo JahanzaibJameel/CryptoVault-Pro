@@ -1,6 +1,6 @@
 import { Component, OnInit, computed, inject, signal, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { effect } from '@angular/core';
 import { PortfolioStore } from '../../../application/portfolio/store';
@@ -1123,7 +1123,11 @@ export class PortfolioComponent implements OnInit {
   portfolioStore: PortfolioStore = inject(PortfolioStore);
   settingsStore: SettingsStore = inject(SettingsStore);
   private marketDataStore: MarketDataStore = inject(MarketDataStore);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private destroyRef = inject(DestroyRef);
+
+  selectedCoinId = signal<string | null>(null);
 
   constructor() {
     // Sync live prices from MarketDataStore into PortfolioStore
@@ -1141,6 +1145,10 @@ export class PortfolioComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadPrices();
+
+    this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
+      this.selectedCoinId.set(params.get('coin'));
+    });
   }
 
   private loadPrices(): void {
@@ -1167,9 +1175,12 @@ export class PortfolioComponent implements OnInit {
   allocation = this.portfolioStore.allocation;
   currency = this.settingsStore.currency;
 
-  recentTransactions = computed(() => 
-    this.portfolioStore.transactions().slice(0, 5)
-  );
+  recentTransactions = computed(() => {
+    const transactions = this.portfolioStore.transactions();
+    const coinId = this.selectedCoinId();
+    const filtered = coinId ? transactions.filter(tx => tx.coinId === coinId) : transactions;
+    return filtered.slice(0, 5);
+  });
 
   setViewMode(mode: 'cards' | 'table'): void {
     this.viewMode.set(mode);
@@ -1224,7 +1235,9 @@ export class PortfolioComponent implements OnInit {
   }
 
   viewTransactions(coinId: string): void {
-    // TODO: Navigate to transactions filtered by coin
+    this.router.navigate(['/portfolio/transactions'], {
+      queryParams: { coin: coinId }
+    });
   }
 
   // Utility methods
