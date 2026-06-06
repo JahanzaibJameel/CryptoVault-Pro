@@ -45,7 +45,7 @@
     "format:check": "prettier --check \"src/**/*.{ts,html,scss,css,json}\"",
     "type-check": "tsc --noEmit",
     "analyze:bundle": "npx webpack-bundle-analyzer dist/crypto-vault-pro/stats.json",
-    "clean": "rimraf dist coverage",
+    "clean": "rimraf dist coverage .angular/cache",
     "validate": "npm run type-check && npm run lint && npm run test:ci",
     "precommit": "lint-staged",
     "prepare": "husky install"
