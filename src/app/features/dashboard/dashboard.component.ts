@@ -903,8 +903,7 @@ export class DashboardComponent implements OnInit {
   }
 
   navigateToCoin(coinId: string): void {
-    // Navigate to coin detail page
-    console.log('Navigate to coin:', coinId);
+    // TODO: Navigate to coin detail page
   }
 
   toggleWatchlist(coinId: string): void {

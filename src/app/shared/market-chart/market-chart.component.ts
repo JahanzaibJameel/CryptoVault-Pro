@@ -93,8 +93,8 @@ export class MarketChartComponent {
 
   onTimeframeChange(event: Event): void {
     const select = event.target as HTMLSelectElement;
-    console.log('Timeframe changed to:', select.value);
-    // In real implementation, this would fetch new data
+    // TODO: Fetch new data for selected timeframe
+    void select.value;
   }
 
   onResize(): void {

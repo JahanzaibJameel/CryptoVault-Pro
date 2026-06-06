@@ -1,6 +1,5 @@
 import { Injectable, inject } from '@angular/core';
 import * as Sentry from '@sentry/angular';
-import { BrowserTracing } from '@sentry/tracing';
 import { OfflineService } from './offline.service';
 import { NotificationService } from './notification.service';
 
@@ -50,9 +49,7 @@ export class SentryService {
         release: config.release,
         tracesSampleRate: config.tracesSampleRate,
         integrations: [
-          (new BrowserTracing({
-            routingInstrumentation: (() => {}),
-          }) as any),
+          Sentry.browserTracingIntegration(),
         ],
         beforeSend: (event, hint) => {
           // Filter out certain errors
@@ -246,7 +243,7 @@ export class SentryService {
 
   captureMessage(message: string, level: Sentry.SeverityLevel = 'info', context?: Record<string, any>): void {
     if (!this.isEnabled) {
-      console.log(`Sentry Message [${level}]:`, message, context);
+      console.warn(`Sentry Message [${level}]:`, message, context);
       return;
     }
 
@@ -322,10 +319,14 @@ export class SentryService {
       return null;
     }
 
-    // Note: Sentry API has changed, transaction tracking disabled for now
-    // TODO: Update to use new Sentry tracing API when available
-    console.warn(`Sentry transaction tracking disabled: ${name} (${operation})`);
-    return null;
+    try {
+      return Sentry.startSpan(
+        { name, op: operation },
+        () => {}
+      );
+    } catch {
+      return null;
+    }
   }
 
   // Circuit breaker specific methods

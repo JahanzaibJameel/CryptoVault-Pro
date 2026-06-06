@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { EncryptedStorageService } from '../../core/services/encrypted-storage.service';
 import { NotificationService } from '../../core/services/notification.service';
+import { SettingsStore, Currency } from '../../../application/settings/store/settings.store';
 
 @Component({
   selector: 'app-settings',
@@ -28,20 +29,20 @@ import { NotificationService } from '../../core/services/notification.service';
             <div class="setting-item">
               <label for="theme-select" class="setting-label">Theme</label>
               <div class="setting-control">
-                <select id="theme-select" class="glass-select">
+                <select id="theme-select" class="glass-select" [ngModel]="settingsStore.theme()" (ngModelChange)="onThemeChange($event)">
                   <option value="dark">Dark Mode</option>
                   <option value="light">Light Mode</option>
-                  <option value="auto">Auto</option>
                 </select>
               </div>
             </div>
             <div class="setting-item">
-              <label for="language-select" class="setting-label">Language</label>
+              <label for="currency-select" class="setting-label">Currency</label>
               <div class="setting-control">
-                <select id="language-select" class="glass-select">
-                  <option value="en">English</option>
-                  <option value="es">Español</option>
-                  <option value="fr">Français</option>
+                <select id="currency-select" class="glass-select" [ngModel]="settingsStore.currency()" (ngModelChange)="onCurrencyChange($event)">
+                  <option value="USD">USD ($)</option>
+                  <option value="EUR">EUR (&euro;)</option>
+                  <option value="GBP">GBP (&pound;)</option>
+                  <option value="JPY">JPY (&yen;)</option>
                 </select>
               </div>
             </div>
@@ -59,25 +60,16 @@ import { NotificationService } from '../../core/services/notification.service';
               <label for="price-alerts-toggle" class="setting-label">Price Alerts</label>
               <div class="setting-control">
                 <label class="glass-toggle">
-                  <input id="price-alerts-toggle" type="checkbox" checked>
+                  <input id="price-alerts-toggle" type="checkbox" [ngModel]="settingsStore.notificationsEnabled()" (ngModelChange)="settingsStore.setNotificationsEnabled($event)">
                   <span class="toggle-slider"></span>
                 </label>
               </div>
             </div>
             <div class="setting-item">
-              <label for="news-updates-toggle" class="setting-label">News Updates</label>
+              <label for="auto-refresh-toggle" class="setting-label">Auto Refresh</label>
               <div class="setting-control">
                 <label class="glass-toggle">
-                  <input id="news-updates-toggle" type="checkbox" checked>
-                  <span class="toggle-slider"></span>
-                </label>
-              </div>
-            </div>
-            <div class="setting-item">
-              <label for="email-notifications-toggle" class="setting-label">Email Notifications</label>
-              <div class="setting-control">
-                <label class="glass-toggle">
-                  <input id="email-notifications-toggle" type="checkbox">
+                  <input id="auto-refresh-toggle" type="checkbox" [ngModel]="settingsStore.autoRefresh()" (ngModelChange)="settingsStore.setAutoRefresh($event)">
                   <span class="toggle-slider"></span>
                 </label>
               </div>
@@ -96,7 +88,7 @@ import { NotificationService } from '../../core/services/notification.service';
               <label class="setting-label">Encryption Status</label>
               <div class="setting-control">
                 <span class="encryption-status" [class.status-enabled]="encryptionStatus().isUnlocked" [class.status-disabled]="!encryptionStatus().isUnlocked">
-                  {{ encryptionStatus().isUnlocked ? '🔓 Unlocked' : '🔒 Locked' }}
+                  {{ encryptionStatus().isUnlocked ? 'Unlocked' : 'Locked' }}
                 </span>
               </div>
             </div>
@@ -137,34 +129,6 @@ import { NotificationService } from '../../core/services/notification.service';
           </div>
         </section>
 
-        <!-- Privacy Section -->
-        <section class="settings-section glass-card">
-          <div class="section-header">
-            <h2 class="section-title text-heading">Privacy</h2>
-            <p class="section-description text-secondary">Control your privacy settings</p>
-          </div>
-          <div class="settings-group">
-            <div class="setting-item">
-              <label for="usage-data-toggle" class="setting-label">Share Usage Data</label>
-              <div class="setting-control">
-                <label class="glass-toggle">
-                  <input id="usage-data-toggle" type="checkbox">
-                  <span class="toggle-slider"></span>
-                </label>
-              </div>
-            </div>
-            <div class="setting-item">
-              <label for="analytics-toggle" class="setting-label">Analytics</label>
-              <div class="setting-control">
-                <label class="glass-toggle">
-                  <input id="analytics-toggle" type="checkbox" checked>
-                  <span class="toggle-slider"></span>
-                </label>
-              </div>
-            </div>
-          </div>
-        </section>
-
         <!-- Advanced Section -->
         <section class="settings-section glass-card">
           <div class="section-header">
@@ -173,19 +137,20 @@ import { NotificationService } from '../../core/services/notification.service';
           </div>
           <div class="settings-group">
             <div class="setting-item">
-              <label for="api-key-input" class="setting-label">API Key</label>
+              <label for="refresh-rate-select" class="setting-label">Data Refresh Rate</label>
               <div class="setting-control">
-                <input id="api-key-input" type="password" class="glass-input" placeholder="Enter your API key">
+                <select id="refresh-rate-select" class="glass-select" [ngModel]="settingsStore.refreshInterval()" (ngModelChange)="onRefreshIntervalChange($event)">
+                  <option [ngValue]="1">1 minute</option>
+                  <option [ngValue]="5">5 minutes</option>
+                  <option [ngValue]="15">15 minutes</option>
+                  <option [ngValue]="30">30 minutes</option>
+                </select>
               </div>
             </div>
             <div class="setting-item">
-              <label for="refresh-rate-select" class="setting-label">Data Refresh Rate</label>
+              <label for="alert-threshold-input" class="setting-label">Price Alert Threshold (%)</label>
               <div class="setting-control">
-                <select id="refresh-rate-select" class="glass-select">
-                  <option value="30">30 seconds</option>
-                  <option value="60">1 minute</option>
-                  <option value="300">5 minutes</option>
-                </select>
+                <input id="alert-threshold-input" type="number" class="glass-input" [ngModel]="settingsStore.priceAlertThreshold()" (ngModelChange)="onThresholdChange($event)" min="0.1" step="0.1">
               </div>
             </div>
           </div>
@@ -194,15 +159,14 @@ import { NotificationService } from '../../core/services/notification.service';
 
       <!-- Actions -->
       <footer class="settings-actions">
-        <button class="glass-button primary">Save Changes</button>
-        <button class="glass-button secondary">Reset to Default</button>
-        <button class="glass-button ghost">Export Settings</button>
+        <button class="glass-button secondary" (click)="resetSettings()">Reset to Default</button>
+        <button class="glass-button ghost" (click)="exportSettings()">Export Settings</button>
       </footer>
     </div>
 
     <!-- Encryption Setup Modal -->
     @if (showEncryptionModal()) {
-      <div class="modal-overlay">
+      <div class="modal-overlay" role="dialog" aria-modal="true" aria-label="Setup Encryption">
         <div class="modal-content glass-card animate-fade-in">
           <div class="modal-header">
             <h3 class="modal-title text-heading">Setup Encryption</h3>
@@ -211,8 +175,9 @@ import { NotificationService } from '../../core/services/notification.service';
           
           <div class="modal-body">
             <div class="form-group">
-              <label class="form-label">Passphrase</label>
+              <label for="encryption-passphrase" class="form-label">Passphrase</label>
               <input 
+                id="encryption-passphrase"
                 type="password" 
                 class="glass-input" 
                 [(ngModel)]="encryptionPassphrase"
@@ -252,7 +217,7 @@ import { NotificationService } from '../../core/services/notification.service';
 
     <!-- Change Passphrase Modal -->
     @if (showChangePassphraseModal()) {
-      <div class="modal-overlay">
+      <div class="modal-overlay" role="dialog" aria-modal="true" aria-label="Change Passphrase">
         <div class="modal-content glass-card animate-fade-in">
           <div class="modal-header">
             <h3 class="modal-title text-heading">Change Passphrase</h3>
@@ -261,8 +226,9 @@ import { NotificationService } from '../../core/services/notification.service';
           
           <div class="modal-body">
             <div class="form-group">
-              <label class="form-label">Current Passphrase</label>
+              <label for="old-passphrase" class="form-label">Current Passphrase</label>
               <input 
+                id="old-passphrase"
                 type="password" 
                 class="glass-input" 
                 [(ngModel)]="oldPassphrase"
@@ -272,8 +238,9 @@ import { NotificationService } from '../../core/services/notification.service';
             </div>
             
             <div class="form-group">
-              <label class="form-label">New Passphrase</label>
+              <label for="new-passphrase" class="form-label">New Passphrase</label>
               <input 
+                id="new-passphrase"
                 type="password" 
                 class="glass-input" 
                 [(ngModel)]="newPassphrase"
@@ -283,8 +250,9 @@ import { NotificationService } from '../../core/services/notification.service';
             </div>
             
             <div class="form-group">
-              <label class="form-label">Confirm New Passphrase</label>
+              <label for="confirm-passphrase" class="form-label">Confirm New Passphrase</label>
               <input 
+                id="confirm-passphrase"
                 type="password" 
                 class="glass-input" 
                 [(ngModel)]="confirmPassphrase"
@@ -314,17 +282,18 @@ import { NotificationService } from '../../core/services/notification.service';
   styleUrl: './settings.component.scss'
 })
 export class SettingsComponent {
+  settingsStore = inject(SettingsStore);
   private encryptedStorage = inject(EncryptedStorageService);
   private notificationService = inject(NotificationService);
   
   // Encryption state signals
   showEncryptionModal = signal(false);
   showChangePassphraseModal = signal(false);
-  encryptionPassphrase = signal('');
-  oldPassphrase = signal('');
-  newPassphrase = signal('');
-  confirmPassphrase = signal('');
-  useDeviceKey = signal(false);
+  encryptionPassphrase = '';
+  oldPassphrase = '';
+  newPassphrase = '';
+  confirmPassphrase = '';
+  useDeviceKey = false;
   isProcessing = signal(false);
   
   // Computed properties
@@ -332,26 +301,65 @@ export class SettingsComponent {
   keyInfo = computed(() => this.encryptedStorage.keyInfo());
   encryptionInfo = computed(() => this.encryptedStorage.getEncryptionInfo());
 
+  onThemeChange(theme: string): void {
+    if (theme === 'light' || theme === 'dark') {
+      this.settingsStore.setTheme(theme);
+    }
+  }
+
+  onCurrencyChange(currency: string): void {
+    if (['USD', 'EUR', 'GBP', 'JPY'].includes(currency)) {
+      this.settingsStore.setCurrency(currency as Currency);
+    }
+  }
+
+  onRefreshIntervalChange(interval: number): void {
+    this.settingsStore.setRefreshInterval(interval);
+  }
+
+  onThresholdChange(threshold: number): void {
+    this.settingsStore.setPriceAlertThreshold(threshold);
+  }
+
+  resetSettings(): void {
+    this.settingsStore.resetToDefaults();
+    this.notificationService.success('Settings Reset', 'All settings have been restored to defaults.');
+  }
+
+  exportSettings(): void {
+    const data = this.settingsStore.exportSettings();
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `crypto-vault-settings-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    this.notificationService.success('Export Complete', 'Settings exported successfully.');
+  }
+
   showEncryptionSetup(): void {
     this.showEncryptionModal.set(true);
-    this.encryptionPassphrase.set('');
-    this.useDeviceKey.set(false);
+    this.encryptionPassphrase = '';
+    this.useDeviceKey = false;
   }
 
   showChangePassphrase(): void {
     this.showChangePassphraseModal.set(true);
-    this.oldPassphrase.set('');
-    this.newPassphrase.set('');
-    this.confirmPassphrase.set('');
+    this.oldPassphrase = '';
+    this.newPassphrase = '';
+    this.confirmPassphrase = '';
   }
 
   async setupEncryption(): Promise<void> {
-    if (!this.encryptionPassphrase()) {
+    if (!this.encryptionPassphrase) {
       this.notificationService.error('Validation Error', 'Please enter a passphrase');
       return;
     }
 
-    if (this.encryptionPassphrase().length < 8) {
+    if (this.encryptionPassphrase.length < 8) {
       this.notificationService.error('Validation Error', 'Passphrase must be at least 8 characters long');
       return;
     }
@@ -360,11 +368,10 @@ export class SettingsComponent {
     
     try {
       await this.encryptedStorage.setupEncryption(
-        this.encryptionPassphrase(),
-        this.useDeviceKey()
+        this.encryptionPassphrase,
+        this.useDeviceKey
       );
       
-      // Test the encryption
       const testResult = await this.encryptedStorage.testEncryption();
       if (!testResult) {
         throw new Error('Encryption test failed');
@@ -372,7 +379,7 @@ export class SettingsComponent {
       
       this.notificationService.success('Success', 'Encryption enabled successfully');
       this.showEncryptionModal.set(false);
-      this.encryptionPassphrase.set('');
+      this.encryptionPassphrase = '';
     } catch (error) {
       this.notificationService.error('Setup Failed', 'Failed to setup encryption: ' + (error as Error).message);
     } finally {
@@ -381,17 +388,17 @@ export class SettingsComponent {
   }
 
   async changePassphrase(): Promise<void> {
-    if (!this.oldPassphrase() || !this.newPassphrase() || !this.confirmPassphrase()) {
+    if (!this.oldPassphrase || !this.newPassphrase || !this.confirmPassphrase) {
       this.notificationService.error('Validation Error', 'Please fill in all passphrase fields');
       return;
     }
 
-    if (this.newPassphrase() !== this.confirmPassphrase()) {
+    if (this.newPassphrase !== this.confirmPassphrase) {
       this.notificationService.error('Validation Error', 'New passphrase and confirmation do not match');
       return;
     }
 
-    if (this.newPassphrase().length < 8) {
+    if (this.newPassphrase.length < 8) {
       this.notificationService.error('Validation Error', 'New passphrase must be at least 8 characters long');
       return;
     }
@@ -400,15 +407,15 @@ export class SettingsComponent {
     
     try {
       await this.encryptedStorage.changePassphrase(
-        this.oldPassphrase(),
-        this.newPassphrase()
+        this.oldPassphrase,
+        this.newPassphrase
       );
       
       this.notificationService.success('Success', 'Passphrase changed successfully');
       this.showChangePassphraseModal.set(false);
-      this.oldPassphrase.set('');
-      this.newPassphrase.set('');
-      this.confirmPassphrase.set('');
+      this.oldPassphrase = '';
+      this.newPassphrase = '';
+      this.confirmPassphrase = '';
     } catch (error) {
       this.notificationService.error('Change Failed', 'Failed to change passphrase: ' + (error as Error).message);
     } finally {
@@ -427,14 +434,14 @@ export class SettingsComponent {
 
   cancelEncryptionSetup(): void {
     this.showEncryptionModal.set(false);
-    this.encryptionPassphrase.set('');
-    this.useDeviceKey.set(false);
+    this.encryptionPassphrase = '';
+    this.useDeviceKey = false;
   }
 
   cancelChangePassphrase(): void {
     this.showChangePassphraseModal.set(false);
-    this.oldPassphrase.set('');
-    this.newPassphrase.set('');
-    this.confirmPassphrase.set('');
+    this.oldPassphrase = '';
+    this.newPassphrase = '';
+    this.confirmPassphrase = '';
   }
 }

@@ -1,8 +1,12 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { effect } from '@angular/core';
 import { PortfolioStore } from '../../../application/portfolio/store';
 import { SettingsStore } from '../../../application/settings/store';
+import { MarketDataStore } from '../../../application/market-data/store';
+import { Holding } from '../../../domain/models';
 import { ButtonComponent } from '../../shared/design-system/button/button.component';
 import { CardComponent } from '../../shared/design-system/card/card.component';
 import { SkeletonComponent } from '../../shared/design-system/skeleton/skeleton.component';
@@ -1115,9 +1119,40 @@ import { TransactionFormComponent } from './transaction-form/transaction-form.co
     }
   `]
 })
-export class PortfolioComponent {
+export class PortfolioComponent implements OnInit {
   portfolioStore: PortfolioStore = inject(PortfolioStore);
   settingsStore: SettingsStore = inject(SettingsStore);
+  private marketDataStore: MarketDataStore = inject(MarketDataStore);
+  private destroyRef = inject(DestroyRef);
+
+  constructor() {
+    // Sync live prices from MarketDataStore into PortfolioStore
+    effect(() => {
+      const coins = this.marketDataStore.topCoins();
+      if (coins.length > 0) {
+        const priceMap: Record<string, number> = {};
+        for (const coin of coins) {
+          priceMap[coin.id] = coin.currentPrice;
+        }
+        this.portfolioStore.updatePrices(priceMap);
+      }
+    });
+  }
+
+  ngOnInit(): void {
+    this.loadPrices();
+  }
+
+  private loadPrices(): void {
+    const currency = this.currency();
+    try {
+      Promise.resolve(this.marketDataStore.fetchTopCoins(currency)).catch(() => {
+        // Prices will fall back to avgBuyPrice if fetch fails
+      });
+    } catch {
+      // Synchronous error handling
+    }
+  }
 
   // Signals
   viewMode = signal<'cards' | 'table'>('cards');
@@ -1189,22 +1224,23 @@ export class PortfolioComponent {
   }
 
   viewTransactions(coinId: string): void {
-    // Navigate to transactions filtered by coin
-    console.log('View transactions for:', coinId);
+    // TODO: Navigate to transactions filtered by coin
   }
 
   // Utility methods
   getCoinName(coinId: string): string {
-    // This would typically come from a market data store
-    return coinId.charAt(0).toUpperCase() + coinId.slice(1);
+    const coin = this.marketDataStore.allCoins().find(c => c.id === coinId);
+    return coin?.name ?? coinId.charAt(0).toUpperCase() + coinId.slice(1);
   }
 
-  getHoldingValue(holding: any): number {
-    // This would calculate based on current price
-    return holding.amount * holding.avgBuyPrice * 1.1; // Mock 10% gain
+  getHoldingValue(holding: Holding): number {
+    const coin = this.marketDataStore.allCoins().find(c => c.id === holding.coinId);
+    const currentPrice = coin?.currentPrice ?? 0;
+    const price = currentPrice > 0 ? currentPrice : holding.avgBuyPrice;
+    return holding.amount * price;
   }
 
-  getHoldingPnL(holding: any): number {
+  getHoldingPnL(holding: Holding): number {
     const currentValue = this.getHoldingValue(holding);
     const invested = holding.amount * holding.avgBuyPrice;
     return currentValue - invested;

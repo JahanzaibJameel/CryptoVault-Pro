@@ -98,32 +98,26 @@ function createFailureResponse(req: HttpRequest<unknown>): Observable<HttpEvent<
 export const OfflineSimulatorControls = {
   setOffline(offlineState: boolean): void {
     offline = offlineState;
-    console.log(`Offline simulator: ${offlineState ? 'ENABLED' : 'DISABLED'}`);
   },
 
   setLatency(latencyMs: number): void {
     latency = Math.max(0, latencyMs);
-    console.log(`Latency simulator: ${latency}ms`);
   },
 
   setFailureRate(rate: number): void {
     failureRate = Math.max(0, Math.min(1, rate));
-    console.log(`Failure rate simulator: ${(failureRate * 100).toFixed(1)}%`);
   },
 
   addOfflineUrl(url: string): void {
     offlineUrls.add(url);
-    console.log(`Added URL to offline list: ${url}`);
   },
 
   removeOfflineUrl(url: string): void {
     offlineUrls.delete(url);
-    console.log(`Removed URL from offline list: ${url}`);
   },
 
   clearOfflineUrls(): void {
     offlineUrls.clear();
-    console.log('Cleared offline URL list');
   },
 
   // Get current simulator state
@@ -147,30 +141,25 @@ export const OfflineSimulatorControls = {
     latency = 0;
     failureRate = 0;
     offlineUrls.clear();
-    console.log('Offline simulator reset to defaults');
   },
 
   // Preset configurations
   enableSlowConnection(): void {
     this.setLatency(2000); // 2 second delay
     this.setFailureRate(0.1); // 10% failure rate
-    console.log('Enabled slow connection preset');
   },
 
   enableUnreliableConnection(): void {
     this.setLatency(500); // 500ms delay
     this.setFailureRate(0.3); // 30% failure rate
-    console.log('Enabled unreliable connection preset');
   },
 
   enableTerribleConnection(): void {
     this.setLatency(5000); // 5 second delay
     this.setFailureRate(0.5); // 50% failure rate
-    console.log('Enabled terrible connection preset');
   },
 
   disable(): void {
     this.reset();
-    console.log('Disabled all connection simulations');
   },
 };
