@@ -11,6 +11,14 @@ export const routes: Routes = [
     loadComponent: () => import('./features/portfolio/portfolio.component').then(m => m.PortfolioComponent)
   },
   {
+    path: 'portfolio/transactions',
+    loadComponent: () => import('./features/portfolio/portfolio.component').then(m => m.PortfolioComponent)
+  },
+  {
+    path: 'coin/:coinId',
+    loadComponent: () => import('./features/coin-detail/coin-detail.component').then(m => m.CoinDetailComponent)
+  },
+  {
     path: 'watchlist',
     loadComponent: () => import('./features/watchlist/watchlist.component').then(m => m.WatchlistComponent)
   },

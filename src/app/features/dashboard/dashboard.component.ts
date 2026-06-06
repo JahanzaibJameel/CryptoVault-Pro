@@ -2,7 +2,7 @@ import { Component, OnInit, computed, inject, signal, ChangeDetectionStrategy, u
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { firstValueFrom } from 'rxjs';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { MarketDataStore } from '../../../application/market-data/store';
 import { WatchlistStore } from '../../../application/watchlist/store';
@@ -903,7 +903,7 @@ export class DashboardComponent implements OnInit {
   }
 
   navigateToCoin(coinId: string): void {
-    // TODO: Navigate to coin detail page
+    this.router.navigate(['/coin', coinId]);
   }
 
   toggleWatchlist(coinId: string): void {
