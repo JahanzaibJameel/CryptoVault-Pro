@@ -128,5 +128,6 @@ class MockWorker {
 }
 
 export function createPortfolioWorker(): Worker {
+  // Return an in-memory mock worker for fast unit testing.
   return new MockWorker() as unknown as Worker;
 }
