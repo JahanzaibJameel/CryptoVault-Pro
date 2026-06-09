@@ -151,6 +151,21 @@ describe('PortfolioWorkerService', () => {
       expect(result.concentrationRisk).toBe('high');
       expect(result.diversificationScore).toBeLessThan(50);
     });
+
+    it('should return stable diversification metrics for zero-value holdings', async () => {
+      const zeroValueHoldings = [
+        { coinId: 'bitcoin', amount: 1, currentValue: 0, sector: 'Store of Value' }
+      ];
+
+      const result = await service.calculateDiversificationMetrics({
+        holdings: zeroValueHoldings
+      });
+
+      expect(result.diversificationScore).toBeGreaterThanOrEqual(0);
+      expect(result.diversificationScore).toBeLessThanOrEqual(100);
+      expect(Array.isArray(result.recommendations)).toBe(true);
+      expect(['low', 'medium', 'high']).toContain(result.concentrationRisk);
+    });
   });
 
   describe('Risk Analysis', () => {

@@ -24,11 +24,13 @@ export interface VolatilityMetrics {
 
 export interface DiversificationMetrics {
   herfindahlIndex: number;
-  concentrationRisk: number;
+  concentrationRisk: 'low' | 'medium' | 'high';
   diversificationRatio: number;
   uniqueAssets: number;
   sectorAllocation: { [key: string]: number };
   geographicAllocation: { [key: string]: number };
+  diversificationScore: number;
+  recommendations: string[];
 }
 
 export interface RiskMetrics {
@@ -149,33 +151,63 @@ function calculateDiversificationMetrics(holdings: any[]): DiversificationMetric
   if (holdings.length === 0) {
     return {
       herfindahlIndex: 0,
-      concentrationRisk: 0,
+      concentrationRisk: 'low',
       diversificationRatio: 0,
       uniqueAssets: 0,
       sectorAllocation: {},
-      geographicAllocation: {}
+      geographicAllocation: {},
+      diversificationScore: 0,
+      recommendations: ['No holdings available for diversification analysis']
     };
   }
 
   const totalValue = holdings.reduce((sum, h) => sum + (h.currentValue || 0), 0);
-  const weights = holdings.map(h => (h.currentValue || 0) / totalValue);
-  
-  // Herfindahl-Hirschman Index
-  const herfindahlIndex = weights.reduce((sum, weight) => sum + Math.pow(weight, 2), 0);
-  const concentrationRisk = herfindahlIndex;
-  const diversificationRatio = 1 / herfindahlIndex;
+  if (totalValue === 0) {
+    return {
+      herfindahlIndex: 0,
+      concentrationRisk: 'low',
+      diversificationRatio: 0,
+      uniqueAssets: holdings.length,
+      sectorAllocation: {},
+      geographicAllocation: {},
+      diversificationScore: 0,
+      recommendations: ['Holdings have no current market value so diversification metrics cannot be calculated reliably']
+    };
+  }
 
-  // Simplified sector allocation (would need sector data in real implementation)
+  const weights = holdings.map(h => (h.currentValue || 0) / totalValue);
+  const herfindahlIndex = weights.reduce((sum, weight) => sum + Math.pow(weight, 2), 0);
+  const concentrationRisk =
+    herfindahlIndex > 0.5 ? 'high' :
+    herfindahlIndex > 0.25 ? 'medium' :
+    'low';
+  const diversificationRatio = herfindahlIndex > 0 ? 1 / herfindahlIndex : 0;
+
   const sectorAllocation: { [key: string]: number } = {};
   holdings.forEach(holding => {
     const sector = holding.sector || 'Unknown';
     sectorAllocation[sector] = (sectorAllocation[sector] || 0) + (holding.currentValue || 0);
   });
 
-  // Convert to percentages
   Object.keys(sectorAllocation).forEach(sector => {
     sectorAllocation[sector] = (sectorAllocation[sector] / totalValue) * 100;
   });
+
+  const geographicAllocation: { [key: string]: number } = {};
+  const diversificationScore = Math.max(0, Math.round((1 - herfindahlIndex) * 100));
+  const recommendations: string[] = [];
+  if (concentrationRisk === 'high') {
+    recommendations.push('Consider adding more asset types to reduce concentration risk');
+  }
+  if (Object.keys(sectorAllocation).length < 3) {
+    recommendations.push('Consider diversifying across more sectors');
+  }
+  if (diversificationScore < 50) {
+    recommendations.push('Portfolio diversification is low; consider rebalancing');
+  }
+  if (recommendations.length === 0) {
+    recommendations.push('Portfolio appears diversified across available holdings');
+  }
 
   return {
     herfindahlIndex,
@@ -183,7 +215,9 @@ function calculateDiversificationMetrics(holdings: any[]): DiversificationMetric
     diversificationRatio,
     uniqueAssets: holdings.length,
     sectorAllocation,
-    geographicAllocation: {} // Would implement with geographic data
+    geographicAllocation,
+    diversificationScore,
+    recommendations
   };
 }
 
