@@ -4,9 +4,9 @@ import { firstValueFrom } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { ScrollingModule } from '@angular/cdk/scrolling';
-import { MarketDataStore } from '../../../application/market-data/store';
-import { WatchlistStore } from '../../../application/watchlist/store';
-import { SettingsStore } from '../../../application/settings/store';
+import { MarketDataStore } from '../../application/market-data/store/market-data.store';
+import { WatchlistStore } from '../../application/watchlist/store/watchlist.store';
+import { SettingsStore } from '../../application/settings/store/settings.store';
 import { ButtonComponent } from '../../shared/design-system/button/button.component';
 import { CardComponent } from '../../shared/design-system/card/card.component';
 import { SkeletonComponent } from '../../shared/design-system/skeleton/skeleton.component';
@@ -830,6 +830,7 @@ export class DashboardComponent implements OnInit {
   private marketDataStore: MarketDataStore = inject(MarketDataStore);
   private watchlistStore: WatchlistStore = inject(WatchlistStore);
   private settingsStore: SettingsStore = inject(SettingsStore);
+  private router = inject(Router);
   private destroyRef = inject(DestroyRef);
 
   // Signals

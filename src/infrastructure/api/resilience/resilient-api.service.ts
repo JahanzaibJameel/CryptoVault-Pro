@@ -9,7 +9,7 @@ import { CircuitBreakerState } from './circuit-breaker.state';
 })
 export class ResilientApiService {
   private http = inject(HttpClient);
-  private circuitBreaker = new CircuitBreakerState();
+  private circuitBreaker = inject(CircuitBreakerState);
   private cache = new Map<string, { data: any; timestamp: number; etag?: string }>();
   private readonly CACHE_DURATION = 30_000; // 30 seconds
   private pendingRequests = new Map<string, Observable<any>>();
@@ -239,11 +239,17 @@ export class ResilientApiService {
     return this.circuitBreaker.getState();
   }
 
-  getCircuitBreakerStats(): { failureCount: number; lastFailureTime: number; state: string } {
+  getCircuitBreakerStats(): {
+    failureCount: number;
+    lastFailureTime: number;
+    state: string;
+    successCount: number;
+  } {
     return {
       failureCount: this.circuitBreaker.getFailureCount(),
       lastFailureTime: this.circuitBreaker.getLastFailureTime(),
-      state: this.circuitBreaker.getState()
+      state: this.circuitBreaker.getState(),
+      successCount: this.circuitBreaker.getSuccessCount(),
     };
   }
 

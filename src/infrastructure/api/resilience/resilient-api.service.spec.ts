@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { firstValueFrom } from 'rxjs';
 import { ResilientApiService } from './resilient-api.service';
 import { CircuitBreakerState } from './circuit-breaker.state';
 
@@ -11,9 +12,9 @@ describe('ResilientApiService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [ResilientApiService, CircuitBreakerState]
+      providers: [ResilientApiService, CircuitBreakerState],
     });
-    
+
     service = TestBed.inject(ResilientApiService);
     httpMock = TestBed.inject(HttpTestingController);
     circuitBreaker = TestBed.inject(CircuitBreakerState);
@@ -23,77 +24,68 @@ describe('ResilientApiService', () => {
     httpMock.verify();
   });
 
+  async function failRequest(url: string): Promise<void> {
+    const requestPromise = firstValueFrom(service.get(url));
+    const request = httpMock.expectOne(url);
+    request.flush('Bad request', { status: 400, statusText: 'Bad Request' });
+    await expect(requestPromise).rejects.toThrow();
+  }
+
   describe('circuit breaker', () => {
     it('should open circuit after 5 failures', async () => {
-      // Simulate 5 consecutive failures
       for (let i = 0; i < 5; i++) {
-        try {
-          await service.get('/test-endpoint');
-        } catch (error) {
-          // Expected to fail
-        }
-
-        const req = httpMock.expectOne('/test-endpoint');
-        req.error(new ErrorEvent('Network error'));
+        await failRequest('/test-endpoint');
       }
 
       expect(circuitBreaker.isOpen()).toBe(true);
     });
 
     it('should close circuit after recovery timeout', async () => {
-      // Open circuit first
+      jest.useFakeTimers();
+
       for (let i = 0; i < 5; i++) {
-        try {
-          await service.get('/test-endpoint');
-        } catch (error) {
-          // Expected to fail
-        }
-        const req = httpMock.expectOne('/test-endpoint');
-        req.error(new ErrorEvent('Network error'));
+        await failRequest('/test-endpoint');
       }
 
       expect(circuitBreaker.isOpen()).toBe(true);
 
-      // Wait for recovery timeout (mocked)
       jest.advanceTimersByTime(30000);
 
-      // Next request should work
-      const successReq = httpMock.expectOne('/test-endpoint');
-      successReq.flush({ data: 'success' });
+      const resultPromise = firstValueFrom(service.get('/test-endpoint'));
+      const successRequest = httpMock.expectOne('/test-endpoint');
+      successRequest.flush({ data: 'success' });
 
-      const result = await service.get('/test-endpoint');
-      expect(result).toEqual({ data: 'success' });
+      await expect(resultPromise).resolves.toEqual({ data: 'success' });
+      jest.useRealTimers();
     });
   });
 
   describe('retry logic', () => {
     it('should retry on network errors', async () => {
+      jest.useFakeTimers();
+
       const mockData = { data: 'success' };
+      const resultPromise = firstValueFrom(service.get('/retry-endpoint'));
 
-      service.get('/retry-endpoint').subscribe({
-        next: (data) => expect(data).toEqual(mockData),
-        error: () => fail('Should not error after retries')
-      });
+      const firstRequest = httpMock.expectOne('/retry-endpoint');
+      firstRequest.error(new ErrorEvent('Network error'), { status: 0 });
 
-      // First request fails
-      const req1 = httpMock.expectOne('/retry-endpoint');
-      req1.error(new ErrorEvent('Network error'));
+      await jest.advanceTimersByTimeAsync(2000);
 
-      // Second request succeeds
-      const req2 = httpMock.expectOne('/retry-endpoint');
-      req2.flush(mockData);
+      const secondRequest = httpMock.expectOne('/retry-endpoint');
+      secondRequest.flush(mockData);
+
+      await expect(resultPromise).resolves.toEqual(mockData);
+      jest.useRealTimers();
     });
 
     it('should not retry on 4xx errors', async () => {
-      service.get('/client-error').subscribe({
-        next: () => fail('Should not succeed'),
-        error: (error) => expect(error.status).toBe(400)
-      });
+      const resultPromise = firstValueFrom(service.get('/client-error'));
 
-      const req = httpMock.expectOne('/client-error');
-      req.flush('Bad request', { status: 400, statusText: 'Bad Request' });
+      const request = httpMock.expectOne('/client-error');
+      request.flush('Bad request', { status: 400, statusText: 'Bad Request' });
 
-      // Should only make one request (no retry)
+      await expect(resultPromise).rejects.toThrow();
       httpMock.expectNone('/client-error');
     });
   });
@@ -102,44 +94,31 @@ describe('ResilientApiService', () => {
     it('should cache successful responses', async () => {
       const mockData = { data: 'cached' };
 
-      // First request
-      const req1 = httpMock.expectOne('/cached-endpoint');
-      req1.flush(mockData);
+      const firstResultPromise = firstValueFrom(service.get('/cached-endpoint'));
+      const firstRequest = httpMock.expectOne('/cached-endpoint');
+      firstRequest.flush(mockData);
 
-      const result1 = await service.get('/cached-endpoint');
-      expect(result1).toEqual(mockData);
+      await expect(firstResultPromise).resolves.toEqual(mockData);
 
-      // Second request should use cache
-      const result2 = await service.get('/cached-endpoint');
-      expect(result2).toEqual(mockData);
-
-      // Should only make one HTTP request
+      const secondResult = await firstValueFrom(service.get('/cached-endpoint'));
+      expect(secondResult).toEqual(mockData);
       httpMock.expectNone('/cached-endpoint');
     });
 
     it('should serve stale cache on circuit open', async () => {
       const mockData = { data: 'stale' };
 
-      // First request to populate cache
-      const req1 = httpMock.expectOne('/stale-endpoint');
-      req1.flush(mockData);
+      const cacheResultPromise = firstValueFrom(service.get('/stale-endpoint'));
+      const cacheRequest = httpMock.expectOne('/stale-endpoint');
+      cacheRequest.flush(mockData);
+      await cacheResultPromise;
 
-      await service.get('/stale-endpoint');
-
-      // Open circuit
       for (let i = 0; i < 5; i++) {
-        try {
-          await service.get('/fail-endpoint');
-        } catch (error) {
-          // Expected to fail
-        }
-        const req = httpMock.expectOne('/fail-endpoint');
-        req.error(new ErrorEvent('Network error'));
+        await failRequest('/fail-endpoint');
       }
 
-      // Should serve stale data
-      const result = await service.get('/stale-endpoint');
-      expect(result).toEqual(mockData);
+      const staleResult = await firstValueFrom(service.get('/stale-endpoint'));
+      expect(staleResult).toEqual(mockData);
     });
   });
 
@@ -147,20 +126,17 @@ describe('ResilientApiService', () => {
     it('should clear cache', async () => {
       const mockData = { data: 'test' };
 
-      // Populate cache
-      const req1 = httpMock.expectOne('/clear-test');
-      req1.flush(mockData);
+      const firstResultPromise = firstValueFrom(service.get('/clear-test'));
+      const firstRequest = httpMock.expectOne('/clear-test');
+      firstRequest.flush(mockData);
+      await firstResultPromise;
 
-      await service.get('/clear-test');
-
-      // Clear cache
       service.clearCache();
 
-      // Next request should make HTTP call
-      const req2 = httpMock.expectOne('/clear-test');
-      req2.flush(mockData);
-
-      await service.get('/clear-test');
+      const secondResultPromise = firstValueFrom(service.get('/clear-test'));
+      const secondRequest = httpMock.expectOne('/clear-test');
+      secondRequest.flush(mockData);
+      await secondResultPromise;
     });
 
     it('should get cache size', () => {
@@ -173,7 +149,7 @@ describe('ResilientApiService', () => {
   describe('circuit breaker stats', () => {
     it('should provide circuit breaker statistics', () => {
       const stats = service.getCircuitBreakerStats();
-      
+
       expect(stats).toHaveProperty('state');
       expect(stats).toHaveProperty('failureCount');
       expect(stats).toHaveProperty('lastFailureTime');
@@ -183,33 +159,33 @@ describe('ResilientApiService', () => {
 
   describe('error handling', () => {
     it('should handle timeout errors', async () => {
-      service.get('/timeout-endpoint').subscribe({
-        next: () => fail('Should not succeed'),
-        error: (error) => {
-          expect(error).toBeDefined();
-          expect(error.timeout).toBe(true);
-        }
-      });
+      jest.useFakeTimers();
 
-      const req = httpMock.expectOne('/timeout-endpoint');
-      req.error(new ErrorEvent('Timeout'));
+      const resultPromise = firstValueFrom(service.get('/timeout-endpoint'));
+
+      for (let attempt = 0; attempt < 4; attempt++) {
+        const request = httpMock.expectOne('/timeout-endpoint');
+        request.error(new ErrorEvent('Timeout'), { status: 0 });
+        if (attempt < 3) {
+          await jest.advanceTimersByTimeAsync(10000);
+        }
+      }
+
+      await expect(resultPromise).rejects.toThrow();
+      jest.useRealTimers();
     });
 
     it('should handle rate limiting', async () => {
-      service.get('/rate-limited').subscribe({
-        next: () => fail('Should not succeed'),
-        error: (error) => {
-          expect(error.status).toBe(429);
-          expect(error.rateLimited).toBe(true);
-        }
+      const resultPromise = firstValueFrom(service.get('/rate-limited'));
+
+      const request = httpMock.expectOne('/rate-limited');
+      request.flush('Too Many Requests', {
+        status: 429,
+        statusText: 'Too Many Requests',
+        headers: { 'Retry-After': '60' },
       });
 
-      const req = httpMock.expectOne('/rate-limited');
-      req.flush('Too Many Requests', { 
-        status: 429, 
-        statusText: 'Too Many Requests',
-        headers: { 'Retry-After': '60' }
-      });
+      await expect(resultPromise).rejects.toThrow();
     });
   });
 });

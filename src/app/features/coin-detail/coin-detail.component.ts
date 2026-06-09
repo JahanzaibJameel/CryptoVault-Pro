@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ButtonComponent } from '../../shared/design-system/button/button.component';
 import { CardComponent } from '../../shared/design-system/card/card.component';
-import { MarketDataStore } from '../../../application/market-data/store';
+import { MarketDataStore } from '../../application/market-data/store/market-data.store';
 
 @Component({
   selector: 'app-coin-detail',

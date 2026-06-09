@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { EncryptedStorageService } from '../../core/services/encrypted-storage.service';
 import { NotificationService } from '../../core/services/notification.service';
-import { SettingsStore, Currency } from '../../../application/settings/store/settings.store';
+import { SettingsStore, Currency } from '../../application/settings/store/settings.store';
 
 @Component({
   selector: 'app-settings',

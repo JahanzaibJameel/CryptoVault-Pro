@@ -73,9 +73,19 @@ export function calculateVolatility(priceHistory: number[]): number {
 }
 
 export function diversificationScore(allocations: { percentage: number }[]): number {
-  // Herfindahl-Hirschman index inverse
-  const hhi = allocations.reduce((sum, a) => sum + (a.percentage / 100) ** 2, 0);
-  return Math.round((1 - hhi) * 100);
+  if (allocations.length === 0) {
+    return 0;
+  }
+
+  if (allocations.length === 1) {
+    return 0;
+  }
+
+  // Herfindahl-Hirschman index normalized so equal weights score 100.
+  const hhi = allocations.reduce((sum, allocation) => sum + (allocation.percentage / 100) ** 2, 0);
+  const minHhi = 1 / allocations.length;
+
+  return Math.round(((1 - hhi) / (1 - minHhi)) * 100);
 }
 
 export function calculateAllocation(holdings: Holding[], currentPrices: Record<string, number>): AllocationItem[] {

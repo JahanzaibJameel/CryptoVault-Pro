@@ -3,8 +3,8 @@ import { TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { TransactionFormComponent } from './transaction-form.component';
-import { PortfolioStore } from '../../../../application/portfolio/store/portfolio.store';
-import { MarketDataStore } from '../../../../application/market-data/store/market-data.store';
+import { PortfolioStore } from '../../../application/portfolio/store/portfolio.store';
+import { MarketDataStore } from '../../../application/market-data/store/market-data.store';
 
 describe('TransactionFormComponent', () => {
   let component: TransactionFormComponent;
