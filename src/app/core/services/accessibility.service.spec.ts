@@ -61,14 +61,14 @@ describe('AccessibilityService', () => {
     });
 
     // Mock DOM methods
-    jest.spyOn(document, 'addEventListener').mockImplementation(jest.fn());
-    jest.spyOn(document.body.classList, 'toggle').mockImplementation(jest.fn());
-    jest.spyOn(document.body.classList, 'add').mockImplementation(jest.fn());
-    jest.spyOn(document.body.classList, 'remove').mockImplementation(jest.fn());
-    jest.spyOn(document.body, 'appendChild').mockImplementation(jest.fn());
-    jest.spyOn(document.body, 'insertBefore').mockImplementation(jest.fn());
-    jest.spyOn(document, 'querySelector').mockReturnValue(null);
-    jest.spyOn(document, 'querySelectorAll').mockReturnValue([]);
+    spyOn(document, 'addEventListener');
+    spyOn(document.body.classList, 'toggle');
+    spyOn(document.body.classList, 'add');
+    spyOn(document.body.classList, 'remove');
+    spyOn(document.body, 'appendChild').and.callFake((node: Node) => node);
+    spyOn(document.body, 'insertBefore').and.callFake((node: Node) => node);
+    spyOn(document, 'querySelector').and.returnValue(null);
+    spyOn(document, 'querySelectorAll').and.returnValue([]);
 
     service = TestBed.inject(AccessibilityService);
     mockLoggerService = TestBed.inject(LoggerService) as jest.Mocked<LoggerService>;
@@ -295,6 +295,7 @@ describe('AccessibilityService', () => {
     });
 
     it('should not announce when announcements are disabled', () => {
+      (document.querySelector as jest.Mock).mockClear();
       service.updateSetting('announcements', false);
       service.announce('Test message', 'polite');
       expect(document.querySelector).not.toHaveBeenCalled();
@@ -360,13 +361,10 @@ describe('AccessibilityService', () => {
 
   describe('Color Contrast Checking', () => {
     it('should detect low contrast ratio', async () => {
-      const mockElement = {
-        style: {
-          color: 'rgb(200, 200, 200)',
-          backgroundColor: 'rgb(240, 240, 240)',
-        },
-      };
-      spyOn(document, 'querySelectorAll').and.returnValue([mockElement]);
+      const mockElement = document.createElement('div');
+      mockElement.style.color = 'rgb(200, 200, 200)';
+      mockElement.style.backgroundColor = 'rgb(240, 240, 240)';
+      spyOn(document, 'querySelectorAll').and.returnValue([mockElement] as any);
 
       const violations = await (service as any).checkColorContrast();
       expect(violations.length).toBeGreaterThan(0);
@@ -375,13 +373,10 @@ describe('AccessibilityService', () => {
     });
 
     it('should ignore elements with transparent background', async () => {
-      const mockElement = {
-        style: {
-          color: 'rgb(0, 0, 0)',
-          backgroundColor: 'rgba(0, 0, 0, 0)',
-        },
-      };
-      spyOn(document, 'querySelectorAll').and.returnValue([mockElement]);
+      const mockElement = document.createElement('div');
+      mockElement.style.color = 'rgb(0, 0, 0)';
+      mockElement.style.backgroundColor = 'rgba(0, 0, 0, 0)';
+      spyOn(document, 'querySelectorAll').and.returnValue([mockElement] as any);
 
       const violations = await (service as any).checkColorContrast();
       expect(violations).toEqual([]);
@@ -390,11 +385,10 @@ describe('AccessibilityService', () => {
 
   describe('Keyboard Accessibility', () => {
     it('should detect elements without keyboard access', () => {
-      const mockElement = {
-        tabIndex: -1,
-        getAttribute: jasmine.createSpy('getAttribute').and.returnValue(null),
-      };
-      spyOn(document, 'querySelectorAll').and.returnValue([mockElement]);
+      const mockElement = document.createElement('button');
+      mockElement.tabIndex = -1;
+      spyOn(mockElement, 'getAttribute').and.returnValue(null);
+      spyOn(document, 'querySelectorAll').and.returnValue([mockElement] as any);
 
       const violations = (service as any).checkKeyboardAccessibility();
       expect(violations.length).toBeGreaterThan(0);
@@ -403,11 +397,10 @@ describe('AccessibilityService', () => {
     });
 
     it('should ignore elements with aria-hidden', () => {
-      const mockElement = {
-        tabIndex: -1,
-        getAttribute: jasmine.createSpy('getAttribute').and.returnValue('true'),
-      };
-      spyOn(document, 'querySelectorAll').and.returnValue([mockElement]);
+      const mockElement = document.createElement('button');
+      mockElement.tabIndex = -1;
+      spyOn(mockElement, 'getAttribute').and.returnValue('true');
+      spyOn(document, 'querySelectorAll').and.returnValue([mockElement] as any);
 
       const violations = (service as any).checkKeyboardAccessibility();
       expect(violations).toEqual([]);
@@ -416,12 +409,10 @@ describe('AccessibilityService', () => {
 
   describe('ARIA Attributes', () => {
     it('should detect missing ARIA labels', () => {
-      const mockElement = {
-        tagName: 'BUTTON',
-        getAttribute: jasmine.createSpy('getAttribute').and.returnValue(null),
-        textContent: '',
-      };
-      spyOn(document, 'querySelectorAll').and.returnValue([mockElement]);
+      const mockElement = document.createElement('button');
+      spyOn(mockElement, 'getAttribute').and.returnValue(null);
+      Object.defineProperty(mockElement, 'textContent', { value: '' });
+      spyOn(document, 'querySelectorAll').and.returnValue([mockElement] as any);
 
       const violations = (service as any).checkARIAAttributes();
       expect(violations.length).toBeGreaterThan(0);
@@ -430,10 +421,8 @@ describe('AccessibilityService', () => {
     });
 
     it('should ignore submit inputs without labels', () => {
-      const mockElement = {
-        tagName: 'INPUT',
-        getAttribute: jasmine.createSpy('getAttribute').and.returnValue('submit'),
-      };
+      const mockElement = document.createElement('input');
+      spyOn(mockElement, 'getAttribute').and.returnValue('submit');
       const querySelectorSpy = spyOn(document, 'querySelectorAll').and.returnValue([
         mockElement,
       ] as any);
@@ -441,16 +430,17 @@ describe('AccessibilityService', () => {
       const violations = (service as any).checkARIAAttributes();
       expect(violations).toEqual([]);
 
-      querySelectorSpy.and.callThrough();
+      querySelectorSpy.mockRestore();
+      spyOn(document, 'querySelectorAll').and.returnValue([]);
     });
   });
 
   describe('Focus Management Checking', () => {
     it('should detect modals without focusable elements', () => {
-      const mockModal = {
-        querySelectorAll: jasmine.createSpy('querySelectorAll').and.returnValue([]),
-      };
-      spyOn(document, 'querySelectorAll').and.returnValue([mockModal]);
+      const mockModal = document.createElement('div');
+      mockModal.setAttribute('role', 'dialog');
+      spyOn(mockModal, 'querySelectorAll').and.returnValue([] as any);
+      spyOn(document, 'querySelectorAll').and.returnValue([mockModal] as any);
 
       const violations = (service as any).checkFocusManagement();
       expect(violations.length).toBeGreaterThan(0);
@@ -461,9 +451,9 @@ describe('AccessibilityService', () => {
 
   describe('Semantic HTML', () => {
     it('should detect skipped heading levels', () => {
-      const mockH1 = { tagName: 'H1' };
-      const mockH3 = { tagName: 'H3' };
-      spyOn(document, 'querySelectorAll').and.returnValue([mockH1, mockH3]);
+      const mockH1 = document.createElement('h1');
+      const mockH3 = document.createElement('h3');
+      spyOn(document, 'querySelectorAll').and.returnValue([mockH1, mockH3] as any);
 
       const violations = (service as any).checkSemanticHTML();
       expect(violations.length).toBeGreaterThan(0);
@@ -588,6 +578,7 @@ describe('AccessibilityService', () => {
     beforeEach(() => {
       spyOn(document.body.classList, 'add');
       spyOn(document.body.classList, 'remove');
+      (service as any).navigationMode.set('mouse');
     });
 
     it('should detect keyboard navigation on tab key', () => {
@@ -615,21 +606,14 @@ describe('AccessibilityService', () => {
     });
 
     it('should detect touch navigation on touch start', () => {
-      const mockEvent = { type: 'touchstart' };
-      const touchstartHandler = (document.addEventListener as jasmine.Spy).calls
-        .allArgs()
-        .find(([event]) => event === 'touchstart')?.[1];
-
-      if (touchstartHandler) {
-        touchstartHandler(mockEvent);
-        const navigationMode = service.getNavigationMode();
-        expect(navigationMode).toBe('touch');
-      }
+      document.dispatchEvent(new Event('touchstart'));
+      expect(service.getNavigationMode()).toBe('touch');
     });
   });
 
   describe('Focus Announcements', () => {
     beforeEach(() => {
+      service.updateSetting('screenReader', true);
       spyOn(service, 'announce');
     });
 
@@ -653,7 +637,7 @@ describe('AccessibilityService', () => {
         tagName: 'INPUT',
         getAttribute: jasmine
           .createSpy('getAttribute')
-          .and.returnValues('Email', 'Enter your email'),
+          .and.returnValues('email', 'Email'),
       };
       Object.defineProperty(document, 'activeElement', {
         get: () => mockElement as any,
@@ -670,7 +654,10 @@ describe('AccessibilityService', () => {
         tagName: 'A',
         textContent: 'Home',
       };
-      spyOn(document, 'activeElement').and.returnValue(mockElement);
+      Object.defineProperty(document, 'activeElement', {
+        get: () => mockElement as any,
+        configurable: true,
+      });
 
       (service as any).handleFocusIn({ target: mockElement });
 
@@ -683,7 +670,7 @@ describe('AccessibilityService', () => {
       const rgb1 = { r: 255, g: 255, b: 255 }; // White
       const rgb2 = { r: 0, g: 0, b: 0 }; // Black
 
-      const ratio = (service as any).calculateContrastRatio(rgb1, rgb2);
+      const ratio = (service as any).calculateContrastRatio('rgb(255, 255, 255)', 'rgb(0, 0, 0)');
       expect(ratio).toBe(21); // Maximum contrast ratio
     });
 

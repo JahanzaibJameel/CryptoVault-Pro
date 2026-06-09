@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { AppComponent } from './app';
+import { IndexedDbService } from '../infrastructure/persistence/indexed-db.service';
 
 describe('App', () => {
   beforeEach(async () => {
@@ -9,8 +10,16 @@ describe('App', () => {
       imports: [AppComponent],
       providers: [
         provideRouter([]),
-        provideHttpClient()
-      ]
+        provideHttpClient(),
+        {
+          provide: IndexedDbService,
+          useValue: {
+            getTransactions: jest.fn().mockResolvedValue([]),
+            saveTransaction: jest.fn().mockResolvedValue(undefined),
+            clearAll: jest.fn().mockResolvedValue(undefined),
+          },
+        },
+      ],
     }).compileComponents();
   });
 

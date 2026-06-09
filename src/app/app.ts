@@ -6,7 +6,7 @@ import { DebugPanelComponent } from './shared/debug-panel/debug-panel.component'
 import { ToastComponent } from './shared/design-system/toast/toast.component';
 import { NotificationService } from './core/services/notification.service';
 import { OfflineService } from './core/services/offline.service';
-import { SettingsStore } from '../application/settings/store/settings.store';
+import { SettingsStore } from './application/settings/store/settings.store';
 
 @Component({
   selector: 'app-root',

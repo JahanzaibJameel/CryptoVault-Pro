@@ -8,6 +8,11 @@ describe('PortfolioWorkerService', () => {
 
   beforeEach(() => {
     const loggerSpy = jasmine.createSpyObj('LoggerService', ['info', 'error', 'warn']);
+    let currentTime = 0;
+    jest.spyOn(performance, 'now').mockImplementation(() => {
+      currentTime += 1;
+      return currentTime;
+    });
     
     TestBed.configureTestingModule({
       providers: [
@@ -49,10 +54,10 @@ describe('PortfolioWorkerService', () => {
         currentPrices: mockPrices
       });
 
-      expect(result.totalValue).toBe(93500); // 60000 + 35000
+      expect(result.totalValue).toBe(95000); // 60000 + 35000
       expect(result.totalInvested).toBe(80000); // 50000 + 30000
-      expect(result.totalPnL).toBe(13500);
-      expect(result.totalROI).toBe(16.875); // (13500/80000)*100
+      expect(result.totalPnL).toBe(15000);
+      expect(result.totalROI).toBe(18.75); // (15000/80000)*100
       expect(result.holdingsCount).toBe(2);
     });
 
@@ -254,11 +259,9 @@ describe('PortfolioWorkerService', () => {
 
   describe('Error Handling', () => {
     it('should handle worker errors gracefully', async () => {
-      // Simulate worker error
       const invalidData = { holdings: null, currentPrices: null };
 
-      await expectAsync(service.calculatePortfolioMetrics(invalidData))
-        .toBeRejectedWithError();
+      await expect(service.calculatePortfolioMetrics(invalidData)).rejects.toThrow();
     });
 
     it('should handle worker destruction', () => {

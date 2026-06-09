@@ -1,6 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { SettingsStore } from '../../../application/settings/store/settings.store';
+import { SettingsStore } from '../../application/settings/store/settings.store';
 
 @Component({
   selector: 'app-offline-banner',

@@ -1,5 +1,6 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { LoggerService } from './logger.service';
+import { createPortfolioWorker } from './portfolio-worker.factory';
 
 export type WorkerMessageType = 'metrics' | 'volatility' | 'diversification' | 'risk-analysis' | 'performance';
 
@@ -39,10 +40,7 @@ export class PortfolioWorkerService {
 
   private initializeWorker(): void {
     try {
-      // Create the worker from the worker file
-      this.worker = new Worker(new URL('../workers/portfolio.worker.ts', import.meta.url), {
-        type: 'module'
-      });
+      this.worker = createPortfolioWorker();
 
       this.worker.onmessage = (event: MessageEvent<WorkerResponse>) => {
         this.handleWorkerMessage(event.data);
@@ -184,7 +182,7 @@ export class PortfolioWorkerService {
         volatility,
         diversification,
         risk,
-        performance
+        performanceMetrics
       ] = await Promise.all([
         this.calculatePortfolioMetrics({
           holdings: data.holdings,
@@ -221,7 +219,7 @@ export class PortfolioWorkerService {
         volatility,
         diversification,
         risk,
-        performance
+        performance: performanceMetrics,
       };
 
     } catch (error) {
@@ -279,7 +277,8 @@ export class PortfolioWorkerService {
 
     const avgWorkerTime = workerTimes.reduce((sum, time) => sum + time, 0) / workerTimes.length;
     const avgMainThreadTime = mainThreadTimes.reduce((sum, time) => sum + time, 0) / mainThreadTimes.length;
-    const speedup = avgMainThreadTime / avgWorkerTime;
+    const speedup =
+      avgWorkerTime > 0 ? avgMainThreadTime / avgWorkerTime : avgMainThreadTime > 0 ? Infinity : 1;
 
     return {
       averageTime: avgWorkerTime,

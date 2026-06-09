@@ -1,5 +1,11 @@
+import { Injectable } from '@angular/core';
+
+@Injectable({
+  providedIn: 'root',
+})
 export class CircuitBreakerState {
   private failureCount = 0;
+  private successCount = 0;
   private lastFailureTime = 0;
   private open = false;
   private readonly failureThreshold = 5;
@@ -20,6 +26,7 @@ export class CircuitBreakerState {
 
   recordSuccess(): void {
     this.failureCount = 0;
+    this.successCount++;
   }
 
   isOpen(): boolean {
@@ -30,12 +37,17 @@ export class CircuitBreakerState {
     return this.failureCount;
   }
 
+  getSuccessCount(): number {
+    return this.successCount;
+  }
+
   getLastFailureTime(): number {
     return this.lastFailureTime;
   }
 
   reset(): void {
     this.failureCount = 0;
+    this.successCount = 0;
     this.lastFailureTime = 0;
     this.open = false;
   }

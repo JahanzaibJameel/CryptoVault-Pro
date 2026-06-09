@@ -12,16 +12,75 @@ getTestBed().initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDyn
 
 expect.extend(jestExtended);
 
-// Provide a minimal Jasmine global shim for Jest environments that use Jasmine-style spies in existing specs.
-const globalWithJasmine = globalThis as unknown as { jasmine?: unknown };
-if (!globalWithJasmine.jasmine) {
+type JasmineSpy = jest.Mock & {
+  and: {
+    returnValue: (value: unknown) => JasmineSpy;
+    returnValues: (...values: unknown[]) => JasmineSpy;
+    callFake: (implementation: (...args: unknown[]) => unknown) => JasmineSpy;
+    callThrough: () => JasmineSpy;
+  };
+  calls: {
+    allArgs: () => unknown[][];
+    argsFor: (index: number) => unknown[];
+    count: () => number;
+    reset: () => void;
+  };
+};
+
+function attachJasmineApi(spy: jest.Mock): JasmineSpy {
+  const jasmineSpy = spy as JasmineSpy;
+
+  jasmineSpy.and = {
+    returnValue: (value: unknown) => {
+      spy.mockReturnValue(value);
+      return jasmineSpy;
+    },
+    returnValues: (...values: unknown[]) => {
+      values.forEach((value) => spy.mockReturnValueOnce(value));
+      return jasmineSpy;
+    },
+    callFake: (implementation: (...args: unknown[]) => unknown) => {
+      spy.mockImplementation(implementation);
+      return jasmineSpy;
+    },
+    callThrough: () => {
+      spy.mockRestore();
+      return jasmineSpy;
+    },
+  };
+
+  jasmineSpy.calls = {
+    allArgs: () => spy.mock.calls,
+    argsFor: (index: number) => spy.mock.calls[index] ?? [],
+    count: () => spy.mock.calls.length,
+    reset: () => {
+      spy.mockClear();
+    },
+  };
+
+  return jasmineSpy;
+}
+
+function createJasmineSpy(): JasmineSpy {
+  return attachJasmineApi(jest.fn());
+}
+
+const globalScope = globalThis as typeof globalThis & {
+  jasmine?: unknown;
+  spyOn?: (...args: unknown[]) => JasmineSpy;
+};
+
+globalScope.spyOn = ((object: object, method: string | symbol) =>
+  attachJasmineApi(jest.spyOn(object as never, method as never) as jest.Mock)) as typeof globalScope.spyOn;
+
+if (!globalScope.jasmine) {
   Object.defineProperty(globalThis, 'jasmine', {
     value: {
-      createSpy: () => jest.fn(),
-      createSpyObj: (baseName: string, methodNames: string[]) => {
-        const obj: Record<string, jest.Mock> = {};
+      createSpy: createJasmineSpy,
+      createSpyObj: (_baseName: string, methodNames: string[]) => {
+        const obj: Record<string, JasmineSpy> = {};
         methodNames.forEach((method) => {
-          obj[method] = jest.fn();
+          obj[method] = createJasmineSpy();
         });
         return obj;
       },
@@ -78,3 +137,14 @@ Object.defineProperty(Notification, 'permission', {
   value: 'granted',
   writable: true,
 });
+
+if (typeof globalThis.performance?.now !== 'function') {
+  const now = jest.fn(() => Date.now());
+  Object.defineProperty(globalThis, 'performance', {
+    configurable: true,
+    writable: true,
+    value: {
+      now,
+    },
+  });
+}

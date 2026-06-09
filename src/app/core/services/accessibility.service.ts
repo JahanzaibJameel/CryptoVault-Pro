@@ -728,14 +728,14 @@ export class AccessibilityService {
   }
 
   getViolationCount(severity?: 'error' | 'warning' | 'info'): number {
-    const violations = this.violations();
+    const violations = this.getViolations();
     if (!severity) return violations.length;
     return violations.filter((v) => v.severity === severity).length;
   }
 
   // Health check
   checkHealth(): { healthy: boolean; checks: Record<string, boolean> } {
-    const violations = this.violations();
+    const violations = this.getViolations();
     const errorCount = violations.filter((v) => v.severity === 'error').length;
 
     const checks = {

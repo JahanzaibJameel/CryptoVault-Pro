@@ -1,8 +1,8 @@
 import { Component, inject, signal, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
-import { PortfolioStore } from '../../../../application/portfolio/store/portfolio.store';
-import { MarketDataStore } from '../../../../application/market-data/store/market-data.store';
+import { PortfolioStore } from '../../../application/portfolio/store/portfolio.store';
+import { MarketDataStore } from '../../../application/market-data/store/market-data.store';
 import { Transaction } from '../../../../domain/models/transaction.model';
 
 @Component({
