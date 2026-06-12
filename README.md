@@ -156,6 +156,8 @@ npm install
 npm run prepare
 ```
 
+For issues or feature requests, please open an issue on the project's GitHub repository.
+
 ### Run Locally
 
 ```bash
