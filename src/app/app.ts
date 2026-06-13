@@ -1,4 +1,4 @@
-import { Component, inject, signal, effect, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, signal, effect, OnInit } from '@angular/core';
 import { DOCUMENT, CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { environment } from '../environments/environment';
@@ -13,7 +13,7 @@ import { SettingsStore } from './application/settings/store/settings.store';
   standalone: true,
   imports: [CommonModule, RouterOutlet, DebugPanelComponent, ToastComponent],
   templateUrl: './app.html',
-  styleUrl: './app.scss'
+  styleUrl: './app.scss',
 })
 export class AppComponent implements OnInit {
   private document = inject(DOCUMENT);
@@ -47,7 +47,7 @@ export class AppComponent implements OnInit {
   }
 
   toggleSidebar(): void {
-    this.isSidebarCollapsed.update(value => !value);
+    this.isSidebarCollapsed.update((value) => !value);
   }
 
   toggleTheme(): void {
