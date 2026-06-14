@@ -253,7 +253,11 @@ export class PerformanceInterceptor implements HttpInterceptor {
 
     if (body instanceof FormData) {
       let size = 0;
-      for (const [, value] of body.entries()) {
+      const formData = body as FormData & {
+        entries(): IterableIterator<[string, FormDataEntryValue]>;
+      };
+
+      for (const [, value] of formData.entries()) {
         if (typeof value === 'string') {
           size += new Blob([value]).size;
         } else if (value instanceof Blob) {
