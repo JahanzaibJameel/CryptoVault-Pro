@@ -1,6 +1,13 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent } from '@angular/common/http';
-import { Observable, throwError, timer } from 'rxjs';
+import {
+  HttpInterceptor,
+  HttpRequest,
+  HttpHandler,
+  HttpEvent,
+  HttpResponse,
+  HttpEventType,
+} from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
 import { catchError, tap, finalize } from 'rxjs/operators';
 import { PerformanceOptimizerService } from '../services/performance-optimizer.service';
 import { environment } from '../../../environments/environment';
@@ -24,15 +31,15 @@ export class PerformanceInterceptor implements HttpInterceptor {
   private readonly SLOW_REQUEST_THRESHOLD = 2000; // 2 seconds
   private readonly LARGE_PAYLOAD_THRESHOLD = 1024 * 1024; // 1MB
 
-  intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+  intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     const startTime = performance.now();
     const requestId = this.generateRequestId();
-    
+
     // Initialize metrics
     const metrics: PerformanceMetrics = {
       url: req.url,
       method: req.method,
-      startTime
+      startTime,
     };
 
     this.metrics.set(requestId, metrics);
@@ -41,43 +48,45 @@ export class PerformanceInterceptor implements HttpInterceptor {
     this.logRequestStart(req, requestId);
 
     return next.handle(req).pipe(
-      tap(event => {
-        if (event.type === 4) { // HTTP Response
+      tap((event: HttpEvent<unknown>) => {
+        if (event.type === HttpEventType.Response) {
+          const responseEvent = event as HttpResponse<unknown>;
           const endTime = performance.now();
           const duration = endTime - startTime;
-          
+
           // Update metrics
           metrics.endTime = endTime;
           metrics.duration = duration;
-          metrics.status = (event as any).status;
-          metrics.size = this.getResponseSize(event);
+          metrics.status = responseEvent.status;
+          metrics.size = this.getResponseSize(responseEvent);
           metrics.cacheHit = this.isCacheHit(req);
 
           // Analyze performance
           this.analyzeRequestPerformance(metrics);
-          
+
           // Log completion
           this.logRequestComplete(metrics, requestId);
         }
       }),
-      catchError(error => {
+      catchError((error: unknown) => {
         const endTime = performance.now();
         const duration = endTime - startTime;
-        
+        const message = this.extractErrorMessage(error);
+
         // Update error metrics
         metrics.endTime = endTime;
         metrics.duration = duration;
-        metrics.error = error.message || 'Unknown error';
+        metrics.error = message;
 
         // Log error
         this.logRequestError(metrics, requestId);
-        
+
         return throwError(() => error);
       }),
       finalize(() => {
         // Cleanup
         this.metrics.delete(requestId);
-      })
+      }),
     );
   }
 
@@ -91,23 +100,23 @@ export class PerformanceInterceptor implements HttpInterceptor {
   /**
    * Log request start with performance context
    */
-  private logRequestStart(req: HttpRequest<any>, requestId: string): void {
+  private logRequestStart(req: HttpRequest<unknown>, requestId: string): void {
     if (this.isDebugEnabled()) {
       console.group(`🌐 [${requestId}] HTTP Request`);
       console.log(`📤 ${req.method} ${req.url}`);
       console.log(`⏰ Started: ${new Date().toISOString()}`);
-      
+
       // Log headers for debugging
       if (req.headers.keys().length > 0) {
         console.log('📋 Headers:', req.headers.keys());
       }
-      
+
       // Log body size if present
       if (req.body) {
         const bodySize = this.getBodySize(req.body);
         console.log(`📦 Body size: ${this.formatBytes(bodySize)}`);
       }
-      
+
       console.groupEnd();
     }
   }
@@ -122,20 +131,24 @@ export class PerformanceInterceptor implements HttpInterceptor {
       console.log(`📊 Status: ${metrics.status}`);
       console.log(`⏱️ Duration: ${metrics.duration?.toFixed(2)}ms`);
       console.log(`📦 Size: ${this.formatBytes(metrics.size || 0)}`);
-      
+
       if (metrics.cacheHit) {
         console.log(`💾 Cache: HIT`);
       }
-      
+
       // Performance warnings
       if (metrics.duration && metrics.duration > this.SLOW_REQUEST_THRESHOLD) {
-        console.warn(`⚠️ Slow request detected (${metrics.duration.toFixed(2)}ms > ${this.SLOW_REQUEST_THRESHOLD}ms)`);
+        console.warn(
+          `⚠️ Slow request detected (${metrics.duration.toFixed(2)}ms > ${this.SLOW_REQUEST_THRESHOLD}ms)`,
+        );
       }
-      
+
       if (metrics.size && metrics.size > this.LARGE_PAYLOAD_THRESHOLD) {
-        console.warn(`⚠️ Large payload detected (${this.formatBytes(metrics.size)} > ${this.formatBytes(this.LARGE_PAYLOAD_THRESHOLD)})`);
+        console.warn(
+          `⚠️ Large payload detected (${this.formatBytes(metrics.size)} > ${this.formatBytes(this.LARGE_PAYLOAD_THRESHOLD)})`,
+        );
       }
-      
+
       console.groupEnd();
     }
   }
@@ -163,18 +176,24 @@ export class PerformanceInterceptor implements HttpInterceptor {
 
     // Analyze response time
     if (metrics.duration > this.SLOW_REQUEST_THRESHOLD) {
-      suggestions.push(`Slow response (${metrics.duration.toFixed(2)}ms): Consider caching, CDN, or API optimization`);
-      
+      suggestions.push(
+        `Slow response (${metrics.duration.toFixed(2)}ms): Consider caching, CDN, or API optimization`,
+      );
+
       // Check if it's a repeated slow request
       const similarRequests = this.getSimilarRequests(metrics.url);
       if (similarRequests.length > 1) {
-        suggestions.push(`Repeated slow requests to ${metrics.url}: Implement request deduplication`);
+        suggestions.push(
+          `Repeated slow requests to ${metrics.url}: Implement request deduplication`,
+        );
       }
     }
 
     // Analyze payload size
     if (metrics.size > this.LARGE_PAYLOAD_THRESHOLD) {
-      suggestions.push(`Large payload (${this.formatBytes(metrics.size)}): Consider pagination, compression, or field filtering`);
+      suggestions.push(
+        `Large payload (${this.formatBytes(metrics.size)}): Consider pagination, compression, or field filtering`,
+      );
     }
 
     // Analyze cache efficiency
@@ -190,7 +209,7 @@ export class PerformanceInterceptor implements HttpInterceptor {
     // Log suggestions if any
     if (suggestions.length > 0) {
       console.group('🚀 Performance Optimization Suggestions');
-      suggestions.forEach(suggestion => console.warn(`⚠️ ${suggestion}`));
+      suggestions.forEach((suggestion) => console.warn(`⚠️ ${suggestion}`));
       console.groupEnd();
     }
   }
@@ -198,27 +217,43 @@ export class PerformanceInterceptor implements HttpInterceptor {
   /**
    * Get response size from HTTP event
    */
-  private getResponseSize(event: HttpEvent<any>): number {
-    const httpResponse = event as any;
-    if (httpResponse.body) {
-      return new Blob([httpResponse.body]).size;
+  private getResponseSize(event: HttpEvent<unknown>): number {
+    if (event.type === HttpEventType.Response) {
+      const responseEvent = event as HttpResponse<unknown>;
+      const body = responseEvent.body;
+      if (body === undefined || body === null) {
+        return 0;
+      }
+
+      if (typeof body === 'string') {
+        return new Blob([body]).size;
+      }
+
+      if (body instanceof Blob) {
+        return body.size;
+      }
+
+      return new Blob([JSON.stringify(body)]).size;
     }
+
     return 0;
   }
 
   /**
    * Get body size for request logging
    */
-  private getBodySize(body: any): number {
-    if (!body) return 0;
-    
+  private getBodySize(body: unknown): number {
+    if (body === undefined || body === null) {
+      return 0;
+    }
+
     if (typeof body === 'string') {
       return new Blob([body]).size;
     }
-    
+
     if (body instanceof FormData) {
       let size = 0;
-      for (const [key, value] of (body as any).entries()) {
+      for (const [, value] of body.entries()) {
         if (typeof value === 'string') {
           size += new Blob([value]).size;
         } else if (value instanceof Blob) {
@@ -227,14 +262,14 @@ export class PerformanceInterceptor implements HttpInterceptor {
       }
       return size;
     }
-    
+
     return new Blob([JSON.stringify(body)]).size;
   }
 
   /**
    * Check if request is a cache hit
    */
-  private isCacheHit(req: HttpRequest<any>): boolean {
+  private isCacheHit(_req: HttpRequest<unknown>): boolean {
     // This would need to be implemented based on your caching strategy
     // For now, return false as a placeholder
     return false;
@@ -244,14 +279,21 @@ export class PerformanceInterceptor implements HttpInterceptor {
    * Check if request should be cached based on URL patterns
    */
   private shouldBeCached(url: string): boolean {
-    const cacheablePatterns = [
-      /\/api\/coins/i,
-      /\/api\/market/i,
-      /\/api\/portfolio/i,
-      /\.json$/i
-    ];
+    const cacheablePatterns = [/\/api\/coins/i, /\/api\/market/i, /\/api\/portfolio/i, /\.json$/i];
 
-    return cacheablePatterns.some(pattern => pattern.test(url));
+    return cacheablePatterns.some((pattern) => pattern.test(url));
+  }
+
+  private extractErrorMessage(error: unknown): string {
+    if (error instanceof Error) {
+      return error.message;
+    }
+
+    if (typeof error === 'string') {
+      return error;
+    }
+
+    return 'Unknown error';
   }
 
   /**
@@ -260,8 +302,8 @@ export class PerformanceInterceptor implements HttpInterceptor {
   private getSimilarRequests(url: string): PerformanceMetrics[] {
     const urlPattern = new URL(url).pathname;
     return Array.from(this.metrics.values())
-      .filter(metric => new URL(metric.url).pathname === urlPattern)
-      .filter(metric => metric.duration && metric.duration > this.SLOW_REQUEST_THRESHOLD);
+      .filter((metric) => new URL(metric.url).pathname === urlPattern)
+      .filter((metric) => metric.duration && metric.duration > this.SLOW_REQUEST_THRESHOLD);
   }
 
   /**
@@ -269,11 +311,11 @@ export class PerformanceInterceptor implements HttpInterceptor {
    */
   private formatBytes(bytes: number): string {
     if (bytes === 0) return '0 Bytes';
-    
+
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    
+
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
 
@@ -298,7 +340,7 @@ export class PerformanceInterceptor implements HttpInterceptor {
   getSlowRequests(threshold?: number): PerformanceMetrics[] {
     const slowThreshold = threshold || this.SLOW_REQUEST_THRESHOLD;
     return Array.from(this.metrics.values())
-      .filter(metric => metric.duration && metric.duration > slowThreshold)
+      .filter((metric) => metric.duration && metric.duration > slowThreshold)
       .sort((a, b) => (b.duration || 0) - (a.duration || 0));
   }
 
@@ -308,7 +350,7 @@ export class PerformanceInterceptor implements HttpInterceptor {
   getLargePayloads(threshold?: number): PerformanceMetrics[] {
     const largeThreshold = threshold || this.LARGE_PAYLOAD_THRESHOLD;
     return Array.from(this.metrics.values())
-      .filter(metric => metric.size && metric.size > largeThreshold)
+      .filter((metric) => metric.size && metric.size > largeThreshold)
       .sort((a, b) => (b.size || 0) - (a.size || 0));
   }
 }
