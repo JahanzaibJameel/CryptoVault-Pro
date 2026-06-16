@@ -1,9 +1,18 @@
-import { Directive, ElementRef, Renderer2, inject, Input, Output, EventEmitter, HostListener } from '@angular/core';
+import {
+  Directive,
+  ElementRef,
+  Renderer2,
+  inject,
+  Input,
+  Output,
+  EventEmitter,
+  HostListener,
+} from '@angular/core';
 import { AccessibilityService } from '../services/accessibility.service';
 
 @Directive({
   selector: '[appAccessibility]',
-  standalone: true
+  standalone: true,
 })
 export class AccessibilityDirective {
   private elementRef = inject(ElementRef);
@@ -104,30 +113,30 @@ export class AccessibilityDirective {
 
   private setupFocusTrap(): void {
     const element = this.elementRef.nativeElement;
-    
+
     if (element instanceof HTMLElement) {
       this.accessibilityService.trapFocus({
         container: element,
         escapeKey: () => {
           this.accessibilityService.announce('Focus trap escaped', 'polite');
-        }
+        },
       });
     }
   }
 
   private setupSkipLink(): void {
     const element = this.elementRef.nativeElement;
-    
+
     if (element instanceof HTMLElement && element.tagName === 'A') {
       this.renderer.addClass(element, 'skip-link');
     }
   }
 
-  @HostListener('focus', ['$event'])
-  onFocus(event: FocusEvent): void {
+  @HostListener('focus')
+  onFocus(): void {
     this.hasFocus = true;
     this.focusChange.emit(true);
-    
+
     // Add focus visible class for keyboard navigation
     if (this.accessibilityService.getNavigationMode() === 'keyboard') {
       this.renderer.addClass(this.elementRef.nativeElement, 'keyboard-focus');
@@ -138,7 +147,7 @@ export class AccessibilityDirective {
   onBlur(): void {
     this.hasFocus = false;
     this.blur.emit();
-    
+
     // Remove focus visible class
     this.renderer.removeClass(this.elementRef.nativeElement, 'keyboard-focus');
   }
@@ -148,7 +157,7 @@ export class AccessibilityDirective {
     // Handle space key for buttons when focused
     if (event.key === ' ' && this.hasFocus) {
       const element = this.elementRef.nativeElement;
-      
+
       if (element.tagName === 'BUTTON' || element.getAttribute('role') === 'button') {
         event.preventDefault();
         element.click();

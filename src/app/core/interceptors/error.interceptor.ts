@@ -15,7 +15,7 @@ function getRetryCount(req: HttpRequest<unknown>): number {
   return 1;
 }
 
-function shouldRetry(error: unknown, retryCount: number): boolean {
+function shouldRetry(error: unknown): boolean {
   if (!(error instanceof HttpErrorResponse)) return false;
   // Don't retry on 4xx errors (except 429)
   if (error.status >= 400 && error.status < 500 && error.status !== 429) return false;
@@ -44,12 +44,12 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
     retry({
       count: getRetryCount(req),
       delay: (error: unknown, retryCount: number) => {
-        if (!shouldRetry(error, retryCount)) {
+        if (!shouldRetry(error)) {
           throw error;
         }
         const delay = getRetryDelay(error as HttpErrorResponse, retryCount);
-        return new Promise(resolve => setTimeout(resolve, delay));
-      }
+        return new Promise((resolve) => setTimeout(resolve, delay));
+      },
     }),
     catchError((error: HttpErrorResponse) => {
       if (error.error?.simulated) {
@@ -60,58 +60,56 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         notificationService.error(
           'Network Error',
           'Unable to connect to the server. Please check your internet connection.',
-          { persistent: true }
+          { persistent: true },
         );
       } else {
         handleServerError(error, req, notificationService);
       }
 
       return throwError(() => error);
-    })
+    }),
   );
 };
 
 function handleServerError(
   error: HttpErrorResponse,
   req: HttpRequest<unknown>,
-  notificationService: NotificationService
+  notificationService: NotificationService,
 ): void {
   switch (error.status) {
     case 0:
       notificationService.error(
         'Connection Failed',
         'Unable to reach the server. Please check your network connection.',
-        { persistent: true }
+        { persistent: true },
       );
       break;
     case 400:
       notificationService.error(
         'Bad Request',
         error.error?.message || 'Invalid request parameters',
-        { duration: 5000 }
+        { duration: 5000 },
       );
       break;
     case 401:
       notificationService.error(
         'Authentication Required',
         'Please log in to access this resource.',
-        { persistent: true }
+        { persistent: true },
       );
       break;
     case 403:
       notificationService.error(
         'Access Denied',
         'You do not have permission to access this resource.',
-        { persistent: true }
+        { persistent: true },
       );
       break;
     case 404:
       if (!req.url.includes('/api/v3/ping')) {
-        notificationService.warning(
-          'Not Found',
-          'The requested resource was not found.',
-          { duration: 3000 }
-        );
+        notificationService.warning('Not Found', 'The requested resource was not found.', {
+          duration: 3000,
+        });
       }
       break;
     case 429: {
@@ -121,7 +119,7 @@ function handleServerError(
         retryAfter
           ? `Rate limit exceeded. Please try again in ${retryAfter} seconds.`
           : 'Rate limit exceeded. Please slow down your requests.',
-        { persistent: true, duration: retryAfter ? parseInt(retryAfter, 10) * 1000 : 10000 }
+        { persistent: true, duration: retryAfter ? parseInt(retryAfter, 10) * 1000 : 10000 },
       );
       break;
     }
@@ -129,7 +127,7 @@ function handleServerError(
       notificationService.error(
         'Server Error',
         'An internal server error occurred. Please try again later.',
-        { persistent: true }
+        { persistent: true },
       );
       break;
     case 502:
@@ -138,14 +136,14 @@ function handleServerError(
       notificationService.error(
         'Service Unavailable',
         `${error.statusText || 'Service Unavailable'}. The service is temporarily unavailable. Please try again later.`,
-        { persistent: true }
+        { persistent: true },
       );
       break;
     default:
       notificationService.error(
         'Error',
         error.error?.message || error.message || 'An unexpected error occurred',
-        { duration: 5000 }
+        { duration: 5000 },
       );
       break;
   }
