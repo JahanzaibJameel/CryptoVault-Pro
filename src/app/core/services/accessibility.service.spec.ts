@@ -635,9 +635,7 @@ describe('AccessibilityService', () => {
     it('should announce input focus', () => {
       const mockElement = {
         tagName: 'INPUT',
-        getAttribute: jasmine
-          .createSpy('getAttribute')
-          .and.returnValues('email', 'Email'),
+        getAttribute: jasmine.createSpy('getAttribute').and.returnValues('email', 'Email'),
       };
       Object.defineProperty(document, 'activeElement', {
         get: () => mockElement as any,
@@ -667,8 +665,8 @@ describe('AccessibilityService', () => {
 
   describe('Contrast Ratio Calculation', () => {
     it('should calculate contrast ratio correctly', () => {
-      const rgb1 = { r: 255, g: 255, b: 255 }; // White
-      const rgb2 = { r: 0, g: 0, b: 0 }; // Black
+      const _rgb1 = { r: 255, g: 255, b: 255 }; // White
+      const _rgb2 = { r: 0, g: 0, b: 0 }; // Black
 
       const ratio = (service as any).calculateContrastRatio('rgb(255, 255, 255)', 'rgb(0, 0, 0)');
       expect(ratio).toBe(21); // Maximum contrast ratio
