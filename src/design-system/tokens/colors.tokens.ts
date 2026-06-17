@@ -1,4 +1,4 @@
- const primary = {
+const _primary = {
   50: '#e8eaf6',
   100: '#c5cae9',
   200: '#9fa8da',
@@ -11,7 +11,7 @@
   900: '#1a237e',
 };
 
-const secondary = {
+const _secondary = {
   50: '#fce4ec',
   100: '#f8bbd9',
   200: '#f48fb1',
