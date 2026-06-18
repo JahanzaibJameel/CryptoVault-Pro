@@ -15,46 +15,22 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
             <span class="brand-text">Crypto Vault Pro</span>
           </a>
         </div>
-        
+
         <div class="nav-menu">
-          <a 
-            routerLink="/dashboard" 
+          <a
+            routerLink="/dashboard"
             routerLinkActive="active"
             class="nav-link"
             [routerLinkActiveOptions]="{ exact: true }"
           >
             Dashboard
           </a>
-          <a 
-            routerLink="/portfolio" 
-            routerLinkActive="active"
-            class="nav-link"
-          >
-            Portfolio
-          </a>
-          <a 
-            routerLink="/watchlist" 
-            routerLinkActive="active"
-            class="nav-link"
-          >
-            Watchlist
-          </a>
-          <a 
-            routerLink="/news" 
-            routerLinkActive="active"
-            class="nav-link"
-          >
-            News
-          </a>
-          <a 
-            routerLink="/settings" 
-            routerLinkActive="active"
-            class="nav-link"
-          >
-            Settings
-          </a>
+          <a routerLink="/portfolio" routerLinkActive="active" class="nav-link"> Portfolio </a>
+          <a routerLink="/watchlist" routerLinkActive="active" class="nav-link"> Watchlist </a>
+          <a routerLink="/news" routerLinkActive="active" class="nav-link"> News </a>
+          <a routerLink="/settings" routerLinkActive="active" class="nav-link"> Settings </a>
         </div>
-        
+
         <div class="nav-actions">
           <button class="nav-toggle" (click)="toggleMobileMenu()" aria-label="Toggle menu">
             <span></span>
@@ -65,11 +41,11 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
       </nav>
     </header>
   `,
-  styleUrl: './header.component.scss'
+  styleUrl: './header.component.scss',
 })
 export class HeaderComponent {
   toggleMobileMenu(): void {
     // Mobile menu toggle logic would go here
-    console.log('Mobile menu toggled');
+    // Mobile menu toggled (debug logging removed)
   }
 }
