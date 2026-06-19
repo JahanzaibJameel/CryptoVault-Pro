@@ -1,17 +1,19 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
-import { TransferState, makeStateKey, OnDestroy } from '@angular/core';
+import { TransferState, makeStateKey } from '@angular/core';
+
+export interface CoreWebVitals {
+  lcp: number; // Largest Contentful Paint (ms)
+  fid: number; // First Input Delay (ms)
+  cls: number; // Cumulative Layout Shift (0-1)
+}
 
 export interface PerformanceMetrics {
   navigationTiming: PerformanceNavigationTiming;
   renderTime: number;
   bundleSize: number;
   memoryUsage: number;
-  coreWebVitals: {
-    lcp: number; // Largest Contentful Paint
-    fid: number; // First Input Delay
-    cls: number; // Cumulative Layout Shift
-  };
+  coreWebVitals: CoreWebVitals;
 }
 
 export interface OptimizationStrategy {
@@ -21,25 +23,45 @@ export interface OptimizationStrategy {
   revert?: () => void;
 }
 
+/**
+ * Performance thresholds and limits
+ */
+interface PerformanceThresholds {
+  lcpGood: number;
+  lcpNeedsImprovement: number;
+  fidGood: number;
+  fidNeedsImprovement: number;
+  clsGood: number;
+  clsNeedsImprovement: number;
+  memoryHighThreshold: number;
+  maxMetricsStored: number;
+  memoryCheckInterval: number;
+}
+
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class PerformanceOptimizerService implements OnDestroy {
-  private router = inject(Router);
-  private transferState = inject(TransferState);
-  
+  private readonly router = inject(Router);
+  private readonly transferState = inject(TransferState);
+
   private metrics: PerformanceMetrics[] = [];
   private strategies: Map<string, OptimizationStrategy> = new Map();
   private observers: PerformanceObserver[] = [];
-  
+  private memoryCheckIntervalId: number | null = null;
+
   private readonly PERFORMANCE_KEY = makeStateKey<PerformanceMetrics[]>('perf_metrics');
-  private readonly THRESHOLDS = {
-    LCP_GOOD: 2500,      // 2.5s
-    LCP_NEEDS_IMPROVEMENT: 4000, // 4s
-    FID_GOOD: 100,        // 100ms
-    FID_NEEDS_IMPROVEMENT: 300, // 300ms
-    CLS_GOOD: 0.1,       // 0.1
-    CLS_NEEDS_IMPROVEMENT: 0.25 // 0.25
+
+  private readonly THRESHOLDS: PerformanceThresholds = {
+    lcpGood: 2500, // 2.5s
+    lcpNeedsImprovement: 4000, // 4s
+    fidGood: 100, // 100ms
+    fidNeedsImprovement: 300, // 300ms
+    clsGood: 0.1, // 0.1
+    clsNeedsImprovement: 0.25, // 0.25
+    memoryHighThreshold: 0.8, // 80%
+    maxMetricsStored: 100,
+    memoryCheckInterval: 30000, // 30 seconds
   };
 
   constructor() {
@@ -55,28 +77,28 @@ export class PerformanceOptimizerService implements OnDestroy {
     this.strategies.set('routePreloading', {
       name: 'Smart Route Preloading',
       description: 'Preloads critical routes based on user behavior patterns',
-      apply: () => this.enableSmartPreloading()
+      apply: () => this.enableSmartPreloading(),
     });
 
     // Bundle splitting optimization
     this.strategies.set('bundleSplitting', {
       name: 'Dynamic Bundle Splitting',
       description: 'Splits bundles based on route and feature usage',
-      apply: () => this.optimizeBundleLoading()
+      apply: () => this.optimizeBundleLoading(),
     });
 
     // Memory management
     this.strategies.set('memoryManagement', {
       name: 'Memory Management',
       description: 'Optimizes memory usage through garbage collection hints',
-      apply: () => this.optimizeMemoryUsage()
+      apply: () => this.optimizeMemoryUsage(),
     });
 
     // Image optimization
     this.strategies.set('imageOptimization', {
       name: 'Progressive Image Loading',
       description: 'Implements lazy loading and WebP format detection',
-      apply: () => this.enableProgressiveImageLoading()
+      apply: () => this.enableProgressiveImageLoading(),
     });
   }
 
@@ -88,13 +110,13 @@ export class PerformanceOptimizerService implements OnDestroy {
 
     // Monitor Core Web Vitals
     this.observeCoreWebVitals();
-    
+
     // Monitor navigation timing
     this.observeNavigationTiming();
-    
+
     // Monitor render performance
     this.observeRenderPerformance();
-    
+
     // Monitor memory usage
     this.observeMemoryUsage();
   }
@@ -110,7 +132,9 @@ export class PerformanceOptimizerService implements OnDestroy {
         }
       });
 
-      vitalsObserver.observe({ entryTypes: ['largest-contentful-paint', 'first-input', 'layout-shift'] });
+      vitalsObserver.observe({
+        entryTypes: ['largest-contentful-paint', 'first-input', 'layout-shift'],
+      });
       this.observers.push(vitalsObserver);
     } catch (error) {
       console.warn('Core Web Vitals monitoring not supported:', error);
@@ -128,58 +152,65 @@ export class PerformanceOptimizerService implements OnDestroy {
   }
 
   /**
-   * Extract metric data from performance entry
+   * Extract metric data from performance entry with proper typing
    */
-  private extractMetricFromEntry(entry: PerformanceEntry): Partial<PerformanceMetrics['coreWebVitals']> | null {
-    switch (entry.entryType) {
-      case 'largest-contentful-paint':
-        return { lcp: entry.startTime };
-      
-      case 'first-input':
-        return { fid: (entry as any).processingStart - entry.startTime };
-      
-      case 'layout-shift':
-        return { cls: (entry as any).value };
-      
-      default:
-        return null;
+  private extractMetricFromEntry(entry: PerformanceEntry): Partial<CoreWebVitals> | null {
+    try {
+      switch (entry.entryType) {
+        case 'largest-contentful-paint':
+          return { lcp: entry.startTime };
+
+        case 'first-input':
+          const firstInputEntry = entry as PerformanceEventTiming;
+          return { fid: firstInputEntry.processingStart - entry.startTime };
+
+        case 'layout-shift':
+          const layoutShiftEntry = entry as any; // LayoutShift doesn't have standard typing
+          return { cls: layoutShiftEntry.value || 0 };
+
+        default:
+          return null;
+      }
+    } catch (error) {
+      console.error('Error extracting metric from entry:', error);
+      return null;
     }
   }
 
   /**
    * Evaluate performance against thresholds and suggest optimizations
    */
-  private evaluatePerformance(metrics: Partial<PerformanceMetrics['coreWebVitals']>): void {
+  private evaluatePerformance(metrics: Partial<CoreWebVitals>): void {
     const suggestions: string[] = [];
 
     if (metrics.lcp) {
-      if (metrics.lcp > this.THRESHOLDS.LCP_NEEDS_IMPROVEMENT) {
-        suggestions.push('LCP needs improvement: Consider optimizing images and server response time');
-      } else if (metrics.lcp > this.THRESHOLDS.LCP_GOOD) {
+      if (metrics.lcp > this.THRESHOLDS.lcpNeedsImprovement) {
+        suggestions.push(
+          'LCP needs improvement: Consider optimizing images and server response time',
+        );
+      } else if (metrics.lcp > this.THRESHOLDS.lcpGood) {
         suggestions.push('LCP could be improved: Optimize critical resources');
       }
     }
 
     if (metrics.fid) {
-      if (metrics.fid > this.THRESHOLDS.FID_NEEDS_IMPROVEMENT) {
+      if (metrics.fid > this.THRESHOLDS.fidNeedsImprovement) {
         suggestions.push('FID needs improvement: Reduce JavaScript execution time');
-      } else if (metrics.fid > this.THRESHOLDS.FID_GOOD) {
+      } else if (metrics.fid > this.THRESHOLDS.fidGood) {
         suggestions.push('FID could be improved: Minimize main thread work');
       }
     }
 
     if (metrics.cls) {
-      if (metrics.cls > this.THRESHOLDS.CLS_NEEDS_IMPROVEMENT) {
+      if (metrics.cls > this.THRESHOLDS.clsNeedsImprovement) {
         suggestions.push('CLS needs improvement: Ensure stable layout during load');
-      } else if (metrics.cls > this.THRESHOLDS.CLS_GOOD) {
+      } else if (metrics.cls > this.THRESHOLDS.clsGood) {
         suggestions.push('CLS could be improved: Optimize dynamic content insertion');
       }
     }
 
     if (suggestions.length > 0) {
-      console.group('🚀 Performance Optimization Suggestions');
-      suggestions.forEach(suggestion => console.warn(`⚠️ ${suggestion}`));
-      console.groupEnd();
+      this.logPerformanceSuggestions(suggestions);
     }
   }
 
@@ -210,7 +241,7 @@ export class PerformanceOptimizerService implements OnDestroy {
   private optimizeMemoryUsage(): void {
     if ('memory' in performance) {
       const memory = (performance as any).memory;
-      
+
       // Trigger garbage collection if memory usage is high
       if (memory.usedJSHeapSize > memory.jsHeapSizeLimit * 0.8) {
         if ('gc' in window) {
@@ -241,7 +272,7 @@ export class PerformanceOptimizerService implements OnDestroy {
           renderTime: navTiming.loadEventEnd - navTiming.loadEventStart,
           bundleSize: this.calculateBundleSize(),
           memoryUsage: this.getMemoryUsage(),
-          coreWebVitals: { lcp: 0, fid: 0, cls: 0 }
+          coreWebVitals: { lcp: 0, fid: 0, cls: 0 },
         });
       }
     });
@@ -269,29 +300,36 @@ export class PerformanceOptimizerService implements OnDestroy {
   }
 
   /**
-   * Monitor memory usage
+   * Monitor memory usage and trigger optimization when threshold exceeded
    */
   private observeMemoryUsage(): void {
-    setInterval(() => {
+    if (!this.isMemoryMonitoringSupported()) {
+      console.warn('Memory monitoring not supported on this browser');
+      return;
+    }
+
+    this.memoryCheckIntervalId = window.setInterval(() => {
       const memoryUsage = this.getMemoryUsage();
-      if (memoryUsage > 0.8) { // 80% threshold
+      if (memoryUsage > this.THRESHOLDS.memoryHighThreshold) {
         this.optimizeMemoryUsage();
       }
-    }, 30000); // Check every 30 seconds
+    }, this.THRESHOLDS.memoryCheckInterval);
   }
 
   /**
-   * Record performance metrics
+   * Record performance metrics with transfer state support
    */
   private recordMetrics(metrics: PerformanceMetrics): void {
-    this.metrics.push(metrics);
-    
-    // Store in transfer state for SSR
-    this.transferState.set(this.PERFORMANCE_KEY, this.metrics as any);
-    
-    // Keep only last 100 metrics
-    if (this.metrics.length > 100) {
-      this.metrics = this.metrics.slice(-100);
+    try {
+      this.metrics.push(metrics);
+      this.transferState.set(this.PERFORMANCE_KEY, this.metrics);
+
+      // Keep only last N metrics to prevent memory issues
+      if (this.metrics.length > this.THRESHOLDS.maxMetricsStored) {
+        this.metrics = this.metrics.slice(-this.THRESHOLDS.maxMetricsStored);
+      }
+    } catch (error) {
+      console.error('Failed to record performance metrics:', error);
     }
   }
 
@@ -320,7 +358,23 @@ export class PerformanceOptimizerService implements OnDestroy {
    * Check if Performance API is supported
    */
   private isPerformanceSupported(): boolean {
-    return 'performance' in window && 'observer' in window.Performance;
+    return 'performance' in window && 'PerformanceObserver' in window;
+  }
+
+  /**
+   * Check if memory monitoring is supported
+   */
+  private isMemoryMonitoringSupported(): boolean {
+    return 'memory' in performance;
+  }
+
+  /**
+   * Log performance suggestions in a formatted way
+   */
+  private logPerformanceSuggestions(suggestions: string[]): void {
+    console.group('🚀 Performance Optimization Suggestions');
+    suggestions.forEach((suggestion) => console.warn(`⚠️ ${suggestion}`));
+    console.groupEnd();
   }
 
   /**
@@ -334,40 +388,56 @@ export class PerformanceOptimizerService implements OnDestroy {
    * Get average performance metrics
    */
   getAverageMetrics(): Partial<PerformanceMetrics> {
-    if (this.metrics.length === 0) return {};
-
-    const sum = this.metrics.reduce((acc, metric) => ({
-      renderTime: (acc.renderTime || 0) + metric.renderTime,
-      bundleSize: (acc.bundleSize || 0) + metric.bundleSize,
-      memoryUsage: (acc.memoryUsage || 0) + metric.memoryUsage,
-      coreWebVitals: {
-        lcp: (acc.coreWebVitals?.lcp || 0) + metric.coreWebVitals.lcp,
-        fid: (acc.coreWebVitals?.fid || 0) + metric.coreWebVitals.fid,
-        cls: (acc.coreWebVitals?.cls || 0) + metric.coreWebVitals.cls
-      }
-    }), {} as any);
+    if (this.metrics.length === 0) {
+      return {};
+    }
 
     const count = this.metrics.length;
+    const avgMetrics = {
+      renderTime: 0,
+      bundleSize: 0,
+      memoryUsage: 0,
+      coreWebVitals: { lcp: 0, fid: 0, cls: 0 },
+    };
+
+    for (const metric of this.metrics) {
+      avgMetrics.renderTime += metric.renderTime;
+      avgMetrics.bundleSize += metric.bundleSize;
+      avgMetrics.memoryUsage += metric.memoryUsage;
+      avgMetrics.coreWebVitals.lcp += metric.coreWebVitals.lcp;
+      avgMetrics.coreWebVitals.fid += metric.coreWebVitals.fid;
+      avgMetrics.coreWebVitals.cls += metric.coreWebVitals.cls;
+    }
+
     return {
-      renderTime: sum.renderTime / count,
-      bundleSize: sum.bundleSize / count,
-      memoryUsage: sum.memoryUsage / count,
+      renderTime: avgMetrics.renderTime / count,
+      bundleSize: avgMetrics.bundleSize / count,
+      memoryUsage: avgMetrics.memoryUsage / count,
       coreWebVitals: {
-        lcp: sum.coreWebVitals.lcp / count,
-        fid: sum.coreWebVitals.fid / count,
-        cls: sum.coreWebVitals.cls / count
-      }
+        lcp: avgMetrics.coreWebVitals.lcp / count,
+        fid: avgMetrics.coreWebVitals.fid / count,
+        cls: avgMetrics.coreWebVitals.cls / count,
+      },
     };
   }
 
   /**
-   * Apply optimization strategy
+   * Apply optimization strategy with validation
    */
   applyStrategy(strategyName: string): void {
+    if (!strategyName || typeof strategyName !== 'string') {
+      console.error('Invalid strategy name provided');
+      return;
+    }
+
     const strategy = this.strategies.get(strategyName);
     if (strategy) {
-      console.log(`🚀 Applying optimization strategy: ${strategy.name}`);
-      strategy.apply();
+      try {
+        console.log(`🚀 Applying optimization strategy: ${strategy.name}`);
+        strategy.apply();
+      } catch (error) {
+        console.error(`Failed to apply strategy ${strategyName}:`, error);
+      }
     } else {
       console.warn(`Unknown optimization strategy: ${strategyName}`);
     }
@@ -381,10 +451,15 @@ export class PerformanceOptimizerService implements OnDestroy {
   }
 
   /**
-   * Cleanup observers on destroy
+   * Cleanup observers and intervals on destroy
    */
   ngOnDestroy(): void {
-    this.observers.forEach(observer => observer.disconnect());
+    this.observers.forEach((observer) => observer.disconnect());
     this.observers = [];
+
+    if (this.memoryCheckIntervalId !== null) {
+      clearInterval(this.memoryCheckIntervalId);
+      this.memoryCheckIntervalId = null;
+    }
   }
 }
