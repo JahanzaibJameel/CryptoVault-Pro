@@ -294,7 +294,7 @@ export class PerformanceOptimizerService implements OnDestroy {
             renderTime: navTiming.loadEventEnd - navTiming.loadEventStart,
             bundleSize: this.calculateBundleSize(),
             memoryUsage: this.getMemoryUsage(),
-            coreWebVitals: { lcp: 0, fid: 0, cls: 0 },
+            coreWebVitals: this.createDefaultCoreWebVitals(),
           });
         }
       });
@@ -365,21 +365,34 @@ export class PerformanceOptimizerService implements OnDestroy {
    * Calculate bundle size from performance entries
    */
   private calculateBundleSize(): number {
-    const resources = performance.getEntriesByType('resource');
-    return resources.reduce((total, resource) => {
-      return total + (resource as any).transferSize || 0;
-    }, 0);
+    try {
+      const resources = performance.getEntriesByType('resource');
+      return resources.reduce((total, resource) => {
+        const transferSize = (resource as any).transferSize || 0;
+        return total + transferSize;
+      }, 0);
+    } catch (error) {
+      console.warn('Failed to calculate bundle size:', error);
+      return 0;
+    }
   }
 
   /**
-   * Get current memory usage as percentage
+   * Get current memory usage as percentage (0-1)
    */
   private getMemoryUsage(): number {
-    if ('memory' in performance) {
+    try {
+      if (!this.isMemoryMonitoringSupported()) {
+        return 0;
+      }
+
       const memory = (performance as any).memory;
-      return memory.usedJSHeapSize / memory.jsHeapSizeLimit;
+      const usage = memory.usedJSHeapSize / memory.jsHeapSizeLimit;
+      return Math.min(usage, 1); // Ensure value is between 0-1
+    } catch (error) {
+      console.warn('Failed to get memory usage:', error);
+      return 0;
     }
-    return 0;
   }
 
   /**
@@ -404,7 +417,12 @@ export class PerformanceOptimizerService implements OnDestroy {
     suggestions.forEach((suggestion) => console.warn(`⚠️ ${suggestion}`));
     console.groupEnd();
   }
-
+  /**
+   * Create a default CoreWebVitals object
+   */
+  private createDefaultCoreWebVitals(): CoreWebVitals {
+    return { lcp: 0, fid: 0, cls: 0 };
+  }
   /**
    * Get current performance metrics
    */
