@@ -1,6 +1,6 @@
 # CryptoVault Pro
 
-[![Release](https://img.shields.io/github/v/release/JahanzaibJameel/CryptoVault-Pro)](https://github.com/JahanzaibJameel/CryptoVault-Pro/releases) [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE) [![Angular](https://img.shields.io/badge/Angular-21.2-red)](https://angular.dev) [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE) [![Angular](https://img.shields.io/badge/Angular-21.2-red)](https://angular.dev) [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org)
 
 > A production-grade Angular 21 application demonstrating resilient, offline-first cryptocurrency portfolio management with clean architecture and enterprise engineering practices.
 
